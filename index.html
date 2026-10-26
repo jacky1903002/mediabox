@@ -129,6 +129,11 @@
             get,
             onValue
         };
+
+        // 觸發全域初始化
+        if (window.initAppListeners) {
+            window.initAppListeners();
+        }
     </script>
 
     <!-- HEADER / NAVIGATION BAR -->
@@ -592,12 +597,6 @@
         let authMode = 'login';
         let currentPhotoSize = 'medium';
 
-        let tabTitles = {
-            1: "分頁一: 專業音樂庫與播放器",
-            2: "分頁二: 影音網址管理與劇院",
-            3: "分頁三: 相簿回憶"
-        };
-
         const defaultMusicList = [
             {
                 id: 'm1',
@@ -638,14 +637,21 @@
             }
         ];
 
-        let musicList = [...defaultMusicList];
+        // 優先從 localStorage 讀取最新狀態，避免 F5 重新整理時閃爍預設舊畫面
+        let tabTitles = JSON.parse(localStorage.getItem('mediaBox_tabTitles')) || {
+            1: "分頁一: 專業音樂庫與播放器",
+            2: "分頁二: 影音網址管理與劇院",
+            3: "分頁三: 相簿回憶"
+        };
 
-        let videoList = [
+        let musicList = JSON.parse(localStorage.getItem('mediaBox_musicList')) || [...defaultMusicList];
+
+        let videoList = JSON.parse(localStorage.getItem('mediaBox_videoList')) || [
             { id: 'v1', title: '4K Tropical Island Nature Drone Video', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
             { id: 'v2', title: 'Relaxing Aquarium Fish 4K Video', url: 'https://www.youtube.com/watch?v=2g811Ko7K8U' }
         ];
 
-        let photoList = [
+        let photoList = JSON.parse(localStorage.getItem('mediaBox_photoList')) || [
             { id: 'p1', title: '日本京都賞櫻回憶', url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
             { id: 'p2', title: '北海道雪景之旅', url: 'https://images.unsplash.com/photo-1491557345352-5929e343eb89?auto=format&fit=crop&w=600&q=80' }
         ];
@@ -664,7 +670,6 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            initFirebaseListeners();
             renderTabTitles();
             renderMusicTable();
             renderVideoTable();
@@ -677,36 +682,44 @@
             }
         });
 
-        function initFirebaseListeners() {
-            setTimeout(() => {
-                if (window.fbAuth && window.fbServices) {
-                    const { onAuthStateChanged } = window.fbServices;
-                    onAuthStateChanged(window.fbAuth, (user) => {
-                        if (user) {
-                            currentUser = user;
-                            updateUserUI();
-                            loadUserDataFromFirebase();
-                        } else {
-                            currentUser = null;
-                            updateUserUI();
-                        }
-                    });
+        // 綁定給 Firebase 模組載入完成後回調
+        window.initAppListeners = function() {
+            if (window.fbAuth && window.fbServices) {
+                const { onAuthStateChanged } = window.fbServices;
+                onAuthStateChanged(window.fbAuth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        updateUserUI();
+                        loadUserDataFromFirebase();
+                    } else {
+                        currentUser = null;
+                        updateUserUI();
+                    }
+                });
 
-                    const { ref, onValue } = window.fbServices;
-                    const connectedRef = ref(window.fbDb, ".info/connected");
-                    onValue(connectedRef, (snap) => {
-                        const connDot = document.getElementById('connDot');
-                        const connStatus = document.getElementById('connStatus');
-                        if (snap.val() === true) {
-                            connDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-                            connStatus.innerText = "🟢 已連線數據庫";
-                        } else {
-                            connDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
-                            connStatus.innerText = "🔴 離線模式";
-                        }
-                    });
-                }
-            }, 1000);
+                const { ref, onValue } = window.fbServices;
+                const connectedRef = ref(window.fbDb, ".info/connected");
+                onValue(connectedRef, (snap) => {
+                    const connDot = document.getElementById('connDot');
+                    const connStatus = document.getElementById('connStatus');
+                    if (snap.val() === true) {
+                        connDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                        connStatus.innerText = "🟢 已連線數據庫";
+                    } else {
+                        connDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+                        connStatus.innerText = "🔴 離線模式";
+                    }
+                });
+            }
+        };
+
+        // 同步儲存至 localStorage 與 Firebase
+        function saveData() {
+            localStorage.setItem('mediaBox_musicList', JSON.stringify(musicList));
+            localStorage.setItem('mediaBox_videoList', JSON.stringify(videoList));
+            localStorage.setItem('mediaBox_photoList', JSON.stringify(photoList));
+            localStorage.setItem('mediaBox_tabTitles', JSON.stringify(tabTitles));
+            saveToFirebase();
         }
 
         // 強制清除瀏覽器快取、Firebase 本地快照並重新整理
@@ -722,7 +735,12 @@
                     { id: 'p1', title: '日本京都賞櫻回憶', url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
                     { id: 'p2', title: '北海道雪景之旅', url: 'https://images.unsplash.com/photo-1491557345352-5929e343eb89?auto=format&fit=crop&w=600&q=80' }
                 ];
-                saveToFirebase();
+                tabTitles = {
+                    1: "分頁一: 專業音樂庫與播放器",
+                    2: "分頁二: 影音網址管理與劇院",
+                    3: "分頁三: 相簿回憶"
+                };
+                saveData();
                 alert("已成功強制清除舊存取！頁面將自動重整。");
                 window.location.reload();
             }
@@ -751,6 +769,13 @@
                     if (data.videoList) videoList = data.videoList;
                     if (data.photoList) photoList = data.photoList;
                     if (data.tabTitles) tabTitles = data.tabTitles;
+
+                    // 同步寫入 localStorage
+                    localStorage.setItem('mediaBox_musicList', JSON.stringify(musicList));
+                    localStorage.setItem('mediaBox_videoList', JSON.stringify(videoList));
+                    localStorage.setItem('mediaBox_photoList', JSON.stringify(photoList));
+                    localStorage.setItem('mediaBox_tabTitles', JSON.stringify(tabTitles));
+
                     renderTabTitles();
                     renderMusicTable();
                     renderVideoTable();
@@ -807,7 +832,7 @@
                     const res = await createUserWithEmailAndPassword(window.fbAuth, email, password);
                     await updateProfile(res.user, { displayName: realName || '會員' });
                     currentUser = res.user;
-                    saveToFirebase();
+                    saveData();
                 } else {
                     const res = await signInWithEmailAndPassword(window.fbAuth, email, password);
                     currentUser = res.user;
@@ -851,7 +876,7 @@
             if (newName !== null && newName.trim() !== "") {
                 tabTitles[tabNum] = newName.trim();
                 renderTabTitles();
-                saveToFirebase();
+                saveData();
             }
         }
 
@@ -919,7 +944,7 @@
             closeMusicModal();
             renderMusicTable();
             populateMusicDropdown();
-            saveToFirebase();
+            saveData();
         }
 
         function deleteMusicItem(id) {
@@ -932,7 +957,7 @@
                 musicList = musicList.filter(x => x.id !== id);
                 renderMusicTable();
                 populateMusicDropdown();
-                saveToFirebase();
+                saveData();
             }
         }
 
@@ -1147,7 +1172,7 @@
             closeVideoModal();
             renderVideoTable();
             populateVideoDropdown();
-            saveToFirebase();
+            saveData();
         }
 
         function deleteVideoItem(id) {
@@ -1156,7 +1181,7 @@
                 videoList = videoList.filter(x => x.id !== id);
                 renderVideoTable();
                 populateVideoDropdown();
-                saveToFirebase();
+                saveData();
             }
         }
 
@@ -1262,14 +1287,14 @@
 
             closePhotoModal();
             renderPhotoGallery();
-            saveToFirebase();
+            saveData();
         }
 
         function deletePhotoItem(id) {
             if (confirm("確定要刪除這張照片嗎？")) {
                 photoList = photoList.filter(x => x.id !== id);
                 renderPhotoGallery();
-                saveToFirebase();
+                saveData();
             }
         }
 
@@ -1294,7 +1319,7 @@
                 }
                 renderMusicTable();
                 populateMusicDropdown();
-                saveToFirebase();
+                saveData();
                 alert("Excel 資料匯入成功！");
             };
             reader.readAsArrayBuffer(file);
