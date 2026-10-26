@@ -165,7 +165,6 @@
             </div>
         </div>
 
-        <!-- 2 個分頁導覽 -->
         <nav class="bg-cream-100 border-t border-cream-200 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-gray-600" id="tabNavContainer">
                 <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
@@ -185,9 +184,14 @@
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center space-x-2 text-xs font-semibold text-gray-600">
                 <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
-                <span>數據轉換與導出工具箱</span>
+                <span>資料庫與導出工具箱</span>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
+                <!-- 清除雲端舊資料並重置按鈕 -->
+                <button onclick="resetCloudAndLocalData()" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 font-medium transition flex items-center space-x-1.5 shadow-sm" title="清除雲端舊快照並恢復乾淨預設曲目">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>清除雲端舊資料並重置</span>
+                </button>
                 <label class="cursor-pointer bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-file-excel text-emerald-600"></i>
                     <span>一鍵匯入 EXCEL</span>
@@ -480,15 +484,15 @@
             <div class="grid grid-cols-2 gap-3">
                 <div class="col-span-2">
                     <label class="text-xs font-semibold text-gray-700">音樂標題 *</label>
-                    <input type="text" id="mFormTitle" placeholder="例如: Shape of You" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <input type="text" id="mFormTitle" placeholder="例如: 像我這樣的人" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-700">演唱 / 演奏者 *</label>
-                    <input type="text" id="mFormArtist" placeholder="Ed Sheeran" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <input type="text" id="mFormArtist" placeholder="毛不易" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-700">音樂流派 (Genre)</label>
-                    <input type="text" id="mFormGenre" placeholder="Pop / Jazz" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <input type="text" id="mFormGenre" placeholder="Pop / Ballad" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div class="col-span-2">
                     <label class="text-xs font-semibold text-gray-700">YouTube 音樂網址或ID *</label>
@@ -496,7 +500,7 @@
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-700">時長 (分:秒)</label>
-                    <input type="text" id="mFormDuration" placeholder="03:55" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <input type="text" id="mFormDuration" placeholder="04:05" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-700">評分 (1 - 5 星)</label>
@@ -557,11 +561,14 @@
             2: "分頁二: 影音網址管理與劇院"
         };
 
-        let musicList = [
-            { id: 'm1', title: 'Lofi Hip Hop - Beats to Relax', artist: 'Lofi Girl', genre: 'Lofi', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', duration: '03:45', rating: 5, notes: '專注與研讀音樂' },
-            { id: 'm2', title: 'Relaxing Piano Music', artist: 'Calm Studio', genre: 'Piano', url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4', duration: '04:20', rating: 4, notes: '舒緩身心' },
-            { id: 'm3', title: 'Jazz Coffee Shop BGM', artist: 'Jazz Cafe', genre: 'Jazz', url: 'https://www.youtube.com/watch?v=2gliGmotbyQ', duration: '05:10', rating: 5, notes: '咖啡廳悠閒爵士樂' }
+        // 預設乾淨的單曲音樂清單（確保每首都是獨立正確的歌曲 ID）
+        const defaultMusicList = [
+            { id: 'm1', title: '像我這樣的人', artist: '毛不易', genre: 'Pop', url: 'https://www.youtube.com/watch?v=OX5wUp93hbc', duration: '04:05', rating: 5, notes: '毛不易經典代表作' },
+            { id: 'm2', title: 'Lofi Hip Hop - Beats to Relax', artist: 'Lofi Girl', genre: 'Lofi', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', duration: '03:45', rating: 5, notes: '專注與研讀音樂' },
+            { id: 'm3', title: 'Relaxing Piano Music', artist: 'Calm Studio', genre: 'Piano', url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4', duration: '04:20', rating: 4, notes: '舒緩身心' }
         ];
+
+        let musicList = [...defaultMusicList];
 
         let videoList = [
             { id: 'v1', title: '4K Tropical Island Nature Drone Video', channel: 'Nature Relaxation', category: '風光紀錄', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', resolution: '4K 2160P', desc: '絕美的熱帶島嶼鳥瞰自然風光。' },
@@ -574,7 +581,7 @@
         let isShuffle = false;
         let isLoop = false;
         let currentAudioTime = 0;
-        let currentAudioDuration = 225;
+        let currentAudioDuration = 245;
         let audioProgressTimer = null;
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -621,6 +628,18 @@
             }, 1000);
         }
 
+        // 一鍵清除雲端與本地舊資料並恢復預設
+        function resetCloudAndLocalData() {
+            if (confirm("確定要清除所有舊資料（包含雲端快照）並恢復乾淨的預設音樂清單嗎？")) {
+                musicList = [...defaultMusicList];
+                renderMusicTable();
+                populateMusicDropdown();
+                if(musicList.length > 0) selectMusicFromDropdown(musicList[0].id);
+                saveToFirebase();
+                alert("已成功重置資料庫！");
+            }
+        }
+
         function saveToFirebase() {
             const now = new Date();
             const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -638,7 +657,9 @@
             get(ref(window.fbDb, 'users/' + currentUser.uid + '/data')).then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    if (data.musicList) musicList = data.musicList;
+                    if (data.musicList && Array.isArray(data.musicList) && data.musicList.length > 0) {
+                        musicList = data.musicList;
+                    }
                     if (data.videoList) videoList = data.videoList;
                     if (data.tabTitles) tabTitles = data.tabTitles;
                     renderTabTitles();
@@ -646,6 +667,9 @@
                     renderVideoTable();
                     populateMusicDropdown();
                     populateVideoDropdown();
+                    if(musicList.length > 0 && !currentPlayingMusicId) {
+                        selectMusicFromDropdown(musicList[0].id);
+                    }
                 }
             });
         }
@@ -768,7 +792,7 @@
                     </td>
                     <td class="p-3"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-medium">${m.genre}</span></td>
                     <td class="p-3 font-mono">${m.duration || '--'}</td>
-                    <td class="p-3 text-amber-500 font-bold">${'★'.repeat(m.rating)}</td>
+                    <td class="p-3 text-amber-500 font-bold">${'★'.repeat(m.rating || 5)}</td>
                     <td class="p-3 text-center space-x-2">
                         <button onclick="selectMusicFromDropdown('${m.id}')" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
                         <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
@@ -792,7 +816,7 @@
                 title, artist,
                 genre: document.getElementById('mFormGenre').value.trim() || 'General',
                 url,
-                duration: document.getElementById('mFormDuration').value.trim() || '03:45',
+                duration: document.getElementById('mFormDuration').value.trim() || '04:00',
                 rating: Number(document.getElementById('mFormRating').value)
             });
 
@@ -802,7 +826,6 @@
             saveToFirebase();
         }
 
-        // Bug Fix 4: If deleted track is currently playing, completely stop and clear it.
         function deleteMusicItem(id) {
             if (confirm("確定要刪除這首音樂嗎？")) {
                 if (currentPlayingMusicId === id) {
@@ -842,7 +865,6 @@
             document.getElementById('queueCount').innerText = `${musicList.length} 首`;
         }
 
-        // Bug Fix 3: Ensure selected music ID matches precisely
         function selectMusicFromDropdown(id) {
             const m = musicList.find(x => x.id === id);
             if (!m) return;
@@ -852,8 +874,8 @@
 
             document.getElementById('npTitle').innerText = m.title;
             document.getElementById('npArtist').innerText = m.artist;
-            document.getElementById('npGenre').innerText = m.genre;
-            document.getElementById('totalDuration').innerText = m.duration;
+            document.getElementById('npGenre').innerText = m.genre || 'Music';
+            document.getElementById('totalDuration').innerText = m.duration || '04:00';
             
             const photos = [
                 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80',
@@ -876,7 +898,6 @@
             populateMusicDropdown();
         }
 
-        // Helper to load YouTube Audio Iframe with start offset
         function loadAudioIframe(startSeconds = 0, autoplay = true) {
             const m = musicList.find(x => x.id === currentPlayingMusicId);
             if (!m) return;
@@ -885,7 +906,6 @@
             document.getElementById('ytAudioFrameContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=${autoParam}&start=${startSeconds}" allow="autoplay" class="hidden"></iframe>`;
         }
 
-        // Bug Fix 1: Pause button now instantly stops/clears iframe
         function toggleAudioPlay() {
             if (!currentPlayingMusicId) return;
             isAudioPlaying = !isAudioPlaying;
@@ -926,7 +946,6 @@
             document.getElementById('currTime').innerText = `${mins}:${secs}`;
         }
 
-        // Bug Fix 2: Instant seek with zero delay using YouTube start parameter reload
         function seekAudio(event) {
             if (!currentPlayingMusicId) return;
             const container = document.getElementById('progressBarContainer');
@@ -937,8 +956,6 @@
             
             currentAudioTime = Math.floor(ratio * currentAudioDuration);
             updateProgressBarUI();
-            
-            // Instantly reload iframe at the target second without delay
             loadAudioIframe(currentAudioTime, isAudioPlaying);
         }
 
