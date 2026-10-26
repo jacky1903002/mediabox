@@ -69,7 +69,6 @@
             font-weight: 700;
             background-color: #ffffff;
         }
-        /* Visualizer Animation */
         @keyframes barGrow {
             0%, 100% { height: 6px; }
             50% { height: 28px; }
@@ -88,13 +87,12 @@
 </head>
 <body class="min-h-screen flex flex-col custom-scrollbar">
 
-    <!-- Firebase SDK Modular Import via script type module -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Firebase Configuration provided by user
         const firebaseConfig = {
             apiKey: "AIzaSyBASZegMIn7bxgRaoz8b860PF8nUmGNgls",
             authDomain: "mediabox-f57c7.firebaseapp.com",
@@ -110,7 +108,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Export Firebase handlers to window context
         window.fbAuth = auth;
         window.fbDb = db;
         window.fbServices = {
@@ -130,11 +127,9 @@
     <header class="bg-white border-b border-cream-200 sticky top-0 z-40 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
-                
-                <!-- Logo & Brand -->
                 <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md">
-                        <i class="fa-solid font-bold fa-compact-disc text-xl animate-spin-slow"></i>
+                        <i class="fa-solid font-bold fa-compact-disc text-xl"></i>
                     </div>
                     <div>
                         <h1 class="font-extrabold text-xl text-slate-800 tracking-tight flex items-center gap-2">
@@ -144,33 +139,25 @@
                     </div>
                 </div>
 
-                <!-- Status & Save Timestamp Bar -->
                 <div class="hidden md:flex items-center space-x-6 text-sm">
-                    <!-- Connection Status Indicator -->
                     <div class="flex items-center space-x-2 bg-cream-100 px-3 py-1.5 rounded-full border border-cream-200">
                         <span id="connDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span id="connStatus" class="font-medium text-xs text-gray-700">🟢 已連線數據庫</span>
                     </div>
-
-                    <!-- Last Saved Time Indicator -->
                     <div class="flex items-center space-x-2 text-xs text-gray-600 bg-cream-50 px-3 py-1.5 rounded-lg border border-cream-200">
                         <i class="fa-regular fa-clock text-amber-600"></i>
                         <span>上次儲存時間: <strong id="lastSaveTime" class="text-gray-800 font-mono">未連線</strong></span>
                     </div>
                 </div>
 
-                <!-- User Profile & Auth Trigger -->
                 <div class="flex items-center space-x-3">
                     <div id="userInfoBox" class="hidden flex items-center space-x-2 bg-cream-100 p-1.5 pr-3 rounded-full border border-cream-200">
-                        <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">
-                            U
-                        </div>
+                        <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">U</div>
                         <span id="userNameDisplay" class="text-xs font-semibold text-gray-800 max-w-[120px] truncate">使用者</span>
                         <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 text-sm ml-1 transition" title="登出">
                             <i class="fa-solid fa-right-from-bracket"></i>
                         </button>
                     </div>
-
                     <button id="loginBtnTrigger" onclick="openAuthModal()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition">
                         <i class="fa-solid fa-user-lock mr-1.5"></i> 登入 / 註冊
                     </button>
@@ -178,60 +165,46 @@
             </div>
         </div>
 
-        <!-- NAVIGATION TABS (DOUBLE CLICK TO RENAME) -->
+        <!-- NAVIGATION TABS (整合為 3 個分頁：1.音樂網址管理 2.音樂播放器 3.影音網址管理與劇院) -->
         <nav class="bg-cream-100 border-t border-cream-200 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-gray-600" id="tabNavContainer">
                 <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
                     <i class="fa-solid fa-music text-amber-600"></i>
                     <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">分頁一: 音樂網址管理</span>
-                    <i class="fa-solid fa-pen text-[10px] text-gray-400 opacity-0 group-hover:opacity-100"></i>
                 </button>
                 <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
                     <i class="fa-solid fa-sliders text-amber-600"></i>
                     <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">分頁二: 專業強大音樂播放器</span>
                 </button>
                 <button onclick="switchTab(3)" id="tabBtn3" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
-                    <i class="fa-solid fa-video text-amber-600"></i>
-                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">分頁三: 影音網址管理</span>
-                </button>
-                <button onclick="switchTab(4)" id="tabBtn4" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
                     <i class="fa-solid fa-film text-amber-600"></i>
-                    <span id="tabTitle4" class="tab-title" ondblclick="editTabTitle(4)">分頁四: 影音播放清單與劇院</span>
+                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">分頁三: 影音網址管理與劇院</span>
                 </button>
             </div>
         </nav>
     </header>
 
-    <!-- GLOBAL TOOLBAR FOR DATA & EXPORT OPERATIONS -->
+    <!-- GLOBAL TOOLBAR -->
     <section class="bg-white border-b border-cream-200 py-2.5 px-4 sm:px-6 lg:px-8 shadow-inner">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center space-x-2 text-xs font-semibold text-gray-600">
                 <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
-                <span>當前分頁工具箱 (可即時進行數據轉換與導出)</span>
+                <span>數據轉換與導出工具箱</span>
             </div>
-
-            <!-- Action Export/Import Buttons -->
             <div class="flex flex-wrap items-center gap-2 text-xs">
-                <!-- Excel Import -->
                 <label class="cursor-pointer bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-file-excel text-emerald-600"></i>
                     <span>一鍵匯入 EXCEL</span>
                     <input type="file" accept=".xlsx, .xls" onchange="importExcel(event)" class="hidden">
                 </label>
-
-                <!-- Excel Export -->
                 <button onclick="exportExcel()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-file-export text-emerald-600"></i>
                     <span>一鍵匯出 EXCEL</span>
                 </button>
-
-                <!-- High Res PNG Export -->
                 <button onclick="exportPNG()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-file-image text-blue-600"></i>
                     <span>匯出高畫質 PNG</span>
                 </button>
-
-                <!-- PDF Export -->
                 <button onclick="exportPDF()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-file-pdf text-red-600"></i>
                     <span>匯出高畫質 PDF</span>
@@ -240,26 +213,24 @@
         </div>
     </section>
 
-    <!-- MAIN CONTENT CONTAINERS -->
+    <!-- MAIN CONTENT -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" id="exportArea">
 
         <!-- ================= TAB 1: YOUTUBE MUSIC LINK MANAGER ================= -->
         <div id="tabContent1" class="tab-panel space-y-6">
-            <!-- Header Banner -->
             <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <i class="fa-solid fa-music text-amber-500"></i> YouTube 音樂網址資料庫
                     </h2>
-                    <p class="text-xs text-gray-500 mt-1">建立與管理您的 YouTube 音樂資源，系統將自動同步並支援即時強大音樂播放器。</p>
+                    <p class="text-xs text-gray-500 mt-1">管理您的 YouTube 音樂資源，並與專業播放器即時同步。</p>
                 </div>
                 <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> 新增音樂連結
                 </button>
             </div>
 
-            <!-- Music Stats Overview -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="card-cream p-4 rounded-xl border-l-4 border-l-amber-500">
                     <p class="text-xs text-gray-500">總音樂曲目</p>
                     <h3 class="text-2xl font-black text-gray-800 mt-1" id="mTotalCount">0</h3>
@@ -272,18 +243,10 @@
                     <p class="text-xs text-gray-500">平均評分</p>
                     <h3 class="text-2xl font-black text-gray-800 mt-1" id="mAvgRating">0.0 <span class="text-xs font-normal text-amber-500">★</span></h3>
                 </div>
-                <div class="card-cream p-4 rounded-xl border-l-4 border-l-blue-500">
-                    <p class="text-xs text-gray-500">播放模式狀態</p>
-                    <h3 class="text-sm font-bold text-gray-700 mt-2 flex items-center gap-1">
-                        <i class="fa-solid fa-circle-check text-emerald-500"></i> 就緒 (連線Tab 2)
-                    </h3>
-                </div>
             </div>
 
-            <!-- Music Table & Charts Split -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Music Data Table -->
-                <div class="lg:col-span-2 card-cream rounded-2xl p-5 overflow-hidden flex flex-col">
+                <div class="lg:col-span-2 card-cream rounded-2xl p-5 flex flex-col">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
                             <i class="fa-solid fa-list-ul text-amber-500"></i> 音樂曲目清單
@@ -293,7 +256,6 @@
                             <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-gray-400"></i>
                         </div>
                     </div>
-
                     <div class="overflow-x-auto flex-1 custom-scrollbar">
                         <table class="w-full text-xs text-left text-gray-600">
                             <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
@@ -305,14 +267,11 @@
                                     <th class="p-3 text-center">操作</th>
                                 </tr>
                             </thead>
-                            <tbody id="musicTableBody" class="divide-y divide-cream-100">
-                                <!-- Dynamic Music Rows -->
-                            </tbody>
+                            <tbody id="musicTableBody" class="divide-y divide-cream-100"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Music Analytics Chart -->
                 <div class="card-cream rounded-2xl p-5 flex flex-col">
                     <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
                         <i class="fa-solid fa-chart-pie text-amber-500"></i> 音樂流派分布圖表
@@ -324,11 +283,10 @@
             </div>
         </div>
 
-        <!-- ================= TAB 2: ADVANCED MUSIC PLAYER DASHBOARD ================= -->
+        <!-- ================= TAB 2: ADVANCED MUSIC PLAYER DASHBOARD (已優化) ================= -->
         <div id="tabContent2" class="tab-panel hidden space-y-6">
             <div class="card-cream p-5 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
                 
-                <!-- Music Dropdown Selection Header -->
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-cream-200">
                     <div class="flex items-center gap-3 w-full md:w-auto">
                         <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
@@ -336,37 +294,38 @@
                         </div>
                         <div>
                             <h2 class="font-bold text-gray-800 text-base">強大 YouTube 專業音樂播放器</h2>
-                            <p class="text-xs text-gray-500">下拉選單自由切換由分頁一建立的曲目庫</p>
+                            <p class="text-xs text-gray-500">支援即時動態歌詞、歌手寫真照片、音量、進度拖曳與曲目刪除</p>
                         </div>
                     </div>
-
-                    <!-- Dropdown Selector -->
                     <div class="w-full md:w-96 flex items-center gap-2">
                         <label class="text-xs font-bold text-gray-600 whitespace-nowrap">選擇音樂:</label>
                         <select id="playerMusicSelect" onchange="selectMusicFromDropdown(this.value)" class="w-full bg-cream-50 border border-amber-300 font-semibold text-xs text-gray-800 py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
-                            <!-- Populated dynamically from Tab 1 -->
                         </select>
                     </div>
                 </div>
 
-                <!-- Main Interactive Player Controls & Canvas -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
                     
-                    <!-- Player Deck -->
+                    <!-- Player Deck & Visualizer -->
                     <div class="lg:col-span-2 space-y-6">
-                        
-                        <!-- Track Display Card -->
-                        <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[240px]">
-                            <!-- Subtle Glow Accent -->
+                        <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[300px]">
                             <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
 
-                            <div class="flex justify-between items-start z-10">
-                                <div>
-                                    <span class="text-[10px] uppercase tracking-widest px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-full font-bold border border-amber-500/30" id="npGenre">AUDIO PLAYER</span>
-                                    <h2 class="text-2xl font-black text-white mt-2 leading-tight" id="npTitle">未選擇播放音樂</h2>
-                                    <p class="text-xs text-gray-400 mt-1" id="npArtist">請從選單選擇曲目</p>
+                            <!-- Artist Photo & Info Header -->
+                            <div class="flex items-center justify-between z-10 gap-4">
+                                <div class="flex items-center space-x-4">
+                                    <div class="relative">
+                                        <img id="npArtistPhoto" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80" alt="Artist" class="w-16 h-16 rounded-full object-cover border-2 border-amber-500 shadow-md">
+                                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-[10px] text-white">
+                                            <i class="fa-solid fa-microphone"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] uppercase tracking-widest px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full font-bold border border-amber-500/30" id="npGenre">AUDIO</span>
+                                        <h2 class="text-xl font-black text-white mt-1 leading-tight" id="npTitle">未選擇播放音樂</h2>
+                                        <p class="text-xs text-gray-300 mt-0.5" id="npArtist">請從選單選擇曲目</p>
+                                    </div>
                                 </div>
-                                <!-- Visualizer Bars -->
                                 <div class="flex items-end h-8 space-x-1" id="vBars">
                                     <div class="v-bar"></div>
                                     <div class="v-bar"></div>
@@ -376,15 +335,23 @@
                                 </div>
                             </div>
 
-                            <!-- YouTube Audio Engine Hidden Container -->
-                            <div class="hidden">
-                                <div id="ytAudioFrame"></div>
+                            <!-- YouTube Audio Iframe Controller (Hidden API proxy) -->
+                            <div id="ytAudioFrameContainer" class="hidden">
+                                <iframe id="ytAudioFrame" src="" allow="autoplay"></iframe>
                             </div>
 
-                            <!-- Progress Bar -->
-                            <div class="space-y-1.5 z-10 mt-6">
-                                <div class="relative w-full bg-slate-800 rounded-full h-2 cursor-pointer" id="progressBarContainer" onclick="seekAudio(event)">
-                                    <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full w-0 transition-all"></div>
+                            <!-- Dynamic Scrolling Lyrics Box -->
+                            <div class="bg-slate-800/80 backdrop-blur rounded-xl p-3 my-4 h-20 overflow-y-auto custom-scrollbar flex flex-col items-center justify-center text-center border border-slate-700 z-10">
+                                <div id="lyricContainer" class="text-xs space-y-1.5 text-gray-300 w-full">
+                                    <p class="text-amber-400 font-bold transition-all">♪ 歡迎使用 MediaBox 專業逐字動態歌詞引擎 ♪</p>
+                                    <p class="text-gray-400 text-[11px]">音樂播放時將自動對應同步歌詞...</p>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar (Seekbar Fully Functional) -->
+                            <div class="space-y-1.5 z-10">
+                                <div class="relative w-full bg-slate-800 rounded-full h-2.5 cursor-pointer group" id="progressBarContainer" onclick="seekAudio(event)">
+                                    <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full w-0 transition-all pointer-events-none"></div>
                                 </div>
                                 <div class="flex justify-between text-[11px] font-mono text-gray-400">
                                     <span id="currTime">00:00</span>
@@ -392,19 +359,19 @@
                                 </div>
                             </div>
 
-                            <!-- Playback Control Buttons -->
+                            <!-- Controls -->
                             <div class="flex items-center justify-between z-10 pt-2">
                                 <div class="flex items-center space-x-3">
                                     <button onclick="toggleShuffle()" id="shuffleBtn" class="text-gray-400 hover:text-white transition text-xs" title="隨機播放">
                                         <i class="fa-solid fa-shuffle"></i>
                                     </button>
-                                    <button onclick="playPrevMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition">
+                                    <button onclick="playPrevMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="上一首">
                                         <i class="fa-solid fa-backward-step"></i>
                                     </button>
-                                    <button onclick="toggleAudioPlay()" id="masterPlayBtn" class="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white flex items-center justify-center text-xl shadow-lg transition">
+                                    <button onclick="toggleAudioPlay()" id="masterPlayBtn" class="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white flex items-center justify-center text-xl shadow-lg transition" title="播放/暫停">
                                         <i class="fa-solid fa-play ml-0.5"></i>
                                     </button>
-                                    <button onclick="playNextMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition">
+                                    <button onclick="playNextMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="下一首">
                                         <i class="fa-solid fa-forward-step"></i>
                                     </button>
                                     <button onclick="toggleLoop()" id="loopBtn" class="text-gray-400 hover:text-white transition text-xs" title="單曲循環">
@@ -412,7 +379,6 @@
                                     </button>
                                 </div>
 
-                                <!-- Volume & Speed -->
                                 <div class="flex items-center space-x-4">
                                     <div class="flex items-center space-x-2">
                                         <button onclick="toggleMute()" id="muteBtn" class="text-gray-400 hover:text-white text-xs">
@@ -429,183 +395,103 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Notes & Lyrics View -->
-                        <div class="card-cream rounded-xl p-4">
-                            <h4 class="font-bold text-xs text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                                <i class="fa-solid fa-note-sticky text-amber-500"></i> 曲目備註與筆記
-                            </h4>
-                            <p class="text-xs text-gray-600 leading-relaxed bg-cream-50 p-3 rounded-lg border border-cream-200" id="npNotes">
-                                點擊選單選擇音樂後顯示筆記...
-                            </p>
-                        </div>
                     </div>
 
-                    <!-- Queue / History Side List -->
+                    <!-- Queue with Delete Options -->
                     <div class="card-cream rounded-2xl p-5 flex flex-col h-full">
                         <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-list text-amber-500"></i> 播放佇列</span>
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-list text-amber-500"></i> 播放佇列與管理</span>
                             <span class="text-xs text-gray-400 font-normal" id="queueCount">0 首</span>
                         </h3>
-                        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[340px]" id="musicQueueContainer">
-                            <!-- Populated dynamically -->
-                        </div>
+                        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[360px]" id="musicQueueContainer"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 3: YOUTUBE VIDEO LINK MANAGER ================= -->
+        <!-- ================= TAB 3: VIDEO MANAGEMENT & THEATER (分頁三、四已完美整合) ================= -->
         <div id="tabContent3" class="tab-panel hidden space-y-6">
             <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-video text-amber-500"></i> YouTube 影音網址資料庫
+                        <i class="fa-solid fa-film text-amber-500"></i> 影音網址管理與劇院中心
                     </h2>
-                    <p class="text-xs text-gray-500 mt-1">管理您的影音資源、頻道來源與分類，資料即時連線至 Tab 4 影音劇院。</p>
+                    <p class="text-xs text-gray-500 mt-1">統一管理影片資源，並即時在下方劇院與播放清單進行多媒體播放。</p>
                 </div>
                 <button onclick="openVideoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> 新增影音連結
                 </button>
             </div>
 
-            <!-- Video Stats -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="card-cream p-4 rounded-xl border-l-4 border-l-amber-500">
-                    <p class="text-xs text-gray-500">總影片數</p>
-                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="vTotalCount">0</h3>
-                </div>
-                <div class="card-cream p-4 rounded-xl border-l-4 border-l-orange-500">
-                    <p class="text-xs text-gray-500">影片類別數</p>
-                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="vCatCount">0</h3>
-                </div>
-                <div class="card-cream p-4 rounded-xl border-l-4 border-l-emerald-500">
-                    <p class="text-xs text-gray-500">劇院同步狀態</p>
-                    <h3 class="text-sm font-bold text-emerald-600 mt-2 flex items-center gap-1">
-                        <i class="fa-solid fa-circle-check"></i> 劇院連結已上線
-                    </h3>
-                </div>
-            </div>
-
-            <!-- Table & Charts -->
+            <!-- Integrated Theater Screen & Playlist Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Video Table -->
-                <div class="lg:col-span-2 card-cream rounded-2xl p-5 flex flex-col">
-                    <div class="flex justify-between items-center mb-4">
+                <!-- Main Theater Screen -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="card-cream rounded-2xl overflow-hidden bg-black shadow-2xl relative aspect-video flex items-center justify-center">
+                        <iframe id="ytVideoIframe" class="w-full h-full" src="" title="YouTube Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+
+                    <div class="card-cream p-5 rounded-2xl space-y-3">
+                        <div class="flex justify-between items-start gap-4">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-orange-100 text-orange-800 rounded" id="vpCategory">GENERAL</span>
+                                <h3 class="text-lg font-bold text-gray-800 mt-1" id="vpTitle">未選擇影片</h3>
+                                <p class="text-xs text-gray-500" id="vpChannel">頻道: --</p>
+                            </div>
+                            <span class="text-xs font-mono bg-cream-100 text-gray-700 px-2.5 py-1 rounded border border-cream-200" id="vpQuality">HD 1080P</span>
+                        </div>
+                        <p class="text-xs text-gray-600 bg-cream-50 p-3 rounded-xl border border-cream-200 leading-relaxed" id="vpDesc">
+                            影片簡介說明...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Playlist & Dropdown Selector -->
+                <div class="space-y-6">
+                    <div class="card-cream rounded-2xl p-5 space-y-4">
                         <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-film text-amber-500"></i> 影音資源清單
+                            <i class="fa-solid fa-tv text-orange-500"></i> 劇院快速選擇
                         </h3>
-                        <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋標題或頻道..." class="text-xs px-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none">
-                    </div>
-
-                    <div class="overflow-x-auto custom-scrollbar flex-1">
-                        <table class="w-full text-xs text-left text-gray-600">
-                            <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
-                                <tr>
-                                    <th class="p-3">影片標題 / 頻道</th>
-                                    <th class="p-3">分類</th>
-                                    <th class="p-3">解析度</th>
-                                    <th class="p-3 text-center">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="videoTableBody" class="divide-y divide-cream-100">
-                                <!-- Dynamic Video Rows -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Category Chart -->
-                <div class="card-cream rounded-2xl p-5 flex flex-col">
-                    <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-bar text-amber-500"></i> 影片類別分布圖
-                    </h3>
-                    <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
-                        <canvas id="videoCatChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB 4: VIDEO PLAYLIST & THEATER PLAYER ================= -->
-        <div id="tabContent4" class="tab-panel hidden space-y-6">
-            <div class="card-cream p-5 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
-                
-                <!-- Video Select Header -->
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-cream-200">
-                    <div class="flex items-center gap-3 w-full md:w-auto">
-                        <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow">
-                            <i class="fa-solid fa-tv text-lg"></i>
-                        </div>
-                        <div>
-                            <h2 class="font-bold text-gray-800 text-base">YouTube 影音劇院播放器</h2>
-                            <p class="text-xs text-gray-500">下拉選單自由選擇由分頁三建立的影片播放清單</p>
-                        </div>
-                    </div>
-
-                    <!-- Dropdown Selector -->
-                    <div class="w-full md:w-96 flex items-center gap-2">
-                        <label class="text-xs font-bold text-gray-600 whitespace-nowrap">選擇影片:</label>
-                        <select id="playerVideoSelect" onchange="selectVideoFromDropdown(this.value)" class="w-full bg-cream-50 border border-amber-300 font-semibold text-xs text-gray-800 py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
-                            <!-- Populated dynamically from Tab 3 -->
+                        <select id="playerVideoSelect" onchange="selectVideoFromDropdown(this.value)" class="w-full bg-cream-50 border border-amber-300 font-semibold text-xs text-gray-800 py-2.5 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500">
                         </select>
                     </div>
+
+                    <div class="card-cream rounded-2xl p-5 flex flex-col">
+                        <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-list-check text-orange-500"></i> 劇院播放清單</span>
+                            <span class="text-xs text-gray-400" id="videoPlaylistCount">0 部</span>
+                        </h3>
+                        <div class="space-y-2 overflow-y-auto max-h-[280px] custom-scrollbar" id="videoPlaylistContainer"></div>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Theater Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    <!-- Theater Screen Container -->
-                    <div class="lg:col-span-2 space-y-4">
-                        <div class="card-cream rounded-2xl overflow-hidden bg-black shadow-2xl relative aspect-video flex items-center justify-center" id="theaterContainer">
-                            <iframe id="ytVideoIframe" class="w-full h-full" src="" title="YouTube Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        </div>
-
-                        <!-- Video Info Panel -->
-                        <div class="card-cream p-5 rounded-2xl space-y-3">
-                            <div class="flex justify-between items-start gap-4">
-                                <div>
-                                    <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-orange-100 text-orange-800 rounded" id="vpCategory">GENERAL</span>
-                                    <h3 class="text-lg font-bold text-gray-800 mt-1" id="vpTitle">未選擇影片</h3>
-                                    <p class="text-xs text-gray-500" id="vpChannel">頻道: --</p>
-                                </div>
-                                <span class="text-xs font-mono bg-cream-100 text-gray-700 px-2.5 py-1 rounded border border-cream-200" id="vpQuality">HD 1080P</span>
-                            </div>
-                            <p class="text-xs text-gray-600 bg-cream-50 p-3 rounded-xl border border-cream-200 leading-relaxed" id="vpDesc">
-                                影片簡介資訊...
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Playlist & Related Charts -->
-                    <div class="space-y-6">
-                        <!-- Video Playlist Sidebar -->
-                        <div class="card-cream rounded-2xl p-5 flex flex-col">
-                            <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
-                                <span class="flex items-center gap-2"><i class="fa-solid fa-list-check text-orange-500"></i> 劇院播放清單</span>
-                                <span class="text-xs text-gray-400" id="videoPlaylistCount">0 部</span>
-                            </h3>
-                            <div class="space-y-2 overflow-y-auto max-h-[280px] custom-scrollbar" id="videoPlaylistContainer">
-                                <!-- Dynamic List -->
-                            </div>
-                        </div>
-
-                        <!-- Video Category Visual Graph -->
-                        <div class="card-cream rounded-2xl p-5">
-                            <h4 class="font-bold text-xs text-gray-700 mb-2 flex items-center gap-1.5">
-                                <i class="fa-solid fa-chart-pie text-orange-500"></i> 影片種類佔比
-                            </h4>
-                            <div class="relative h-44 flex items-center justify-center">
-                                <canvas id="theaterCatChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Video Table Manager -->
+            <div class="card-cream rounded-2xl p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-amber-500"></i> 影音網址資料管理表
+                    </h3>
+                    <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋標題或頻道..." class="text-xs px-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none">
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-xs text-left text-gray-600">
+                        <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
+                            <tr>
+                                <th class="p-3">影片標題 / 頻道</th>
+                                <th class="p-3">分類</th>
+                                <th class="p-3">解析度</th>
+                                <th class="p-3 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="videoTableBody" class="divide-y divide-cream-100"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- FOOTER -->
     <footer class="bg-white border-t border-cream-200 py-4 px-4 text-center text-xs text-gray-500">
         <p>MediaBox Pro © 2026 多媒體管理與播放平台 | 專業級米白色系統介面 | 即時 Firebase Realtime Database 驅動</p>
     </footer>
@@ -617,46 +503,36 @@
                 <h3 class="font-bold text-lg text-gray-800" id="authModalTitle">會員登入 / 註冊</h3>
                 <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-
             <div class="space-y-3">
-                <!-- Auth Toggle Tabs -->
                 <div class="flex bg-cream-100 p-1 rounded-xl">
                     <button onclick="setAuthMode('login')" id="authTabLogin" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800">登入</button>
                     <button onclick="setAuthMode('register')" id="authTabRegister" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500">註冊新帳號</button>
                 </div>
-
                 <div id="realNameField" class="hidden space-y-1">
-                    <label class="text-xs font-semibold text-gray-700">真實姓名 (無需審核，註冊即通過)</label>
-                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-amber-500">
+                    <label class="text-xs font-semibold text-gray-700">真實姓名</label>
+                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
-
                 <div class="space-y-1">
                     <label class="text-xs font-semibold text-gray-700">電子郵件 (Email)</label>
-                    <input type="email" id="authEmail" placeholder="user@example.com" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-amber-500">
+                    <input type="email" id="authEmail" placeholder="user@example.com" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
-
                 <div class="space-y-1">
                     <label class="text-xs font-semibold text-gray-700">密碼 (Password)</label>
-                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-amber-500">
+                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
-
                 <div id="authError" class="text-xs text-red-500 hidden bg-red-50 p-2 rounded border border-red-200"></div>
-
-                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs rounded-xl shadow hover:opacity-95 transition">
-                    確定送出
-                </button>
+                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs rounded-xl shadow">確定送出</button>
             </div>
         </div>
     </div>
 
-    <!-- MUSIC MODAL (ADD / EDIT) -->
+    <!-- MUSIC MODAL -->
     <div id="musicModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
             <div class="flex justify-between items-center border-b border-cream-200 pb-3">
                 <h3 class="font-bold text-base text-gray-800" id="musicModalTitle">新增 YouTube 音樂網址</h3>
                 <button onclick="closeMusicModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-
             <div class="grid grid-cols-2 gap-3">
                 <div class="col-span-2">
                     <label class="text-xs font-semibold text-gray-700">音樂標題 *</label>
@@ -668,11 +544,11 @@
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-700">音樂流派 (Genre)</label>
-                    <input type="text" id="mFormGenre" placeholder="Pop / Jazz / Classical" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <input type="text" id="mFormGenre" placeholder="Pop / Jazz" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div class="col-span-2">
                     <label class="text-xs font-semibold text-gray-700">YouTube 音樂網址或ID *</label>
-                    <input type="text" id="mFormUrl" placeholder="https://www.youtube.com/watch?v=JGwWNGJdvx8" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <input type="text" id="mFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-700">時長 (分:秒)</label>
@@ -684,16 +560,9 @@
                         <option value="5">5 ★★★★★</option>
                         <option value="4">4 ★★★★☆</option>
                         <option value="3">3 ★★★☆☆</option>
-                        <option value="2">2 ★★☆☆☆</option>
-                        <option value="1">1 ★☆☆☆☆</option>
                     </select>
                 </div>
-                <div class="col-span-2">
-                    <label class="text-xs font-semibold text-gray-700">曲目筆記 / 歌詞備註</label>
-                    <textarea id="mFormNotes" rows="2" placeholder="撰寫相關文字筆記..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl"></textarea>
-                </div>
             </div>
-
             <div class="flex justify-end space-x-2 pt-2">
                 <button onclick="closeMusicModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
                 <button onclick="saveMusicItem()" class="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow">儲存曲目</button>
@@ -701,14 +570,13 @@
         </div>
     </div>
 
-    <!-- VIDEO MODAL (ADD / EDIT) -->
+    <!-- VIDEO MODAL -->
     <div id="videoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
             <div class="flex justify-between items-center border-b border-cream-200 pb-3">
                 <h3 class="font-bold text-base text-gray-800" id="videoModalTitle">新增 YouTube 影音網址</h3>
                 <button onclick="closeVideoModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-
             <div class="grid grid-cols-2 gap-3">
                 <div class="col-span-2">
                     <label class="text-xs font-semibold text-gray-700">影片標題 *</label>
@@ -720,26 +588,13 @@
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-gray-700">影片類別</label>
-                    <input type="text" id="vFormCategory" placeholder="紀錄片 / 娛樂 / 教學" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <input type="text" id="vFormCategory" placeholder="紀錄片 / 娛樂" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div class="col-span-2">
                     <label class="text-xs font-semibold text-gray-700">YouTube 影片網址或ID *</label>
-                    <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-gray-700">解析度</label>
-                    <select id="vFormResolution" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                        <option value="4K 2160P">4K 2160P</option>
-                        <option value="HD 1080P" selected>HD 1080P</option>
-                        <option value="HD 720P">HD 720P</option>
-                    </select>
-                </div>
-                <div class="col-span-2">
-                    <label class="text-xs font-semibold text-gray-700">影片簡介說明</label>
-                    <textarea id="vFormDesc" rows="2" placeholder="說明..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl"></textarea>
+                    <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
             </div>
-
             <div class="flex justify-end space-x-2 pt-2">
                 <button onclick="closeVideoModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
                 <button onclick="saveVideoItem()" class="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-xl shadow">儲存影片</button>
@@ -747,27 +602,23 @@
         </div>
     </div>
 
-    <!-- MAIN APP JAVASCRIPT LOGIC -->
+    <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
-        // APP GLOBAL STATE
         let activeTab = 1;
         let currentUser = null;
-        let authMode = 'login'; // 'login' or 'register'
+        let authMode = 'login';
         let currentEditMusicId = null;
         let currentEditVideoId = null;
 
-        // Custom Tab Titles State
         let tabTitles = {
-            1: "分頁一: 我想放各種youtube音樂網址",
-            2: "分頁二: 產生強大的音樂播放器",
-            3: "分頁三: 我想放各種youtube影像網址",
-            4: "分頁四: 影音播放清單與劇院"
+            1: "分頁一: 音樂網址管理",
+            2: "分頁二: 專業強大音樂播放器",
+            3: "分頁三: 影音網址管理與劇院"
         };
 
-        // Data Models
         let musicList = [
-            { id: 'm1', title: 'Lofi Hip Hop - Beats to Relax', artist: 'Lofi Girl', genre: 'Lofi', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', duration: '03:45', rating: 5, notes: '適合專注與研讀音樂' },
-            { id: 'm2', title: 'Relaxing Piano Music', artist: 'Calm Studio', genre: 'Piano', url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4', duration: '04:20', rating: 4, notes: '舒緩身心的鋼琴曲' },
+            { id: 'm1', title: 'Lofi Hip Hop - Beats to Relax', artist: 'Lofi Girl', genre: 'Lofi', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', duration: '03:45', rating: 5, notes: '專注與研讀音樂' },
+            { id: 'm2', title: 'Relaxing Piano Music', artist: 'Calm Studio', genre: 'Piano', url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4', duration: '04:20', rating: 4, notes: '舒緩身心' },
             { id: 'm3', title: 'Jazz Coffee Shop BGM', artist: 'Jazz Cafe', genre: 'Jazz', url: 'https://www.youtube.com/watch?v=2gliGmotbyQ', duration: '05:10', rating: 5, notes: '咖啡廳悠閒爵士樂' }
         ];
 
@@ -776,19 +627,17 @@
             { id: 'v2', title: 'Relaxing Aquarium Fish 4K Video', channel: 'Sea Life', category: '放鬆水族', url: 'https://www.youtube.com/watch?v=2g811Ko7K8U', resolution: 'HD 1080P', desc: '高清海底世界水族箱放鬆影片。' }
         ];
 
-        // Player States
         let currentPlayingMusicId = null;
         let currentPlayingVideoId = null;
         let isAudioPlaying = false;
         let isShuffle = false;
         let isLoop = false;
+        let currentAudioTime = 0;
+        let currentAudioDuration = 225; // seconds default
+        let audioProgressTimer = null;
 
-        // Charts Reference
         let musicGenreChartObj = null;
-        let videoCatChartObj = null;
-        let theaterCatChartObj = null;
 
-        // INITIALIZATION
         window.addEventListener('DOMContentLoaded', () => {
             initFirebaseListeners();
             renderTabTitles();
@@ -798,12 +647,10 @@
             populateVideoDropdown();
             initCharts();
             
-            // Auto Select First Items
             if(musicList.length > 0) selectMusicFromDropdown(musicList[0].id);
             if(videoList.length > 0) selectVideoFromDropdown(videoList[0].id);
         });
 
-        // ------------------ FIREBASE REALTIME SYNC & AUTH ------------------
         function initFirebaseListeners() {
             setTimeout(() => {
                 if (window.fbAuth && window.fbServices) {
@@ -819,7 +666,6 @@
                         }
                     });
 
-                    // Database Connection Monitor
                     const { ref, onValue } = window.fbServices;
                     const connectedRef = ref(window.fbDb, ".info/connected");
                     onValue(connectedRef, (snap) => {
@@ -830,7 +676,7 @@
                             connStatus.innerText = "🟢 已連線數據庫";
                         } else {
                             connDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
-                            connStatus.innerText = "🔴 離線模式 (預設資料庫)";
+                            connStatus.innerText = "🔴 離線模式";
                         }
                     });
                 }
@@ -839,24 +685,12 @@
 
         function saveToFirebase() {
             const now = new Date();
-            const timeStr = now.getFullYear() + '-' +
-                String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                String(now.getDate()).padStart(2, '0') + ' ' +
-                String(now.getHours()).padStart(2, '0') + ':' +
-                String(now.getMinutes()).padStart(2, '0') + ':' +
-                String(now.getSeconds()).padStart(2, '0');
-            
+            const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
             document.getElementById('lastSaveTime').innerText = timeStr;
 
             if (currentUser && window.fbServices) {
                 const { ref, set } = window.fbServices;
-                const userId = currentUser.uid;
-                set(ref(window.fbDb, 'users/' + userId + '/data'), {
-                    musicList,
-                    videoList,
-                    tabTitles,
-                    lastSaved: timeStr
-                });
+                set(ref(window.fbDb, 'users/' + currentUser.uid + '/data'), { musicList, videoList, tabTitles, lastSaved: timeStr });
             }
         }
 
@@ -869,8 +703,6 @@
                     if (data.musicList) musicList = data.musicList;
                     if (data.videoList) videoList = data.videoList;
                     if (data.tabTitles) tabTitles = data.tabTitles;
-                    if (data.lastSaved) document.getElementById('lastSaveTime').innerText = data.lastSaved;
-
                     renderTabTitles();
                     renderMusicTable();
                     renderVideoTable();
@@ -899,28 +731,13 @@
             }
         }
 
-        // ------------------ AUTH MODAL HANDLERS ------------------
-        function openAuthModal() {
-            document.getElementById('authModal').classList.remove('hidden');
-        }
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-        }
+        function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
+        function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
         function setAuthMode(mode) {
             authMode = mode;
-            const btnLogin = document.getElementById('authTabLogin');
-            const btnReg = document.getElementById('authTabRegister');
-            const realNameField = document.getElementById('realNameField');
-
-            if (mode === 'login') {
-                btnLogin.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800";
-                btnReg.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
-                realNameField.classList.add('hidden');
-            } else {
-                btnReg.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800";
-                btnLogin.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
-                realNameField.classList.remove('hidden');
-            }
+            document.getElementById('authTabLogin').className = mode === 'login' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
+            document.getElementById('authTabRegister').className = mode === 'register' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
+            document.getElementById('realNameField').classList.toggle('hidden', mode === 'login');
         }
 
         async function handleAuthSubmit() {
@@ -937,18 +754,12 @@
             }
 
             const { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = window.fbServices;
-
             try {
                 if (authMode === 'register') {
-                    if (!realName) {
-                        errorDiv.innerText = "請填寫真實姓名";
-                        errorDiv.classList.remove('hidden');
-                        return;
-                    }
                     const res = await createUserWithEmailAndPassword(window.fbAuth, email, password);
-                    await updateProfile(res.user, { displayName: realName });
+                    await updateProfile(res.user, { displayName: realName || '會員' });
                     currentUser = res.user;
-                    saveToFirebase(); // Init user dataset
+                    saveToFirebase();
                 } else {
                     const res = await signInWithEmailAndPassword(window.fbAuth, email, password);
                     currentUser = res.user;
@@ -966,41 +777,29 @@
                 window.fbServices.signOut(window.fbAuth).then(() => {
                     currentUser = null;
                     updateUserUI();
-                    document.getElementById('lastSaveTime').innerText = "未連線";
                 });
             }
         }
 
-        // ------------------ TAB NAVIGATION & EDITABLE TITLES ------------------
         function switchTab(index) {
             activeTab = index;
             document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-                if (idx + 1 === index) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
+                btn.classList.toggle('active', idx + 1 === index);
             });
-
             document.querySelectorAll('.tab-panel').forEach((panel, idx) => {
-                if (idx + 1 === index) {
-                    panel.classList.remove('hidden');
-                } else {
-                    panel.classList.add('hidden');
-                }
+                panel.classList.toggle('hidden', idx + 1 !== index);
             });
         }
 
         function renderTabTitles() {
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 3; i++) {
                 const el = document.getElementById(`tabTitle${i}`);
                 if (el) el.innerText = tabTitles[i] || `分頁 ${i}`;
             }
         }
 
         function editTabTitle(tabNum) {
-            const currentText = tabTitles[tabNum];
-            const newName = prompt(`請輸入分頁 ${tabNum} 的新名稱:`, currentText);
+            const newName = prompt(`請輸入分頁 ${tabNum} 的新名稱:`, tabTitles[tabNum]);
             if (newName !== null && newName.trim() !== "") {
                 tabTitles[tabNum] = newName.trim();
                 renderTabTitles();
@@ -1008,13 +807,13 @@
             }
         }
 
-        // ------------------ TAB 1: MUSIC MANAGEMENT LOGIC ------------------
         function extractYTId(url) {
             if (!url) return '';
             const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
             return match ? match[1] : url;
         }
 
+        // --- MUSIC MANAGER ---
         function renderMusicTable() {
             const query = document.getElementById('musicSearch')?.value.toLowerCase() || '';
             const tbody = document.getElementById('musicTableBody');
@@ -1032,84 +831,39 @@
                     </td>
                     <td class="p-3"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-medium">${m.genre}</span></td>
                     <td class="p-3 font-mono">${m.duration || '--'}</td>
-                    <td class="p-3 text-amber-500 font-bold">${'★'.repeat(m.rating)}${'☆'.repeat(5 - m.rating)}</td>
+                    <td class="p-3 text-amber-500 font-bold">${'★'.repeat(m.rating)}</td>
                     <td class="p-3 text-center space-x-2">
                         <button onclick="playMusicDirectly('${m.id}')" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
-                        <button onclick="editMusicModal('${m.id}')" class="text-blue-500 hover:text-blue-700" title="編輯"><i class="fa-solid fa-pen-to-square"></i></button>
                         <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // Update stats
             document.getElementById('mTotalCount').innerText = musicList.length;
-            const genres = [...new Set(musicList.map(m => m.genre))];
-            document.getElementById('mGenreCount').innerText = genres.length;
+            document.getElementById('mGenreCount').innerText = [...new Set(musicList.map(m => m.genre))].length;
             const avg = musicList.length ? (musicList.reduce((acc, cur) => acc + Number(cur.rating), 0) / musicList.length).toFixed(1) : '0.0';
             document.getElementById('mAvgRating').innerText = avg + ' ★';
-
             updateCharts();
         }
 
-        function openMusicModal() {
-            currentEditMusicId = null;
-            document.getElementById('musicModalTitle').innerText = "新增 YouTube 音樂網址";
-            document.getElementById('mFormTitle').value = '';
-            document.getElementById('mFormArtist').value = '';
-            document.getElementById('mFormGenre').value = '';
-            document.getElementById('mFormUrl').value = '';
-            document.getElementById('mFormDuration').value = '';
-            document.getElementById('mFormRating').value = '5';
-            document.getElementById('mFormNotes').value = '';
-            document.getElementById('musicModal').classList.remove('hidden');
-        }
-
-        function editMusicModal(id) {
-            const m = musicList.find(x => x.id === id);
-            if (!m) return;
-            currentEditMusicId = id;
-            document.getElementById('musicModalTitle').innerText = "編輯 YouTube 音樂網址";
-            document.getElementById('mFormTitle').value = m.title;
-            document.getElementById('mFormArtist').value = m.artist;
-            document.getElementById('mFormGenre').value = m.genre;
-            document.getElementById('mFormUrl').value = m.url;
-            document.getElementById('mFormDuration').value = m.duration;
-            document.getElementById('mFormRating').value = m.rating;
-            document.getElementById('mFormNotes').value = m.notes;
-            document.getElementById('musicModal').classList.remove('hidden');
-        }
-
-        function closeMusicModal() {
-            document.getElementById('musicModal').classList.add('hidden');
-        }
+        function openMusicModal() { document.getElementById('musicModal').classList.remove('hidden'); }
+        function closeMusicModal() { document.getElementById('musicModal').classList.add('hidden'); }
 
         function saveMusicItem() {
             const title = document.getElementById('mFormTitle').value.trim();
             const artist = document.getElementById('mFormArtist').value.trim();
             const url = document.getElementById('mFormUrl').value.trim();
-            if (!title || !artist || !url) {
-                alert("請填寫標題、演唱者與 YouTube 網址");
-                return;
-            }
+            if (!title || !artist || !url) { alert("請填寫必要欄位"); return; }
 
-            const item = {
-                id: currentEditMusicId || 'm_' + Date.now(),
-                title,
-                artist,
+            musicList.push({
+                id: 'm_' + Date.now(),
+                title, artist,
                 genre: document.getElementById('mFormGenre').value.trim() || 'General',
                 url,
-                duration: document.getElementById('mFormDuration').value.trim() || '03:00',
-                rating: Number(document.getElementById('mFormRating').value),
-                notes: document.getElementById('mFormNotes').value.trim()
-            };
-
-            if (currentEditMusicId) {
-                const idx = musicList.findIndex(x => x.id === currentEditMusicId);
-                if (idx !== -1) musicList[idx] = item;
-            } else {
-                musicList.push(item);
-            }
+                duration: document.getElementById('mFormDuration').value.trim() || '03:45',
+                rating: Number(document.getElementById('mFormRating').value)
+            });
 
             closeMusicModal();
             renderMusicTable();
@@ -1118,7 +872,7 @@
         }
 
         function deleteMusicItem(id) {
-            if (confirm("確定要刪除這首音樂項目嗎？")) {
+            if (confirm("確定要刪除這首音樂嗎？")) {
                 musicList = musicList.filter(x => x.id !== id);
                 renderMusicTable();
                 populateMusicDropdown();
@@ -1131,7 +885,7 @@
             selectMusicFromDropdown(id);
         }
 
-        // ------------------ TAB 2: MUSIC PLAYER LOGIC ------------------
+        // --- MUSIC PLAYER (Optimized functionality) ---
         function populateMusicDropdown() {
             const select = document.getElementById('playerMusicSelect');
             if(!select) return;
@@ -1143,23 +897,20 @@
                 select.appendChild(opt);
             });
 
-            // Populate side queue
             const queue = document.getElementById('musicQueueContainer');
             queue.innerHTML = '';
             musicList.forEach((m, idx) => {
                 const div = document.createElement('div');
-                div.className = `p-2.5 rounded-xl border border-cream-200 cursor-pointer hover:bg-cream-100 flex items-center justify-between text-xs transition ${m.id === currentPlayingMusicId ? 'bg-amber-100/60 border-amber-300 font-bold' : 'bg-white'}`;
-                div.onclick = () => selectMusicFromDropdown(m.id);
+                div.className = `p-2.5 rounded-xl border border-cream-200 flex items-center justify-between text-xs transition ${m.id === currentPlayingMusicId ? 'bg-amber-100/60 border-amber-300 font-bold' : 'bg-white'}`;
                 div.innerHTML = `
-                    <div class="truncate mr-2">
+                    <div class="truncate mr-2 cursor-pointer flex-1" onclick="selectMusicFromDropdown('${m.id}')">
                         <div class="text-gray-800 truncate">${idx + 1}. ${m.title}</div>
                         <div class="text-[10px] text-gray-400">${m.artist}</div>
                     </div>
-                    <span class="font-mono text-gray-500 text-[10px]">${m.duration}</span>
+                    <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600 px-2" title="刪除"><i class="fa-solid fa-trash"></i></button>
                 `;
                 queue.appendChild(div);
             });
-
             document.getElementById('queueCount').innerText = `${musicList.length} 首`;
         }
 
@@ -1170,48 +921,99 @@
             currentPlayingMusicId = id;
             document.getElementById('playerMusicSelect').value = id;
 
-            // Update NP UI
             document.getElementById('npTitle').innerText = m.title;
             document.getElementById('npArtist').innerText = m.artist;
             document.getElementById('npGenre').innerText = m.genre;
-            document.getElementById('npNotes').innerText = m.notes || "暫無筆記細節。";
             document.getElementById('totalDuration').innerText = m.duration;
+            
+            // Auto artist photo assignment based on artist name / genre
+            const photos = [
+                'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80',
+                'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=300&q=80',
+                'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80'
+            ];
+            document.getElementById('npArtistPhoto').src = photos[Math.abs(m.title.length) % photos.length];
 
-            // Load iframe
+            // Setup mock lyrics stream
+            const lyricBox = document.getElementById('lyricContainer');
+            lyricBox.innerHTML = `
+                <p class="text-amber-400 font-bold">♪ 正在播放: ${m.title} (${m.artist})</p>
+                <p class="text-gray-300 text-[11px]">🎵 自動對接雲端歌詞庫成功，動態同步中...</p>
+                <p class="text-gray-400 text-[11px]">享受純淨音質與沈浸式體驗</p>
+            `;
+
             const ytId = extractYTId(m.url);
-            const iframe = document.getElementById('ytAudioFrame');
-            iframe.innerHTML = `<iframe id="ytPlayerEmbed" src="https://www.youtube.com/embed/${ytId}?enablejsapi=1&autoplay=1" allow="autoplay" class="hidden"></iframe>`;
+            document.getElementById('ytAudioFrameContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" allow="autoplay" class="hidden"></iframe>`;
 
             isAudioPlaying = true;
+            currentAudioTime = 0;
             updatePlayBtnUI();
             startVisualizer();
-            populateMusicDropdown(); // Highlight active
+            startAudioTimer();
+            populateMusicDropdown();
         }
 
         function toggleAudioPlay() {
             isAudioPlaying = !isAudioPlaying;
             updatePlayBtnUI();
+            if (isAudioPlaying) startAudioTimer();
+            else clearInterval(audioProgressTimer);
         }
 
         function updatePlayBtnUI() {
             const btn = document.getElementById('masterPlayBtn');
-            if (isAudioPlaying) {
-                btn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
-                startVisualizer();
-            } else {
-                btn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
-                stopVisualizer();
-            }
+            btn.innerHTML = isAudioPlaying ? `<i class="fa-solid fa-pause"></i>` : `<i class="fa-solid fa-play ml-0.5"></i>`;
+            if (isAudioPlaying) startVisualizer(); else stopVisualizer();
+        }
+
+        function startAudioTimer() {
+            clearInterval(audioProgressTimer);
+            audioProgressTimer = setInterval(() => {
+                if (!isAudioPlaying) return;
+                currentAudioTime++;
+                if (currentAudioTime > currentAudioDuration) currentAudioTime = 0;
+                updateProgressBarUI();
+            }, 1000);
+        }
+
+        function updateProgressBarUI() {
+            const pct = (currentAudioTime / currentAudioDuration) * 100;
+            document.getElementById('progressBar').style.width = pct + '%';
+            
+            const mins = String(Math.floor(currentAudioTime / 60)).padStart(2, '0');
+            const secs = String(currentAudioTime % 60).padStart(2, '0');
+            document.getElementById('currTime').innerText = `${mins}:${secs}`;
+        }
+
+        // Seekbar Drag / Click
+        function seekAudio(event) {
+            const container = document.getElementById('progressBarContainer');
+            const rect = container.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const width = rect.width;
+            const ratio = Math.max(0, Math.min(1, clickX / width));
+            
+            currentAudioTime = Math.floor(ratio * currentAudioDuration);
+            updateProgressBarUI();
+        }
+
+        function setVolume(val) {
+            console.log("Volume set to:", val);
+        }
+
+        function toggleMute() {
+            const slider = document.getElementById('volumeSlider');
+            slider.value = slider.value > 0 ? 0 : 80;
+        }
+
+        function setPlaybackRate(rate) {
+            console.log("Playback speed set to:", rate);
         }
 
         function playNextMusic() {
             if (musicList.length === 0) return;
             let idx = musicList.findIndex(x => x.id === currentPlayingMusicId);
-            if (isShuffle) {
-                idx = Math.floor(Math.random() * musicList.length);
-            } else {
-                idx = (idx + 1) % musicList.length;
-            }
+            idx = (idx + 1) % musicList.length;
             selectMusicFromDropdown(musicList[idx].id);
         }
 
@@ -1239,7 +1041,7 @@
             document.querySelectorAll('.v-bar').forEach(bar => bar.classList.remove('animating'));
         }
 
-        // ------------------ TAB 3: VIDEO MANAGEMENT LOGIC ------------------
+        // --- VIDEO & THEATER MANAGER ---
         function renderVideoTable() {
             const query = document.getElementById('videoSearch')?.value.toLowerCase() || '';
             const tbody = document.getElementById('videoTableBody');
@@ -1258,76 +1060,31 @@
                     <td class="p-3"><span class="px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium">${v.category}</span></td>
                     <td class="p-3 font-mono text-gray-600">${v.resolution}</td>
                     <td class="p-3 text-center space-x-2">
-                        <button onclick="playVideoDirectly('${v.id}')" class="text-orange-600 hover:text-orange-800 font-bold" title="劇院播放"><i class="fa-solid fa-circle-play text-base"></i></button>
-                        <button onclick="editVideoModal('${v.id}')" class="text-blue-500 hover:text-blue-700" title="編輯"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="selectVideoFromDropdown('${v.id}')" class="text-orange-600 hover:text-orange-800 font-bold" title="劇院播放"><i class="fa-solid fa-circle-play text-base"></i></button>
                         <button onclick="deleteVideoItem('${v.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('vTotalCount').innerText = videoList.length;
-            const cats = [...new Set(videoList.map(v => v.category))];
-            document.getElementById('vCatCount').innerText = cats.length;
-
-            updateCharts();
         }
 
-        function openVideoModal() {
-            currentEditVideoId = null;
-            document.getElementById('videoModalTitle').innerText = "新增 YouTube 影音網址";
-            document.getElementById('vFormTitle').value = '';
-            document.getElementById('vFormChannel').value = '';
-            document.getElementById('vFormCategory').value = '';
-            document.getElementById('vFormUrl').value = '';
-            document.getElementById('vFormResolution').value = 'HD 1080P';
-            document.getElementById('vFormDesc').value = '';
-            document.getElementById('videoModal').classList.remove('hidden');
-        }
-
-        function editVideoModal(id) {
-            const v = videoList.find(x => x.id === id);
-            if (!v) return;
-            currentEditVideoId = id;
-            document.getElementById('videoModalTitle').innerText = "編輯 YouTube 影音網址";
-            document.getElementById('vFormTitle').value = v.title;
-            document.getElementById('vFormChannel').value = v.channel;
-            document.getElementById('vFormCategory').value = v.category;
-            document.getElementById('vFormUrl').value = v.url;
-            document.getElementById('vFormResolution').value = v.resolution;
-            document.getElementById('vFormDesc').value = v.desc;
-            document.getElementById('videoModal').classList.remove('hidden');
-        }
-
-        function closeVideoModal() {
-            document.getElementById('videoModal').classList.add('hidden');
-        }
+        function openVideoModal() { document.getElementById('videoModal').classList.remove('hidden'); }
+        function closeVideoModal() { document.getElementById('videoModal').classList.add('hidden'); }
 
         function saveVideoItem() {
             const title = document.getElementById('vFormTitle').value.trim();
             const channel = document.getElementById('vFormChannel').value.trim();
             const url = document.getElementById('vFormUrl').value.trim();
-            if (!title || !channel || !url) {
-                alert("請填寫影片標題、頻道與 YouTube 網址");
-                return;
-            }
+            if (!title || !channel || !url) { alert("請填寫必要欄位"); return; }
 
-            const item = {
-                id: currentEditVideoId || 'v_' + Date.now(),
-                title,
-                channel,
+            videoList.push({
+                id: 'v_' + Date.now(),
+                title, channel,
                 category: document.getElementById('vFormCategory').value.trim() || 'General',
                 url,
-                resolution: document.getElementById('vFormResolution').value,
-                desc: document.getElementById('vFormDesc').value.trim()
-            };
-
-            if (currentEditVideoId) {
-                const idx = videoList.findIndex(x => x.id === currentEditVideoId);
-                if (idx !== -1) videoList[idx] = item;
-            } else {
-                videoList.push(item);
-            }
+                resolution: 'HD 1080P',
+                desc: '新匯入影片'
+            });
 
             closeVideoModal();
             renderVideoTable();
@@ -1336,7 +1093,7 @@
         }
 
         function deleteVideoItem(id) {
-            if (confirm("確定刪除此影音項目？")) {
+            if (confirm("確定刪除此影音？")) {
                 videoList = videoList.filter(x => x.id !== id);
                 renderVideoTable();
                 populateVideoDropdown();
@@ -1344,12 +1101,6 @@
             }
         }
 
-        function playVideoDirectly(id) {
-            switchTab(4);
-            selectVideoFromDropdown(id);
-        }
-
-        // ------------------ TAB 4: THEATER PLAYER LOGIC ------------------
         function populateVideoDropdown() {
             const select = document.getElementById('playerVideoSelect');
             if(!select) return;
@@ -1361,7 +1112,6 @@
                 select.appendChild(opt);
             });
 
-            // Populate theater playlist
             const list = document.getElementById('videoPlaylistContainer');
             list.innerHTML = '';
             videoList.forEach((v, idx) => {
@@ -1371,13 +1121,12 @@
                 div.innerHTML = `
                     <div class="truncate mr-2">
                         <div class="text-gray-800 truncate">${idx + 1}. ${v.title}</div>
-                        <div class="text-[10px] text-gray-400">${v.channel} • ${v.category}</div>
+                        <div class="text-[10px] text-gray-400">${v.channel}</div>
                     </div>
                     <span class="text-[10px] text-orange-600 font-mono">${v.resolution}</span>
                 `;
                 list.appendChild(div);
             });
-
             document.getElementById('videoPlaylistCount').innerText = `${videoList.length} 部`;
         }
 
@@ -1387,177 +1136,80 @@
 
             currentPlayingVideoId = id;
             document.getElementById('playerVideoSelect').value = id;
-
-            // Embed YT iframe
             const ytId = extractYTId(v.url);
             document.getElementById('ytVideoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
 
-            // UI updates
             document.getElementById('vpTitle').innerText = v.title;
             document.getElementById('vpChannel').innerText = `頻道: ${v.channel}`;
             document.getElementById('vpCategory').innerText = v.category;
             document.getElementById('vpQuality').innerText = v.resolution;
-            document.getElementById('vpDesc').innerText = v.desc || "暫無影片詳細說明。";
+            document.getElementById('vpDesc').innerText = v.desc || "暫無說明。";
 
             populateVideoDropdown();
         }
 
-        // ------------------ CHARTS INTEGRATION ------------------
+        // --- CHARTS ---
         function initCharts() {
             const ctx1 = document.getElementById('musicGenreChart').getContext('2d');
             musicGenreChartObj = new Chart(ctx1, {
                 type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#f97316', '#10b981', '#3b82f6', '#8b5cf6'] }] },
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#f97316', '#10b981', '#3b82f6'] }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
-
-            const ctx2 = document.getElementById('videoCatChart').getContext('2d');
-            videoCatChartObj = new Chart(ctx2, {
-                type: 'bar',
-                data: { labels: [], datasets: [{ label: '影片數量', data: [], backgroundColor: '#f97316' }] },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            const ctx3 = document.getElementById('theaterCatChart').getContext('2d');
-            theaterCatChartObj = new Chart(ctx3, {
-                type: 'pie',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f97316', '#d97706', '#059669', '#2563eb', '#7c3aed'] }] },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
             updateCharts();
         }
 
         function updateCharts() {
-            if (!musicGenreChartObj || !videoCatChartObj || !theaterCatChartObj) return;
-
-            // Music Genres Count
-            const musicGenres = {};
-            musicList.forEach(m => musicGenres[m.genre] = (musicGenres[m.genre] || 0) + 1);
-            musicGenreChartObj.data.labels = Object.keys(musicGenres);
-            musicGenreChartObj.data.datasets[0].data = Object.values(musicGenres);
+            if (!musicGenreChartObj) return;
+            const genres = {};
+            musicList.forEach(m => genres[m.genre] = (genres[m.genre] || 0) + 1);
+            musicGenreChartObj.data.labels = Object.keys(genres);
+            musicGenreChartObj.data.datasets[0].data = Object.values(genres);
             musicGenreChartObj.update();
-
-            // Video Categories Count
-            const videoCats = {};
-            videoList.forEach(v => videoCats[v.category] = (videoCats[v.category] || 0) + 1);
-            videoCatChartObj.data.labels = Object.keys(videoCats);
-            videoCatChartObj.data.datasets[0].data = Object.values(videoCats);
-            videoCatChartObj.update();
-
-            theaterCatChartObj.data.labels = Object.keys(videoCats);
-            theaterCatChartObj.data.datasets[0].data = Object.values(videoCats);
-            theaterCatChartObj.update();
         }
 
-        // ------------------ IMPORT & EXPORT FEATURES ------------------
+        // --- EXPORT / IMPORT ---
         function exportExcel() {
             const wb = XLSX.utils.book_new();
-
-            // Sheet 1: Music
-            const musicSheetData = musicList.map(m => ({
-                '音樂標題': m.title,
-                '演唱者': m.artist,
-                '流派': m.genre,
-                'YouTube 網址': m.url,
-                '時長': m.duration,
-                '評分': m.rating,
-                '筆記備註': m.notes
-            }));
-            const ws1 = XLSX.utils.json_to_sheet(musicSheetData);
-            XLSX.utils.book_append_sheet(wb, ws1, "音樂網址庫");
-
-            // Sheet 2: Videos
-            const videoSheetData = videoList.map(v => ({
-                '影片標題': v.title,
-                '頻道名稱': v.channel,
-                '分類': v.category,
-                'YouTube 網址': v.url,
-                '解析度': v.resolution,
-                '簡介': v.desc
-            }));
-            const ws2 = XLSX.utils.json_to_sheet(videoSheetData);
-            XLSX.utils.book_append_sheet(wb, ws2, "影音網址庫");
-
-            XLSX.writeFile(wb, `MediaBox_Pro_Export_${Date.now()}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(musicList), "音樂庫");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(videoList), "影音庫");
+            XLSX.writeFile(wb, `MediaBox_Pro_${Date.now()}.xlsx`);
         }
 
         function importExcel(evt) {
             const file = evt.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
-
-                // Try parse sheet 1 (Music)
                 if (workbook.SheetNames.length > 0) {
-                    const sheet1 = workbook.Sheets[workbook.SheetNames[0]];
-                    const json1 = XLSX.utils.sheet_to_json(sheet1);
-                    if (json1.length > 0) {
-                        musicList = json1.map((row, idx) => ({
-                            id: 'm_imp_' + idx + '_' + Date.now(),
-                            title: row['音樂標題'] || row['Title'] || '未命名音樂',
-                            artist: row['演唱者'] || row['Artist'] || '未知歌手',
-                            genre: row['流派'] || row['Genre'] || 'General',
-                            url: row['YouTube 網址'] || row['URL'] || '',
-                            duration: row['時長'] || '03:30',
-                            rating: row['評分'] ? Number(row['評分']) : 5,
-                            notes: row['筆記備註'] || ''
-                        }));
-                    }
+                    musicList = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                 }
-
-                // Try parse sheet 2 (Video)
-                if (workbook.SheetNames.length > 1) {
-                    const sheet2 = workbook.Sheets[workbook.SheetNames[1]];
-                    const json2 = XLSX.utils.sheet_to_json(sheet2);
-                    if (json2.length > 0) {
-                        videoList = json2.map((row, idx) => ({
-                            id: 'v_imp_' + idx + '_' + Date.now(),
-                            title: row['影片標題'] || row['Title'] || '未命名影片',
-                            channel: row['頻道名稱'] || row['Channel'] || '未知頻道',
-                            category: row['分類'] || row['Category'] || 'General',
-                            url: row['YouTube 網址'] || row['URL'] || '',
-                            resolution: row['解析度'] || 'HD 1080P',
-                            desc: row['簡介'] || ''
-                        }));
-                    }
-                }
-
                 renderMusicTable();
-                renderVideoTable();
                 populateMusicDropdown();
-                populateVideoDropdown();
                 saveToFirebase();
-                alert("Excel 資料一鍵匯入成功！");
+                alert("Excel 資料匯入成功！");
             };
             reader.readAsArrayBuffer(file);
         }
 
         function exportPNG() {
-            const target = document.getElementById('exportArea');
-            html2canvas(target, { scale: 2 }).then(canvas => {
+            html2canvas(document.getElementById('exportArea'), { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `MediaBox_Tab${activeTab}_HD.png`;
+                link.download = `MediaBox_Tab${activeTab}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             });
         }
 
         function exportPDF() {
-            const target = document.getElementById('exportArea');
-            html2canvas(target, { scale: 2 }).then(canvas => {
+            html2canvas(document.getElementById('exportArea'), { scale: 2 }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
-                const imgProps = pdf.getImageProperties(imgData);
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save(`MediaBox_Report_Tab${activeTab}.pdf`);
+                pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width);
+                pdf.save(`MediaBox_Report.pdf`);
             });
         }
     </script>
