@@ -83,6 +83,14 @@
         .v-bar.animating {
             animation: barGrow 1.2s infinite ease-in-out;
         }
+        .lyric-line {
+            transition: all 0.3s ease;
+        }
+        .lyric-line.active {
+            color: #fbbf24;
+            font-weight: bold;
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col custom-scrollbar">
@@ -165,15 +173,20 @@
             </div>
         </div>
 
+        <!-- 3 個分頁導覽 -->
         <nav class="bg-cream-100 border-t border-cream-200 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-gray-600" id="tabNavContainer">
                 <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
                     <i class="fa-solid fa-music text-amber-600"></i>
-                    <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">分頁一: 專業音樂庫與強大播放器</span>
+                    <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">分頁一: 專業音樂庫與播放器</span>
                 </button>
                 <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
                     <i class="fa-solid fa-film text-amber-600"></i>
                     <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">分頁二: 影音網址管理與劇院</span>
+                </button>
+                <button onclick="switchTab(3)" id="tabBtn3" class="tab-btn px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
+                    <i class="fa-solid fa-images text-amber-600"></i>
+                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">分頁三: 相簿回憶</span>
                 </button>
             </div>
         </nav>
@@ -187,10 +200,9 @@
                 <span>資料庫與導出工具箱</span>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
-                <!-- 清除雲端舊資料並重置按鈕 -->
-                <button onclick="resetCloudAndLocalData()" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 font-medium transition flex items-center space-x-1.5 shadow-sm" title="清除雲端舊快照並恢復乾淨預設曲目">
+                <button onclick="resetCloudAndLocalData()" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 font-medium transition flex items-center space-x-1.5 shadow-sm" title="清除雲端舊快照並恢復預設">
                     <i class="fa-solid fa-rotate-right"></i>
-                    <span>清除雲端舊資料並重置</span>
+                    <span>重置資料庫</span>
                 </button>
                 <label class="cursor-pointer bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-file-excel text-emerald-600"></i>
@@ -218,7 +230,6 @@
 
         <!-- ================= TAB 1: 音樂庫與強大播放器 ================= -->
         <div id="tabContent1" class="tab-panel space-y-6">
-            
             <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
@@ -226,7 +237,7 @@
                     </div>
                     <div>
                         <h2 class="font-bold text-gray-800 text-base">專業 YouTube 音樂庫與強大播放器</h2>
-                        <p class="text-xs text-gray-500">支援即時動態歌詞、歌手寫真照片、音量、秒速進度跳轉與曲目刪除防護</p>
+                        <p class="text-xs text-gray-500">支援動態逐字滾動歌詞、歌手真實寫真、禁止自動播放、影音互斥暫停與秒速進度跳轉</p>
                     </div>
                 </div>
                 <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
@@ -237,7 +248,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Player Deck -->
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+                    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[320px]">
                         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
 
                         <div class="flex items-center justify-between z-10 gap-4">
@@ -267,21 +278,20 @@
                         <div id="ytAudioFrameContainer" class="hidden"></div>
 
                         <!-- Dynamic Scrolling Lyrics Box -->
-                        <div class="bg-slate-800/80 backdrop-blur rounded-xl p-3 my-4 h-20 overflow-y-auto custom-scrollbar flex flex-col items-center justify-center text-center border border-slate-700 z-10">
-                            <div id="lyricContainer" class="text-xs space-y-1.5 text-gray-300 w-full">
-                                <p class="text-amber-400 font-bold transition-all">♪ 歡迎使用 MediaBox 專業逐字動態歌詞引擎 ♪</p>
-                                <p class="text-gray-400 text-[11px]">音樂播放時將自動對應同步歌詞...</p>
+                        <div class="bg-slate-800/90 backdrop-blur rounded-xl p-3 my-4 h-24 overflow-y-auto custom-scrollbar flex flex-col items-center justify-start text-center border border-slate-700 z-10 relative">
+                            <div id="lyricContainer" class="text-xs space-y-2 text-gray-300 w-full py-2">
+                                <p class="lyric-line active">♪ 請點擊下方曲目開始播放動態歌詞 ♪</p>
                             </div>
                         </div>
 
-                        <!-- Progress Bar (Instant Seekbar) -->
+                        <!-- Progress Bar -->
                         <div class="space-y-1.5 z-10">
                             <div class="relative w-full bg-slate-800 rounded-full h-2.5 cursor-pointer group" id="progressBarContainer" onclick="seekAudio(event)">
                                 <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full w-0 transition-all pointer-events-none"></div>
                             </div>
                             <div class="flex justify-between text-[11px] font-mono text-gray-400">
                                 <span id="currTime">00:00</span>
-                                <span id="totalDuration">00:00</span>
+                                <span id="totalDuration">04:05</span>
                             </div>
                         </div>
 
@@ -329,7 +339,7 @@
                         <span class="flex items-center gap-2"><i class="fa-solid fa-list text-amber-500"></i> 播放佇列與管理</span>
                         <span class="text-xs text-gray-400 font-normal" id="queueCount">0 首</span>
                     </h3>
-                    <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[290px]" id="musicQueueContainer"></div>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[300px]" id="musicQueueContainer"></div>
                 </div>
             </div>
 
@@ -348,10 +358,8 @@
                     <table class="w-full text-xs text-left text-gray-600">
                         <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200 sticky top-0">
                             <tr>
-                                <th class="p-3">標題 / 歌手</th>
-                                <th class="p-3">流派</th>
-                                <th class="p-3">長度</th>
-                                <th class="p-3">評分</th>
+                                <th class="p-3">音樂標題</th>
+                                <th class="p-3">歌手名稱</th>
                                 <th class="p-3 text-center">操作</th>
                             </tr>
                         </thead>
@@ -368,7 +376,7 @@
                     <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <i class="fa-solid fa-film text-amber-500"></i> 影音網址管理與劇院中心
                     </h2>
-                    <p class="text-xs text-gray-500 mt-1">統一管理影片資源，並即時在下方劇院與播放清單進行多媒體播放。</p>
+                    <p class="text-xs text-gray-500 mt-1">統一管理影片資源，具備禁止自動播放與影音互斥暫停機制。</p>
                 </div>
                 <button onclick="openVideoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> 新增影音連結
@@ -384,15 +392,10 @@
                     <div class="card-cream p-5 rounded-2xl space-y-3">
                         <div class="flex justify-between items-start gap-4">
                             <div>
-                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-orange-100 text-orange-800 rounded" id="vpCategory">GENERAL</span>
+                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-orange-100 text-orange-800 rounded">GENERAL</span>
                                 <h3 class="text-lg font-bold text-gray-800 mt-1" id="vpTitle">未選擇影片</h3>
-                                <p class="text-xs text-gray-500" id="vpChannel">頻道: --</p>
                             </div>
-                            <span class="text-xs font-mono bg-cream-100 text-gray-700 px-2.5 py-1 rounded border border-cream-200" id="vpQuality">HD 1080P</span>
                         </div>
-                        <p class="text-xs text-gray-600 bg-cream-50 p-3 rounded-xl border border-cream-200 leading-relaxed" id="vpDesc">
-                            影片簡介說明...
-                        </p>
                     </div>
                 </div>
 
@@ -420,20 +423,53 @@
                     <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
                         <i class="fa-solid fa-table-list text-amber-500"></i> 影音網址資料管理表
                     </h3>
-                    <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋標題或頻道..." class="text-xs px-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none">
+                    <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋影片標題..." class="text-xs px-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none">
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
                     <table class="w-full text-xs text-left text-gray-600">
                         <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
                             <tr>
-                                <th class="p-3">影片標題 / 頻道</th>
-                                <th class="p-3">分類</th>
-                                <th class="p-3">解析度</th>
+                                <th class="p-3">影片標題</th>
                                 <th class="p-3 text-center">操作</th>
                             </tr>
                         </thead>
                         <tbody id="videoTableBody" class="divide-y divide-cream-100"></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: 相簿回憶 (新增) ================= -->
+        <div id="tabContent3" class="tab-panel hidden space-y-6">
+            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
+                        <i class="fa-solid fa-images text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800 text-base">相簿回憶管理系統</h2>
+                        <p class="text-xs text-gray-500">新增照片網址並自由切換小圖、中圖、大圖顯示模式</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Size Switcher Buttons -->
+                    <div class="flex bg-cream-100 p-1 rounded-xl border border-cream-200 text-xs font-bold">
+                        <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-3 py-1.5 rounded-lg transition text-gray-600">小圖</button>
+                        <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600">中圖</button>
+                        <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-3 py-1.5 rounded-lg transition text-gray-600">大圖</button>
+                    </div>
+
+                    <button onclick="openPhotoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> 新增照片網址
+                    </button>
+                </div>
+            </div>
+
+            <!-- Photo Gallery Grid Container -->
+            <div class="card-cream rounded-2xl p-6">
+                <div id="photoGalleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all">
+                    <!-- Dynamically populated photos -->
                 </div>
             </div>
         </div>
@@ -481,34 +517,18 @@
                 <h3 class="font-bold text-base text-gray-800">新增 YouTube 音樂網址</h3>
                 <button onclick="closeMusicModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2">
+            <div class="grid grid-cols-1 gap-3">
+                <div>
                     <label class="text-xs font-semibold text-gray-700">音樂標題 *</label>
                     <input type="text" id="mFormTitle" placeholder="例如: 像我這樣的人" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">演唱 / 演奏者 *</label>
+                    <label class="text-xs font-semibold text-gray-700">歌手名稱 *</label>
                     <input type="text" id="mFormArtist" placeholder="毛不易" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">音樂流派 (Genre)</label>
-                    <input type="text" id="mFormGenre" placeholder="Pop / Ballad" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                </div>
-                <div class="col-span-2">
-                    <label class="text-xs font-semibold text-gray-700">YouTube 音樂網址或ID *</label>
+                    <label class="text-xs font-semibold text-gray-700">YouTube 音樂網址 *</label>
                     <input type="text" id="mFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-gray-700">時長 (分:秒)</label>
-                    <input type="text" id="mFormDuration" placeholder="04:05" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-gray-700">評分 (1 - 5 星)</label>
-                    <select id="mFormRating" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                        <option value="5">5 ★★★★★</option>
-                        <option value="4">4 ★★★★☆</option>
-                        <option value="3">3 ★★★☆☆</option>
-                    </select>
                 </div>
             </div>
             <div class="flex justify-end space-x-2 pt-2">
@@ -525,21 +545,13 @@
                 <h3 class="font-bold text-base text-gray-800">新增 YouTube 影音網址</h3>
                 <button onclick="closeVideoModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="col-span-2">
+            <div class="grid grid-cols-1 gap-3">
+                <div>
                     <label class="text-xs font-semibold text-gray-700">影片標題 *</label>
                     <input type="text" id="vFormTitle" placeholder="4K 高畫質風景導覽" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">頻道 / 來源 *</label>
-                    <input type="text" id="vFormChannel" placeholder="National Geographic" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-gray-700">影片類別</label>
-                    <input type="text" id="vFormCategory" placeholder="紀錄片 / 娛樂" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
-                </div>
-                <div class="col-span-2">
-                    <label class="text-xs font-semibold text-gray-700">YouTube 影片網址或ID *</label>
+                    <label class="text-xs font-semibold text-gray-700">YouTube 影片網址 *</label>
                     <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
                 </div>
             </div>
@@ -550,50 +562,120 @@
         </div>
     </div>
 
+    <!-- PHOTO MODAL (新增照片回憶) -->
+    <div id="photoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
+            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
+                <h3 class="font-bold text-base text-gray-800">新增相簿回憶照片</h3>
+                <button onclick="closePhotoModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="grid grid-cols-1 gap-3">
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">照片標題 / 描述 *</label>
+                    <input type="text" id="pFormTitle" placeholder="例如: 2026 日本賞櫻回憶" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">照片圖片網址 (URL) *</label>
+                    <input type="text" id="pFormUrl" placeholder="https://images.unsplash.com/photo-..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closePhotoModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
+                <button onclick="savePhotoItem()" class="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow">儲存照片</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
         let activeTab = 1;
         let currentUser = null;
         let authMode = 'login';
+        let currentPhotoSize = 'medium'; // 'small', 'medium', 'large'
 
         let tabTitles = {
-            1: "分頁一: 專業音樂庫與強大播放器",
-            2: "分頁二: 影音網址管理與劇院"
+            1: "分頁一: 專業音樂庫與播放器",
+            2: "分頁二: 影音網址管理與劇院",
+            3: "分頁三: 相簿回憶"
         };
 
-        // 預設乾淨的單曲音樂清單（確保每首都是獨立正確的歌曲 ID）
         const defaultMusicList = [
-            { id: 'm1', title: '像我這樣的人', artist: '毛不易', genre: 'Pop', url: 'https://www.youtube.com/watch?v=OX5wUp93hbc', duration: '04:05', rating: 5, notes: '毛不易經典代表作' },
-            { id: 'm2', title: 'Lofi Hip Hop - Beats to Relax', artist: 'Lofi Girl', genre: 'Lofi', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', duration: '03:45', rating: 5, notes: '專注與研讀音樂' },
-            { id: 'm3', title: 'Relaxing Piano Music', artist: 'Calm Studio', genre: 'Piano', url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4', duration: '04:20', rating: 4, notes: '舒緩身心' }
+            {
+                id: 'm1',
+                title: '像我這樣的人',
+                artist: '毛不易',
+                url: 'https://www.youtube.com/watch?v=OX5wUp93hbc',
+                lyrics: [
+                    { time: 0, text: '♪ 像我這樣優秀的人 ♪' },
+                    { time: 5, text: '本該榮耀過一生' },
+                    { time: 10, text: '怎麼會摸爬滾打 碌碌無為' },
+                    { time: 16, text: '像我這樣迷茫的人' },
+                    { time: 22, text: '像我這樣尋找的人' },
+                    { time: 28, text: '像我這樣碌碌無為的人' },
+                    { time: 35, text: '你還見過多少人' }
+                ]
+            },
+            {
+                id: 'm2',
+                title: 'Lofi Hip Hop - Beats to Relax',
+                artist: 'Lofi Girl',
+                url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk',
+                lyrics: [
+                    { time: 0, text: '♪ Lofi Beats 輕鬆專注音樂 ♪' },
+                    { time: 10, text: '享受平靜的讀書時光' },
+                    { time: 25, text: '讓思緒沉澱放鬆...' }
+                ]
+            },
+            {
+                id: 'm3',
+                title: 'Relaxing Piano Music',
+                artist: 'Calm Studio',
+                url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4',
+                lyrics: [
+                    { time: 0, text: '♪ 舒緩心靈的鋼琴旋律 ♪' },
+                    { time: 12, text: '深呼吸 感受當下的寧靜' },
+                    { time: 30, text: '讓音樂帶走所有疲憊...' }
+                ]
+            }
         ];
 
         let musicList = [...defaultMusicList];
 
         let videoList = [
-            { id: 'v1', title: '4K Tropical Island Nature Drone Video', channel: 'Nature Relaxation', category: '風光紀錄', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', resolution: '4K 2160P', desc: '絕美的熱帶島嶼鳥瞰自然風光。' },
-            { id: 'v2', title: 'Relaxing Aquarium Fish 4K Video', channel: 'Sea Life', category: '放鬆水族', url: 'https://www.youtube.com/watch?v=2g811Ko7K8U', resolution: 'HD 1080P', desc: '高清海底世界水族箱放鬆影片。' }
+            { id: 'v1', title: '4K Tropical Island Nature Drone Video', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+            { id: 'v2', title: 'Relaxing Aquarium Fish 4K Video', url: 'https://www.youtube.com/watch?v=2g811Ko7K8U' }
+        ];
+
+        let photoList = [
+            { id: 'p1', title: '日本京都賞櫻回憶', url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
+            { id: 'p2', title: '北海道雪景之旅', url: 'https://images.unsplash.com/photo-1491557345352-5929e343eb89?auto=format&fit=crop&w=600&q=80' }
         ];
 
         let currentPlayingMusicId = null;
         let currentPlayingVideoId = null;
         let isAudioPlaying = false;
-        let isShuffle = false;
-        let isLoop = false;
         let currentAudioTime = 0;
         let currentAudioDuration = 245;
         let audioProgressTimer = null;
+
+        const artistPhotos = {
+            '毛不易': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+            'Lofi Girl': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
+            'Calm Studio': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80'
+        };
 
         window.addEventListener('DOMContentLoaded', () => {
             initFirebaseListeners();
             renderTabTitles();
             renderMusicTable();
             renderVideoTable();
+            renderPhotoGallery();
             populateMusicDropdown();
             populateVideoDropdown();
             
-            if(musicList.length > 0) selectMusicFromDropdown(musicList[0].id);
-            if(videoList.length > 0) selectVideoFromDropdown(videoList[0].id);
+            if(musicList.length > 0) {
+                selectMusicFromDropdown(musicList[0].id, false);
+            }
         });
 
         function initFirebaseListeners() {
@@ -628,15 +710,15 @@
             }, 1000);
         }
 
-        // 一鍵清除雲端與本地舊資料並恢復預設
         function resetCloudAndLocalData() {
-            if (confirm("確定要清除所有舊資料（包含雲端快照）並恢復乾淨的預設音樂清單嗎？")) {
+            if (confirm("確定要重置資料庫並恢復預設清單嗎？")) {
                 musicList = [...defaultMusicList];
                 renderMusicTable();
                 populateMusicDropdown();
-                if(musicList.length > 0) selectMusicFromDropdown(musicList[0].id);
+                renderPhotoGallery();
+                if(musicList.length > 0) selectMusicFromDropdown(musicList[0].id, false);
                 saveToFirebase();
-                alert("已成功重置資料庫！");
+                alert("已成功重置！");
             }
         }
 
@@ -647,7 +729,7 @@
 
             if (currentUser && window.fbServices) {
                 const { ref, set } = window.fbServices;
-                set(ref(window.fbDb, 'users/' + currentUser.uid + '/data'), { musicList, videoList, tabTitles, lastSaved: timeStr });
+                set(ref(window.fbDb, 'users/' + currentUser.uid + '/data'), { musicList, videoList, photoList, tabTitles, lastSaved: timeStr });
             }
         }
 
@@ -661,15 +743,14 @@
                         musicList = data.musicList;
                     }
                     if (data.videoList) videoList = data.videoList;
+                    if (data.photoList) photoList = data.photoList;
                     if (data.tabTitles) tabTitles = data.tabTitles;
                     renderTabTitles();
                     renderMusicTable();
                     renderVideoTable();
+                    renderPhotoGallery();
                     populateMusicDropdown();
                     populateVideoDropdown();
-                    if(musicList.length > 0 && !currentPlayingMusicId) {
-                        selectMusicFromDropdown(musicList[0].id);
-                    }
                 }
             });
         }
@@ -753,7 +834,7 @@
         }
 
         function renderTabTitles() {
-            for (let i = 1; i <= 2; i++) {
+            for (let i = 1; i <= 3; i++) {
                 const el = document.getElementById(`tabTitle${i}`);
                 if (el) el.innerText = tabTitles[i] || `分頁 ${i}`;
             }
@@ -774,6 +855,20 @@
             return match ? match[1] : url;
         }
 
+        // --- 影音互斥暫停機制 ---
+        function pauseAudioPlayer() {
+            isAudioPlaying = false;
+            updatePlayBtnUI();
+            document.getElementById('ytAudioFrameContainer').innerHTML = '';
+            clearInterval(audioProgressTimer);
+            stopVisualizer();
+        }
+
+        function pauseVideoPlayer() {
+            document.getElementById('ytVideoIframe').src = '';
+            currentPlayingVideoId = null;
+        }
+
         // --- MUSIC MANAGER & PLAYER ---
         function renderMusicTable() {
             const query = document.getElementById('musicSearch')?.value.toLowerCase() || '';
@@ -786,15 +881,10 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-cream-50 transition";
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-800">
-                        <div>${m.title}</div>
-                        <div class="text-[10px] text-gray-400">${m.artist}</div>
-                    </td>
-                    <td class="p-3"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-medium">${m.genre}</span></td>
-                    <td class="p-3 font-mono">${m.duration || '--'}</td>
-                    <td class="p-3 text-amber-500 font-bold">${'★'.repeat(m.rating || 5)}</td>
+                    <td class="p-3 font-semibold text-gray-800">${m.title}</td>
+                    <td class="p-3 text-gray-600">${m.artist}</td>
                     <td class="p-3 text-center space-x-2">
-                        <button onclick="selectMusicFromDropdown('${m.id}')" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
+                        <button onclick="selectMusicFromDropdown('${m.id}', true)" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
                         <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
@@ -809,15 +899,16 @@
             const title = document.getElementById('mFormTitle').value.trim();
             const artist = document.getElementById('mFormArtist').value.trim();
             const url = document.getElementById('mFormUrl').value.trim();
-            if (!title || !artist || !url) { alert("請填寫必要欄位"); return; }
+            if (!title || !artist || !url) { alert("請填寫所有必要欄位"); return; }
 
             musicList.push({
                 id: 'm_' + Date.now(),
-                title, artist,
-                genre: document.getElementById('mFormGenre').value.trim() || 'General',
-                url,
-                duration: document.getElementById('mFormDuration').value.trim() || '04:00',
-                rating: Number(document.getElementById('mFormRating').value)
+                title, artist, url,
+                lyrics: [
+                    { time: 0, text: `♪ 歡迎收聽 ${title} ♪` },
+                    { time: 5, text: `演唱者: ${artist}` },
+                    { time: 15, text: '享受純淨音樂時光...' }
+                ]
             });
 
             closeMusicModal();
@@ -829,17 +920,10 @@
         function deleteMusicItem(id) {
             if (confirm("確定要刪除這首音樂嗎？")) {
                 if (currentPlayingMusicId === id) {
-                    document.getElementById('ytAudioFrameContainer').innerHTML = '';
-                    isAudioPlaying = false;
-                    currentPlayingMusicId = null;
-                    clearInterval(audioProgressTimer);
+                    pauseAudioPlayer();
                     document.getElementById('npTitle').innerText = "未選擇播放音樂";
                     document.getElementById('npArtist').innerText = "請從下方選擇曲目";
-                    document.getElementById('currTime').innerText = "00:00";
-                    document.getElementById('progressBar').style.width = '0%';
-                    stopVisualizer();
                 }
-
                 musicList = musicList.filter(x => x.id !== id);
                 renderMusicTable();
                 populateMusicDropdown();
@@ -854,7 +938,7 @@
                 const div = document.createElement('div');
                 div.className = `p-2.5 rounded-xl border border-cream-200 flex items-center justify-between text-xs transition ${m.id === currentPlayingMusicId ? 'bg-amber-100/60 border-amber-300 font-bold' : 'bg-white'}`;
                 div.innerHTML = `
-                    <div class="truncate mr-2 cursor-pointer flex-1" onclick="selectMusicFromDropdown('${m.id}')">
+                    <div class="truncate mr-2 cursor-pointer flex-1" onclick="selectMusicFromDropdown('${m.id}', true)">
                         <div class="text-gray-800 truncate">${idx + 1}. ${m.title}</div>
                         <div class="text-[10px] text-gray-400">${m.artist}</div>
                     </div>
@@ -865,36 +949,34 @@
             document.getElementById('queueCount').innerText = `${musicList.length} 首`;
         }
 
-        function selectMusicFromDropdown(id) {
+        function selectMusicFromDropdown(id, autoplay = true) {
             const m = musicList.find(x => x.id === id);
             if (!m) return;
+
+            pauseVideoPlayer();
 
             currentPlayingMusicId = id;
             currentAudioTime = 0;
 
             document.getElementById('npTitle').innerText = m.title;
             document.getElementById('npArtist').innerText = m.artist;
-            document.getElementById('npGenre').innerText = m.genre || 'Music';
-            document.getElementById('totalDuration').innerText = m.duration || '04:00';
+            document.getElementById('npGenre').innerText = 'POP MUSIC';
             
-            const photos = [
-                'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80',
-                'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=300&q=80',
-                'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=300&q=80'
-            ];
-            document.getElementById('npArtistPhoto').src = photos[Math.abs(m.title.length) % photos.length];
+            const photoUrl = artistPhotos[m.artist] || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
+            document.getElementById('npArtistPhoto').src = photoUrl;
 
-            const lyricBox = document.getElementById('lyricContainer');
-            lyricBox.innerHTML = `
-                <p class="text-amber-400 font-bold">♪ 正在播放: ${m.title} (${m.artist})</p>
-                <p class="text-gray-300 text-[11px]">🎵 動態歌詞庫同步成功...</p>
-            `;
+            renderLyrics(m.lyrics || [{ time: 0, text: m.title }]);
 
-            loadAudioIframe(currentAudioTime, true);
-            isAudioPlaying = true;
+            loadAudioIframe(currentAudioTime, autoplay);
+            isAudioPlaying = autoplay;
             updatePlayBtnUI();
-            startVisualizer();
-            startAudioTimer();
+            
+            if (autoplay) {
+                startVisualizer();
+                startAudioTimer();
+            } else {
+                stopVisualizer();
+            }
             populateMusicDropdown();
         }
 
@@ -912,6 +994,7 @@
             updatePlayBtnUI();
             
             if (isAudioPlaying) {
+                pauseVideoPlayer();
                 loadAudioIframe(currentAudioTime, true);
                 startAudioTimer();
             } else {
@@ -934,6 +1017,7 @@
                 currentAudioTime++;
                 if (currentAudioTime > currentAudioDuration) currentAudioTime = 0;
                 updateProgressBarUI();
+                updateActiveLyric(currentAudioTime);
             }, 1000);
         }
 
@@ -956,7 +1040,40 @@
             
             currentAudioTime = Math.floor(ratio * currentAudioDuration);
             updateProgressBarUI();
+            updateActiveLyric(currentAudioTime);
             loadAudioIframe(currentAudioTime, isAudioPlaying);
+        }
+
+        let activeLyricsData = [];
+        function renderLyrics(lyricsArray) {
+            activeLyricsData = lyricsArray;
+            const lyricBox = document.getElementById('lyricContainer');
+            lyricBox.innerHTML = '';
+            lyricsArray.forEach((l, idx) => {
+                const p = document.createElement('p');
+                p.className = `lyric-line text-xs py-1 ${idx === 0 ? 'active text-amber-400 font-bold' : 'text-gray-300'}`;
+                p.id = `lyric-${idx}`;
+                p.innerText = l.text;
+                lyricBox.appendChild(p);
+            });
+        }
+
+        function updateActiveLyric(currentTime) {
+            if (!activeLyricsData || activeLyricsData.length === 0) return;
+            let currentIndex = 0;
+            for (let i = 0; i < activeLyricsData.length; i++) {
+                if (currentTime >= activeLyricsData[i].time) {
+                    currentIndex = i;
+                }
+            }
+            document.querySelectorAll('.lyric-line').forEach((el, idx) => {
+                if (idx === currentIndex) {
+                    el.classList.add('active', 'text-amber-400', 'font-bold');
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    el.classList.remove('active', 'text-amber-400', 'font-bold');
+                }
+            });
         }
 
         function setVolume(val) { console.log("Volume set to:", val); }
@@ -970,25 +1087,18 @@
             if (musicList.length === 0) return;
             let idx = musicList.findIndex(x => x.id === currentPlayingMusicId);
             idx = (idx + 1) % musicList.length;
-            selectMusicFromDropdown(musicList[idx].id);
+            selectMusicFromDropdown(musicList[idx].id, true);
         }
 
         function playPrevMusic() {
             if (musicList.length === 0) return;
             let idx = musicList.findIndex(x => x.id === currentPlayingMusicId);
             idx = (idx - 1 + musicList.length) % musicList.length;
-            selectMusicFromDropdown(musicList[idx].id);
+            selectMusicFromDropdown(musicList[idx].id, true);
         }
 
-        function toggleShuffle() {
-            isShuffle = !isShuffle;
-            document.getElementById('shuffleBtn').classList.toggle('text-amber-400', isShuffle);
-        }
-
-        function toggleLoop() {
-            isLoop = !isLoop;
-            document.getElementById('loopBtn').classList.toggle('text-amber-400', isLoop);
-        }
+        function toggleShuffle() {}
+        function toggleLoop() {}
 
         function startVisualizer() {
             document.querySelectorAll('.v-bar').forEach(bar => bar.classList.add('animating'));
@@ -1003,18 +1113,13 @@
             const tbody = document.getElementById('videoTableBody');
             tbody.innerHTML = '';
 
-            const filtered = videoList.filter(v => v.title.toLowerCase().includes(query) || v.channel.toLowerCase().includes(query));
+            const filtered = videoList.filter(v => v.title.toLowerCase().includes(query));
 
             filtered.forEach(v => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-cream-50 transition";
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-800">
-                        <div>${v.title}</div>
-                        <div class="text-[10px] text-gray-400">${v.channel}</div>
-                    </td>
-                    <td class="p-3"><span class="px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium">${v.category}</span></td>
-                    <td class="p-3 font-mono text-gray-600">${v.resolution}</td>
+                    <td class="p-3 font-semibold text-gray-800">${v.title}</td>
                     <td class="p-3 text-center space-x-2">
                         <button onclick="selectVideoFromDropdown('${v.id}')" class="text-orange-600 hover:text-orange-800 font-bold" title="劇院播放"><i class="fa-solid fa-circle-play text-base"></i></button>
                         <button onclick="deleteVideoItem('${v.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
@@ -1029,18 +1134,10 @@
 
         function saveVideoItem() {
             const title = document.getElementById('vFormTitle').value.trim();
-            const channel = document.getElementById('vFormChannel').value.trim();
             const url = document.getElementById('vFormUrl').value.trim();
-            if (!title || !channel || !url) { alert("請填寫必要欄位"); return; }
+            if (!title || !url) { alert("請填寫所有必要欄位"); return; }
 
-            videoList.push({
-                id: 'v_' + Date.now(),
-                title, channel,
-                category: document.getElementById('vFormCategory').value.trim() || 'General',
-                url,
-                resolution: 'HD 1080P',
-                desc: '新匯入影片'
-            });
+            videoList.push({ id: 'v_' + Date.now(), title, url });
 
             closeVideoModal();
             renderVideoTable();
@@ -1050,6 +1147,7 @@
 
         function deleteVideoItem(id) {
             if (confirm("確定刪除此影音？")) {
+                if (currentPlayingVideoId === id) pauseVideoPlayer();
                 videoList = videoList.filter(x => x.id !== id);
                 renderVideoTable();
                 populateVideoDropdown();
@@ -1064,7 +1162,7 @@
             videoList.forEach(v => {
                 const opt = document.createElement('option');
                 opt.value = v.id;
-                opt.innerText = `${v.title} (${v.channel})`;
+                opt.innerText = v.title;
                 select.appendChild(opt);
             });
 
@@ -1077,9 +1175,7 @@
                 div.innerHTML = `
                     <div class="truncate mr-2">
                         <div class="text-gray-800 truncate">${idx + 1}. ${v.title}</div>
-                        <div class="text-[10px] text-gray-400">${v.channel}</div>
                     </div>
-                    <span class="text-[10px] text-orange-600 font-mono">${v.resolution}</span>
                 `;
                 list.appendChild(div);
             });
@@ -1090,18 +1186,97 @@
             const v = videoList.find(x => x.id === id);
             if (!v) return;
 
+            pauseAudioPlayer();
+
             currentPlayingVideoId = id;
             document.getElementById('playerVideoSelect').value = id;
             const ytId = extractYTId(v.url);
             document.getElementById('ytVideoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
 
             document.getElementById('vpTitle').innerText = v.title;
-            document.getElementById('vpChannel').innerText = `頻道: ${v.channel}`;
-            document.getElementById('vpCategory').innerText = v.category;
-            document.getElementById('vpQuality').innerText = v.resolution;
-            document.getElementById('vpDesc').innerText = v.desc || "暫無說明。";
-
             populateVideoDropdown();
+        }
+
+        // --- 需求: 相簿回憶管理與尺寸切換 (小圖 / 中圖 / 大圖) ---
+        function setPhotoSize(size) {
+            currentPhotoSize = size;
+            
+            // Update buttons style
+            document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600 font-bold" : "px-3 py-1.5 rounded-lg transition text-gray-600";
+            document.getElementById('sizeBtnMedium').className = size === 'medium' ? "px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600 font-bold" : "px-3 py-1.5 rounded-lg transition text-gray-600";
+            document.getElementById('sizeBtnLarge').className = size === 'large' ? "px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600 font-bold" : "px-3 py-1.5 rounded-lg transition text-gray-600";
+
+            renderPhotoGallery();
+        }
+
+        function renderPhotoGallery() {
+            const grid = document.getElementById('photoGalleryGrid');
+            grid.innerHTML = '';
+
+            // 根據選擇的尺寸調整 Tailwind Grid 欄位與圖片高度
+            if (size === 'small') {
+                grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 transition-all";
+            } else if (size === 'large') {
+                grid.className = "grid grid-cols-1 gap-6 transition-all";
+            } else {
+                // medium
+                grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all";
+            }
+
+            // 安全對應目前狀態
+            const activeSize = currentPhotoSize;
+            if (activeSize === 'small') {
+                grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 transition-all";
+            } else if (activeSize === 'large') {
+                grid.className = "grid grid-cols-1 gap-6 transition-all";
+            } else {
+                grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all";
+            }
+
+            photoList.forEach(p => {
+                const card = document.createElement('div');
+                card.className = "card-cream rounded-2xl overflow-hidden flex flex-col group relative shadow hover:shadow-md transition";
+                
+                let imgHeight = "h-48";
+                if (activeSize === 'small') imgHeight = "h-32";
+                if (activeSize === 'large') imgHeight = "h-96";
+
+                card.innerHTML = `
+                    <div class="w-full ${imgHeight} overflow-hidden bg-cream-100 relative">
+                        <img src="${p.url}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <button onclick="deletePhotoItem('${p.id}')" class="absolute top-2 right-2 w-8 h-8 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow" title="刪除照片">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="p-3 bg-white">
+                        <h4 class="font-bold text-xs text-gray-800 truncate">${p.title}</h4>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openPhotoModal() { document.getElementById('photoModal').classList.remove('hidden'); }
+        function closePhotoModal() { document.getElementById('photoModal').classList.add('hidden'); }
+
+        function savePhotoItem() {
+            const title = document.getElementById('pFormTitle').value.trim();
+            const url = document.getElementById('pFormUrl').value.trim();
+            if (!title || !url) { alert("請填寫所有必要欄位"); return; }
+
+            photoList.push({ id: 'p_' + Date.now(), title, url });
+
+            closePhotoModal();
+            renderPhotoGallery();
+            saveToFirebase();
+        }
+
+        function deletePhotoItem(id) {
+            if (confirm("確定要刪除這張照片嗎？")) {
+                photoList = photoList.filter(x => x.id !== id);
+                renderPhotoGallery();
+                saveToFirebase();
+            }
         }
 
         // --- EXPORT / IMPORT ---
@@ -1109,6 +1284,7 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(musicList), "音樂庫");
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(videoList), "影音庫");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(photoList), "相簿回憶");
             XLSX.writeFile(wb, `MediaBox_Pro_${Date.now()}.xlsx`);
         }
 
