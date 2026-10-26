@@ -165,20 +165,16 @@
             </div>
         </div>
 
-        <!-- NAVIGATION TABS (整合為 3 個分頁：1.音樂網址管理 2.音樂播放器 3.影音網址管理與劇院) -->
+        <!-- 整合為 2 個分頁導覽 -->
         <nav class="bg-cream-100 border-t border-cream-200 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-gray-600" id="tabNavContainer">
-                <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
+                <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
                     <i class="fa-solid fa-music text-amber-600"></i>
-                    <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">分頁一: 音樂網址管理</span>
+                    <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">分頁一: 專業音樂庫與強大播放器</span>
                 </button>
-                <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
-                    <i class="fa-solid fa-sliders text-amber-600"></i>
-                    <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">分頁二: 專業強大音樂播放器</span>
-                </button>
-                <button onclick="switchTab(3)" id="tabBtn3" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
+                <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
                     <i class="fa-solid fa-film text-amber-600"></i>
-                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">分頁三: 影音網址管理與劇院</span>
+                    <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">分頁二: 影音網址管理與劇院</span>
                 </button>
             </div>
         </nav>
@@ -216,201 +212,158 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" id="exportArea">
 
-        <!-- ================= TAB 1: YOUTUBE MUSIC LINK MANAGER ================= -->
+        <!-- ================= TAB 1: 整合後的音樂庫與強大音樂播放器 ================= -->
         <div id="tabContent1" class="tab-panel space-y-6">
-            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-music text-amber-500"></i> YouTube 音樂網址資料庫
-                    </h2>
-                    <p class="text-xs text-gray-500 mt-1">管理您的 YouTube 音樂資源，並與專業播放器即時同步。</p>
+            
+            <!-- Banner & Add Button -->
+            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
+                        <i class="fa-solid fa-headphones text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-gray-800 text-base">專業 YouTube 音樂庫與強大播放器</h2>
+                        <p class="text-xs text-gray-500">管理曲目庫、支援動態逐字歌詞、歌手寫真照片、音量調節、進度軸拖曳與曲目刪除</p>
+                    </div>
                 </div>
                 <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> 新增音樂連結
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="card-cream p-4 rounded-xl border-l-4 border-l-amber-500">
-                    <p class="text-xs text-gray-500">總音樂曲目</p>
-                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="mTotalCount">0</h3>
-                </div>
-                <div class="card-cream p-4 rounded-xl border-l-4 border-l-orange-500">
-                    <p class="text-xs text-gray-500">流派分類數</p>
-                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="mGenreCount">0</h3>
-                </div>
-                <div class="card-cream p-4 rounded-xl border-l-4 border-l-emerald-500">
-                    <p class="text-xs text-gray-500">平均評分</p>
-                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="mAvgRating">0.0 <span class="text-xs font-normal text-amber-500">★</span></h3>
-                </div>
-            </div>
-
+            <!-- Player & Controls Deck -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 card-cream rounded-2xl p-5 flex flex-col">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-list-ul text-amber-500"></i> 音樂曲目清單
-                        </h3>
-                        <div class="relative w-48">
-                            <input type="text" id="musicSearch" oninput="renderMusicTable()" placeholder="搜尋曲目或歌手..." class="w-full text-xs pl-8 pr-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none focus:border-amber-500">
-                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-gray-400"></i>
+                <!-- Main Player Deck -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+                        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
+
+                        <!-- Artist Photo & Info -->
+                        <div class="flex items-center justify-between z-10 gap-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="relative">
+                                    <img id="npArtistPhoto" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80" alt="Artist" class="w-16 h-16 rounded-full object-cover border-2 border-amber-500 shadow-md">
+                                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-[10px] text-white">
+                                        <i class="fa-solid fa-microphone"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] uppercase tracking-widest px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full font-bold border border-amber-500/30" id="npGenre">AUDIO</span>
+                                    <h2 class="text-xl font-black text-white mt-1 leading-tight" id="npTitle">未選擇播放音樂</h2>
+                                    <p class="text-xs text-gray-300 mt-0.5" id="npArtist">請從下方選擇曲目</p>
+                                </div>
+                            </div>
+                            <div class="flex items-end h-8 space-x-1" id="vBars">
+                                <div class="v-bar"></div>
+                                <div class="v-bar"></div>
+                                <div class="v-bar"></div>
+                                <div class="v-bar"></div>
+                                <div class="v-bar"></div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="overflow-x-auto flex-1 custom-scrollbar">
-                        <table class="w-full text-xs text-left text-gray-600">
-                            <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
-                                <tr>
-                                    <th class="p-3">標題 / 歌手</th>
-                                    <th class="p-3">流派</th>
-                                    <th class="p-3">長度</th>
-                                    <th class="p-3">評分</th>
-                                    <th class="p-3 text-center">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="musicTableBody" class="divide-y divide-cream-100"></tbody>
-                        </table>
+
+                        <!-- YouTube Audio Iframe Container -->
+                        <div id="ytAudioFrameContainer" class="hidden">
+                            <iframe id="ytAudioFrame" src="" allow="autoplay"></iframe>
+                        </div>
+
+                        <!-- Dynamic Scrolling Lyrics Box -->
+                        <div class="bg-slate-800/80 backdrop-blur rounded-xl p-3 my-4 h-20 overflow-y-auto custom-scrollbar flex flex-col items-center justify-center text-center border border-slate-700 z-10">
+                            <div id="lyricContainer" class="text-xs space-y-1.5 text-gray-300 w-full">
+                                <p class="text-amber-400 font-bold transition-all">♪ 歡迎使用 MediaBox 專業逐字動態歌詞引擎 ♪</p>
+                                <p class="text-gray-400 text-[11px]">音樂播放時將自動對應同步歌詞...</p>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar (Fully interactive seekbar) -->
+                        <div class="space-y-1.5 z-10">
+                            <div class="relative w-full bg-slate-800 rounded-full h-2.5 cursor-pointer group" id="progressBarContainer" onclick="seekAudio(event)">
+                                <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full w-0 transition-all pointer-events-none"></div>
+                            </div>
+                            <div class="flex justify-between text-[11px] font-mono text-gray-400">
+                                <span id="currTime">00:00</span>
+                                <span id="totalDuration">00:00</span>
+                            </div>
+                        </div>
+
+                        <!-- Player Control Buttons -->
+                        <div class="flex items-center justify-between z-10 pt-2">
+                            <div class="flex items-center space-x-3">
+                                <button onclick="toggleShuffle()" id="shuffleBtn" class="text-gray-400 hover:text-white transition text-xs" title="隨機播放">
+                                    <i class="fa-solid fa-shuffle"></i>
+                                </button>
+                                <button onclick="playPrevMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="上一首">
+                                    <i class="fa-solid fa-backward-step"></i>
+                                </button>
+                                <button onclick="toggleAudioPlay()" id="masterPlayBtn" class="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white flex items-center justify-center text-xl shadow-lg transition" title="播放/暫停">
+                                    <i class="fa-solid fa-play ml-0.5"></i>
+                                </button>
+                                <button onclick="playNextMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="下一首">
+                                    <i class="fa-solid fa-forward-step"></i>
+                                </button>
+                                <button onclick="toggleLoop()" id="loopBtn" class="text-gray-400 hover:text-white transition text-xs" title="單曲循環">
+                                    <i class="fa-solid fa-repeat"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="toggleMute()" id="muteBtn" class="text-gray-400 hover:text-white text-xs">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                    <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-16 accent-amber-500 cursor-pointer">
+                                </div>
+                                <select onchange="setPlaybackRate(this.value)" class="bg-slate-800 text-xs text-gray-300 rounded px-1.5 py-1 focus:outline-none">
+                                    <option value="0.75">0.75x</option>
+                                    <option value="1" selected>1.0x</option>
+                                    <option value="1.25">1.25x</option>
+                                    <option value="1.5">1.5x</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Queue & Management Sidebar -->
                 <div class="card-cream rounded-2xl p-5 flex flex-col">
-                    <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-amber-500"></i> 音樂流派分布圖表
+                    <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-list text-amber-500"></i> 播放佇列與管理</span>
+                        <span class="text-xs text-gray-400 font-normal" id="queueCount">0 首</span>
                     </h3>
-                    <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
-                        <canvas id="musicGenreChart"></canvas>
+                    <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[290px]" id="musicQueueContainer"></div>
+                </div>
+            </div>
+
+            <!-- Music Database Table -->
+            <div class="card-cream rounded-2xl p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-amber-500"></i> 音樂曲目資料庫管理
+                    </h3>
+                    <div class="relative w-48">
+                        <input type="text" id="musicSearch" oninput="renderMusicTable()" placeholder="搜尋曲目或歌手..." class="w-full text-xs pl-8 pr-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none focus:border-amber-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-gray-400"></i>
                     </div>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar max-h-72">
+                    <table class="w-full text-xs text-left text-gray-600">
+                        <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200 sticky top-0">
+                            <tr>
+                                <th class="p-3">標題 / 歌手</th>
+                                <th class="p-3">流派</th>
+                                <th class="p-3">長度</th>
+                                <th class="p-3">評分</th>
+                                <th class="p-3 text-center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="musicTableBody" class="divide-y divide-cream-100"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 2: ADVANCED MUSIC PLAYER DASHBOARD (已優化) ================= -->
+        <!-- ================= TAB 2: 影音網址管理與劇院 ================= -->
         <div id="tabContent2" class="tab-panel hidden space-y-6">
-            <div class="card-cream p-5 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
-                
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-cream-200">
-                    <div class="flex items-center gap-3 w-full md:w-auto">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
-                            <i class="fa-solid fa-headphones text-lg"></i>
-                        </div>
-                        <div>
-                            <h2 class="font-bold text-gray-800 text-base">強大 YouTube 專業音樂播放器</h2>
-                            <p class="text-xs text-gray-500">支援即時動態歌詞、歌手寫真照片、音量、進度拖曳與曲目刪除</p>
-                        </div>
-                    </div>
-                    <div class="w-full md:w-96 flex items-center gap-2">
-                        <label class="text-xs font-bold text-gray-600 whitespace-nowrap">選擇音樂:</label>
-                        <select id="playerMusicSelect" onchange="selectMusicFromDropdown(this.value)" class="w-full bg-cream-50 border border-amber-300 font-semibold text-xs text-gray-800 py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                    
-                    <!-- Player Deck & Visualizer -->
-                    <div class="lg:col-span-2 space-y-6">
-                        <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[300px]">
-                            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
-
-                            <!-- Artist Photo & Info Header -->
-                            <div class="flex items-center justify-between z-10 gap-4">
-                                <div class="flex items-center space-x-4">
-                                    <div class="relative">
-                                        <img id="npArtistPhoto" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=200&q=80" alt="Artist" class="w-16 h-16 rounded-full object-cover border-2 border-amber-500 shadow-md">
-                                        <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-[10px] text-white">
-                                            <i class="fa-solid fa-microphone"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span class="text-[10px] uppercase tracking-widest px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full font-bold border border-amber-500/30" id="npGenre">AUDIO</span>
-                                        <h2 class="text-xl font-black text-white mt-1 leading-tight" id="npTitle">未選擇播放音樂</h2>
-                                        <p class="text-xs text-gray-300 mt-0.5" id="npArtist">請從選單選擇曲目</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-end h-8 space-x-1" id="vBars">
-                                    <div class="v-bar"></div>
-                                    <div class="v-bar"></div>
-                                    <div class="v-bar"></div>
-                                    <div class="v-bar"></div>
-                                    <div class="v-bar"></div>
-                                </div>
-                            </div>
-
-                            <!-- YouTube Audio Iframe Controller (Hidden API proxy) -->
-                            <div id="ytAudioFrameContainer" class="hidden">
-                                <iframe id="ytAudioFrame" src="" allow="autoplay"></iframe>
-                            </div>
-
-                            <!-- Dynamic Scrolling Lyrics Box -->
-                            <div class="bg-slate-800/80 backdrop-blur rounded-xl p-3 my-4 h-20 overflow-y-auto custom-scrollbar flex flex-col items-center justify-center text-center border border-slate-700 z-10">
-                                <div id="lyricContainer" class="text-xs space-y-1.5 text-gray-300 w-full">
-                                    <p class="text-amber-400 font-bold transition-all">♪ 歡迎使用 MediaBox 專業逐字動態歌詞引擎 ♪</p>
-                                    <p class="text-gray-400 text-[11px]">音樂播放時將自動對應同步歌詞...</p>
-                                </div>
-                            </div>
-
-                            <!-- Progress Bar (Seekbar Fully Functional) -->
-                            <div class="space-y-1.5 z-10">
-                                <div class="relative w-full bg-slate-800 rounded-full h-2.5 cursor-pointer group" id="progressBarContainer" onclick="seekAudio(event)">
-                                    <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full w-0 transition-all pointer-events-none"></div>
-                                </div>
-                                <div class="flex justify-between text-[11px] font-mono text-gray-400">
-                                    <span id="currTime">00:00</span>
-                                    <span id="totalDuration">00:00</span>
-                                </div>
-                            </div>
-
-                            <!-- Controls -->
-                            <div class="flex items-center justify-between z-10 pt-2">
-                                <div class="flex items-center space-x-3">
-                                    <button onclick="toggleShuffle()" id="shuffleBtn" class="text-gray-400 hover:text-white transition text-xs" title="隨機播放">
-                                        <i class="fa-solid fa-shuffle"></i>
-                                    </button>
-                                    <button onclick="playPrevMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="上一首">
-                                        <i class="fa-solid fa-backward-step"></i>
-                                    </button>
-                                    <button onclick="toggleAudioPlay()" id="masterPlayBtn" class="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white flex items-center justify-center text-xl shadow-lg transition" title="播放/暫停">
-                                        <i class="fa-solid fa-play ml-0.5"></i>
-                                    </button>
-                                    <button onclick="playNextMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="下一首">
-                                        <i class="fa-solid fa-forward-step"></i>
-                                    </button>
-                                    <button onclick="toggleLoop()" id="loopBtn" class="text-gray-400 hover:text-white transition text-xs" title="單曲循環">
-                                        <i class="fa-solid fa-repeat"></i>
-                                    </button>
-                                </div>
-
-                                <div class="flex items-center space-x-4">
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="toggleMute()" id="muteBtn" class="text-gray-400 hover:text-white text-xs">
-                                            <i class="fa-solid fa-volume-high"></i>
-                                        </button>
-                                        <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-16 accent-amber-500 cursor-pointer">
-                                    </div>
-                                    <select onchange="setPlaybackRate(this.value)" class="bg-slate-800 text-xs text-gray-300 rounded px-1.5 py-1 focus:outline-none">
-                                        <option value="0.75">0.75x</option>
-                                        <option value="1" selected>1.0x</option>
-                                        <option value="1.25">1.25x</option>
-                                        <option value="1.5">1.5x</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Queue with Delete Options -->
-                    <div class="card-cream rounded-2xl p-5 flex flex-col h-full">
-                        <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-list text-amber-500"></i> 播放佇列與管理</span>
-                            <span class="text-xs text-gray-400 font-normal" id="queueCount">0 首</span>
-                        </h3>
-                        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[360px]" id="musicQueueContainer"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB 3: VIDEO MANAGEMENT & THEATER (分頁三、四已完美整合) ================= -->
-        <div id="tabContent3" class="tab-panel hidden space-y-6">
             <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
                 <div>
                     <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -423,9 +376,7 @@
                 </button>
             </div>
 
-            <!-- Integrated Theater Screen & Playlist Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Main Theater Screen -->
                 <div class="lg:col-span-2 space-y-4">
                     <div class="card-cream rounded-2xl overflow-hidden bg-black shadow-2xl relative aspect-video flex items-center justify-center">
                         <iframe id="ytVideoIframe" class="w-full h-full" src="" title="YouTube Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -446,7 +397,6 @@
                     </div>
                 </div>
 
-                <!-- Playlist & Dropdown Selector -->
                 <div class="space-y-6">
                     <div class="card-cream rounded-2xl p-5 space-y-4">
                         <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
@@ -466,7 +416,6 @@
                 </div>
             </div>
 
-            <!-- Video Table Manager -->
             <div class="card-cream rounded-2xl p-5">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
@@ -500,7 +449,7 @@
     <div id="authModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-cream-200 space-y-4">
             <div class="flex justify-between items-center border-b border-cream-200 pb-3">
-                <h3 class="font-bold text-lg text-gray-800" id="authModalTitle">會員登入 / 註冊</h3>
+                <h3 class="font-bold text-lg text-gray-800">會員登入 / 註冊</h3>
                 <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="space-y-3">
@@ -530,7 +479,7 @@
     <div id="musicModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
             <div class="flex justify-between items-center border-b border-cream-200 pb-3">
-                <h3 class="font-bold text-base text-gray-800" id="musicModalTitle">新增 YouTube 音樂網址</h3>
+                <h3 class="font-bold text-base text-gray-800">新增 YouTube 音樂網址</h3>
                 <button onclick="closeMusicModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -574,7 +523,7 @@
     <div id="videoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
             <div class="flex justify-between items-center border-b border-cream-200 pb-3">
-                <h3 class="font-bold text-base text-gray-800" id="videoModalTitle">新增 YouTube 影音網址</h3>
+                <h3 class="font-bold text-base text-gray-800">新增 YouTube 影音網址</h3>
                 <button onclick="closeVideoModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -607,13 +556,10 @@
         let activeTab = 1;
         let currentUser = null;
         let authMode = 'login';
-        let currentEditMusicId = null;
-        let currentEditVideoId = null;
 
         let tabTitles = {
-            1: "分頁一: 音樂網址管理",
-            2: "分頁二: 專業強大音樂播放器",
-            3: "分頁三: 影音網址管理與劇院"
+            1: "分頁一: 專業音樂庫與強大播放器",
+            2: "分頁二: 影音網址管理與劇院"
         };
 
         let musicList = [
@@ -633,10 +579,8 @@
         let isShuffle = false;
         let isLoop = false;
         let currentAudioTime = 0;
-        let currentAudioDuration = 225; // seconds default
+        let currentAudioDuration = 225;
         let audioProgressTimer = null;
-
-        let musicGenreChartObj = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             initFirebaseListeners();
@@ -645,7 +589,6 @@
             renderVideoTable();
             populateMusicDropdown();
             populateVideoDropdown();
-            initCharts();
             
             if(musicList.length > 0) selectMusicFromDropdown(musicList[0].id);
             if(videoList.length > 0) selectVideoFromDropdown(videoList[0].id);
@@ -708,7 +651,6 @@
                     renderVideoTable();
                     populateMusicDropdown();
                     populateVideoDropdown();
-                    updateCharts();
                 }
             });
         }
@@ -792,7 +734,7 @@
         }
 
         function renderTabTitles() {
-            for (let i = 1; i <= 3; i++) {
+            for (let i = 1; i <= 2; i++) {
                 const el = document.getElementById(`tabTitle${i}`);
                 if (el) el.innerText = tabTitles[i] || `分頁 ${i}`;
             }
@@ -813,7 +755,7 @@
             return match ? match[1] : url;
         }
 
-        // --- MUSIC MANAGER ---
+        // --- MUSIC MANAGER & PLAYER ---
         function renderMusicTable() {
             const query = document.getElementById('musicSearch')?.value.toLowerCase() || '';
             const tbody = document.getElementById('musicTableBody');
@@ -833,18 +775,12 @@
                     <td class="p-3 font-mono">${m.duration || '--'}</td>
                     <td class="p-3 text-amber-500 font-bold">${'★'.repeat(m.rating)}</td>
                     <td class="p-3 text-center space-x-2">
-                        <button onclick="playMusicDirectly('${m.id}')" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
+                        <button onclick="selectMusicFromDropdown('${m.id}')" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
                         <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('mTotalCount').innerText = musicList.length;
-            document.getElementById('mGenreCount').innerText = [...new Set(musicList.map(m => m.genre))].length;
-            const avg = musicList.length ? (musicList.reduce((acc, cur) => acc + Number(cur.rating), 0) / musicList.length).toFixed(1) : '0.0';
-            document.getElementById('mAvgRating').innerText = avg + ' ★';
-            updateCharts();
         }
 
         function openMusicModal() { document.getElementById('musicModal').classList.remove('hidden'); }
@@ -880,23 +816,7 @@
             }
         }
 
-        function playMusicDirectly(id) {
-            switchTab(2);
-            selectMusicFromDropdown(id);
-        }
-
-        // --- MUSIC PLAYER (Optimized functionality) ---
         function populateMusicDropdown() {
-            const select = document.getElementById('playerMusicSelect');
-            if(!select) return;
-            select.innerHTML = '';
-            musicList.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m.id;
-                opt.innerText = `${m.title} - ${m.artist}`;
-                select.appendChild(opt);
-            });
-
             const queue = document.getElementById('musicQueueContainer');
             queue.innerHTML = '';
             musicList.forEach((m, idx) => {
@@ -919,14 +839,12 @@
             if (!m) return;
 
             currentPlayingMusicId = id;
-            document.getElementById('playerMusicSelect').value = id;
 
             document.getElementById('npTitle').innerText = m.title;
             document.getElementById('npArtist').innerText = m.artist;
             document.getElementById('npGenre').innerText = m.genre;
             document.getElementById('totalDuration').innerText = m.duration;
             
-            // Auto artist photo assignment based on artist name / genre
             const photos = [
                 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80',
                 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=300&q=80',
@@ -934,7 +852,6 @@
             ];
             document.getElementById('npArtistPhoto').src = photos[Math.abs(m.title.length) % photos.length];
 
-            // Setup mock lyrics stream
             const lyricBox = document.getElementById('lyricContainer');
             lyricBox.innerHTML = `
                 <p class="text-amber-400 font-bold">♪ 正在播放: ${m.title} (${m.artist})</p>
@@ -985,7 +902,6 @@
             document.getElementById('currTime').innerText = `${mins}:${secs}`;
         }
 
-        // Seekbar Drag / Click
         function seekAudio(event) {
             const container = document.getElementById('progressBarContainer');
             const rect = container.getBoundingClientRect();
@@ -997,18 +913,12 @@
             updateProgressBarUI();
         }
 
-        function setVolume(val) {
-            console.log("Volume set to:", val);
-        }
-
+        function setVolume(val) { console.log("Volume set to:", val); }
         function toggleMute() {
             const slider = document.getElementById('volumeSlider');
             slider.value = slider.value > 0 ? 0 : 80;
         }
-
-        function setPlaybackRate(rate) {
-            console.log("Playback speed set to:", rate);
-        }
+        function setPlaybackRate(rate) { console.log("Playback speed set to:", rate); }
 
         function playNextMusic() {
             if (musicList.length === 0) return;
@@ -1146,26 +1056,6 @@
             document.getElementById('vpDesc').innerText = v.desc || "暫無說明。";
 
             populateVideoDropdown();
-        }
-
-        // --- CHARTS ---
-        function initCharts() {
-            const ctx1 = document.getElementById('musicGenreChart').getContext('2d');
-            musicGenreChartObj = new Chart(ctx1, {
-                type: 'doughnut',
-                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#f97316', '#10b981', '#3b82f6'] }] },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-            updateCharts();
-        }
-
-        function updateCharts() {
-            if (!musicGenreChartObj) return;
-            const genres = {};
-            musicList.forEach(m => genres[m.genre] = (genres[m.genre] || 0) + 1);
-            musicGenreChartObj.data.labels = Object.keys(genres);
-            musicGenreChartObj.data.datasets[0].data = Object.values(genres);
-            musicGenreChartObj.update();
         }
 
         // --- EXPORT / IMPORT ---
