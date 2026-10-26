@@ -1,0 +1,1169 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged, 
+  updateProfile 
+} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+import { 
+  getDatabase, 
+  ref, 
+  set, 
+  onValue, 
+  onDisconnect 
+} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+import { 
+  Compass, Plus, Trash2, Edit3, MoveUp, MoveDown, Download, Upload, FileSpreadsheet, 
+  FileText, Image as ImageIcon, Save, Wifi, WifiOff, LogIn, LogOut, User, CheckCircle2, 
+  Copy, MapPin, DollarSign, Clock, Layers, Sparkles, AlertCircle, RefreshCw, Eye, Calendar
+} from 'lucide-react';
+
+// ==========================================
+// 1. FIREBASE CONFIG & INITIALIZATION
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBASZegMIn7bxgRaoz8b860PF8nUmGNgls",
+  authDomain: "mediabox-f57c7.firebaseapp.com",
+  projectId: "mediabox-f57c7",
+  storageBucket: "mediabox-f57c7.firebasestorage.app",
+  messagingSenderId: "617898895254",
+  appId: "1:617898895254:web:75888aa1c8e2979f829fb7",
+  measurementId: "G-S8KH7L3C41"
+};
+
+let app, auth, db;
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getDatabase(app);
+} catch (e) {
+  console.warn("Firebase Init fallback/warning:", e);
+}
+
+// Initial Sample Travel Data
+const defaultSheets = [
+  {
+    id: 'sheet-1',
+    title: 'Day 1: 東京抵達與新宿夜遊',
+    categories: [
+      {
+        id: 'cat-1-1',
+        name: '上午：交通與報到',
+        rows: [
+          { id: 'r1', time: '08:30', title: '成田機場入境 & 領取 JR Pass', location: '成田機場第一航廈', cost: 4000, currency: 'JPY', note: '確認過閘機與網卡設定', status: true },
+          { id: 'r2', time: '10:15', title: '搭乘 N\'EX 特快前往新宿', location: '新宿車站', cost: 3200, currency: 'JPY', note: '車程約 1 小時 20 分鐘', status: true }
+        ]
+      },
+      {
+        id: 'cat-1-2',
+        name: '下午 & 晚上：美食與觀光',
+        rows: [
+          { id: 'r3', time: '13:00', title: '入住飯店放行李', location: 'Hotel Gracery Shinjuku', cost: 0, currency: 'JPY', note: '訂單編號: #TK88203', status: false },
+          { id: 'r4', time: '18:00', title: '敘敘苑燒肉晚餐', location: '新宿歌舞伎町', cost: 12000, currency: 'JPY', note: '已線上預約 18:00 席位', status: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'sheet-2',
+    title: 'Day 2: 富士山與河口湖一日遊',
+    categories: [
+      {
+        id: 'cat-2-1',
+        name: '景點行程',
+        rows: [
+          { id: 'r5', time: '07:00', title: '新宿搭乘富士回遊列車', location: '河口湖站', cost: 4130, currency: 'JPY', note: '需提前買好早餐', status: false },
+          { id: 'r6', time: '10:30', title: '新倉山淺間公園看富士山', location: '新倉山淺間神社', cost: 0, currency: 'JPY', note: '準備階梯健行', status: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'sheet-3',
+    title: '總預算與備忘錄',
+    categories: [
+      {
+        id: 'cat-3-1',
+        name: '機票與住宿大筆支出',
+        rows: [
+          { id: 'r7', time: '-', title: '星宇航空 來回機票', location: 'TPE - NRT', cost: 18500, currency: 'TWD', note: '包含 23kg 托運行李', status: true },
+          { id: 'r8', time: '-', title: '新宿格拉斯麗飯店 3 晚', location: '新宿', cost: 14200, currency: 'TWD', note: '包含早餐', status: true }
+        ]
+      }
+    ]
+  }
+];
+
+export default function App() {
+  // Auth state
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  // Sync & Data states
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [sheets, setSheets] = useState(defaultSheets);
+  const [activeSheetId, setActiveSheetId] = useState('sheet-1');
+
+  // Inline edit state
+  const [editingSheetId, setEditingSheetId] = useState(null);
+  const [tempSheetTitle, setTempSheetTitle] = useState('');
+  const [editingCatId, setEditingCatId] = useState(null);
+  const [tempCatTitle, setTempCatTitle] = useState('');
+
+  // Toast Notification State
+  const [toast, setToast] = useState(null);
+
+  const printAreaRef = useRef(null);
+
+  // Load CDN scripts for Excel, PNG, PDF exports
+  useEffect(() => {
+    const loadScript = (src) => {
+      if (!document.querySelector(`script[src="${src}"]`)) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        document.body.appendChild(script);
+      }
+    };
+    loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+    loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  }, []);
+
+  // Listen to Auth State
+  useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      if (user) {
+        showToast(`歡迎回來，${user.displayName || user.email}！`, 'success');
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Listen to Realtime Database & Connection Status
+  useEffect(() => {
+    if (!db) return;
+
+    // Presence listener
+    const connectedRef = ref(db, '.info/connected');
+    const unsubConn = onValue(connectedRef, (snap) => {
+      setIsConnected(snap.val() === true);
+    });
+
+    // Realtime Data Sync for User
+    let unsubData = () => {};
+    if (currentUser) {
+      const userTripRef = ref(db, `travel_itineraries/${currentUser.uid}`);
+      unsubData = onValue(userTripRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val && val.sheets) {
+          setSheets(val.sheets);
+          if (val.updatedAt) setLastSaved(val.updatedAt);
+        }
+      });
+    }
+
+    return () => {
+      unsubConn();
+      unsubData();
+    };
+  }, [currentUser]);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  // Cloud Save Helper
+  const saveToFirebase = async (newSheets) => {
+    setSheets(newSheets);
+    const now = new Date().toLocaleString('zh-TW', { hour12: false });
+    setLastSaved(now);
+
+    if (currentUser && db && isConnected) {
+      setIsSaving(true);
+      try {
+        await set(ref(db, `travel_itineraries/${currentUser.uid}`), {
+          sheets: newSheets,
+          updatedAt: now,
+          userEmail: currentUser.email
+        });
+      } catch (err) {
+        console.error("Firebase save error:", err);
+        showToast("雲端儲存失敗，已保留在本地儲存", "error");
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  // Auth Operations
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      if (isRegister) {
+        const res = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
+        if (authName) {
+          await updateProfile(res.user, { displayName: authName });
+        }
+        showToast("帳號註冊成功！", "success");
+      } else {
+        await signInWithEmailAndPassword(auth, authEmail, authPassword);
+        showToast("登入成功！", "success");
+      }
+      setAuthModalOpen(false);
+      setAuthEmail('');
+      setAuthPassword('');
+      setAuthName('');
+    } catch (err) {
+      setAuthError(err.message || '認證失敗，請檢查輸入內容');
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (auth) {
+      await signOut(auth);
+      showToast("已安全登出", "info");
+    }
+  };
+
+  // Sheet (Tab) Operations
+  const currentSheet = sheets.find(s => s.id === activeSheetId) || sheets[0];
+
+  const handleAddSheet = () => {
+    const newId = 'sheet-' + Date.now();
+    const newSheet = {
+      id: newId,
+      title: `新行程頁面 ${sheets.length + 1}`,
+      categories: [
+        {
+          id: 'cat-' + Date.now(),
+          name: '行程類別 1',
+          rows: [
+            { id: 'r-' + Date.now(), time: '10:00', title: '新增活動項目', location: '地點名稱', cost: 0, currency: 'TWD', note: '備註欄位', status: false }
+          ]
+        }
+      ]
+    };
+    const updated = [...sheets, newSheet];
+    saveToFirebase(updated);
+    setActiveSheetId(newId);
+    showToast("已新增工作表頁面", "success");
+  };
+
+  const handleDuplicateSheet = (sheetToClone) => {
+    const newId = 'sheet-' + Date.now();
+    const cloned = {
+      ...JSON.parse(JSON.stringify(sheetToClone)),
+      id: newId,
+      title: `${sheetToClone.title} (副本)`
+    };
+    const updated = [...sheets, cloned];
+    saveToFirebase(updated);
+    setActiveSheetId(newId);
+    showToast("已複製工作表", "success");
+  };
+
+  const handleDeleteSheet = (sheetId) => {
+    if (sheets.length <= 1) {
+      alert("最少需要保留一個工作表頁面！");
+      return;
+    }
+    if (confirm("確定要刪除此工作表頁面及其所有內容嗎？")) {
+      const updated = sheets.filter(s => s.id !== sheetId);
+      saveToFirebase(updated);
+      if (activeSheetId === sheetId) {
+        setActiveSheetId(updated[0].id);
+      }
+      showToast("已刪除工作表", "info");
+    }
+  };
+
+  const handleSheetTitleRename = (sheetId) => {
+    if (!tempSheetTitle.trim()) return;
+    const updated = sheets.map(s => s.id === sheetId ? { ...s, title: tempSheetTitle } : s);
+    saveToFirebase(updated);
+    setEditingSheetId(null);
+    showToast("已更新頁面名稱", "success");
+  };
+
+  // Category Operations
+  const handleAddCategory = () => {
+    if (!currentSheet) return;
+    const newCat = {
+      id: 'cat-' + Date.now(),
+      name: '全新行程類別',
+      rows: []
+    };
+    const updatedSheets = sheets.map(s => {
+      if (s.id === currentSheet.id) {
+        return { ...s, categories: [...s.categories, newCat] };
+      }
+      return s;
+    });
+    saveToFirebase(updatedSheets);
+  };
+
+  const handleRenameCategory = (catId) => {
+    if (!tempCatTitle.trim()) return;
+    const updatedSheets = sheets.map(s => {
+      if (s.id === currentSheet.id) {
+        return {
+          ...s,
+          categories: s.categories.map(c => c.id === catId ? { ...c, name: tempCatTitle } : c)
+        };
+      }
+      return s;
+    });
+    saveToFirebase(updatedSheets);
+    setEditingCatId(null);
+  };
+
+  const handleDeleteCategory = (catId) => {
+    if (confirm("確定刪除此分類區塊嗎？內含的所有項目也會刪除。")) {
+      const updatedSheets = sheets.map(s => {
+        if (s.id === currentSheet.id) {
+          return {
+            ...s,
+            categories: s.categories.filter(c => c.id !== catId)
+          };
+        }
+        return s;
+      });
+      saveToFirebase(updatedSheets);
+    }
+  };
+
+  const handleMoveCategory = (index, direction) => {
+    const categories = [...currentSheet.categories];
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= categories.length) return;
+
+    const temp = categories[index];
+    categories[index] = categories[targetIdx];
+    categories[targetIdx] = temp;
+
+    const updatedSheets = sheets.map(s => s.id === currentSheet.id ? { ...s, categories } : s);
+    saveToFirebase(updatedSheets);
+  };
+
+  // Row Operations
+  const handleAddRow = (catId) => {
+    const newRow = {
+      id: 'r-' + Date.now(),
+      time: '12:00',
+      title: '新行程項目',
+      location: '未設定地點',
+      cost: 0,
+      currency: 'TWD',
+      note: '',
+      status: false
+    };
+
+    const updatedSheets = sheets.map(s => {
+      if (s.id === currentSheet.id) {
+        return {
+          ...s,
+          categories: s.categories.map(c => c.id === catId ? { ...c, rows: [...c.rows, newRow] } : c)
+        };
+      }
+      return s;
+    });
+    saveToFirebase(updatedSheets);
+  };
+
+  const handleUpdateRow = (catId, rowId, field, value) => {
+    const updatedSheets = sheets.map(s => {
+      if (s.id === currentSheet.id) {
+        return {
+          ...s,
+          categories: s.categories.map(c => {
+            if (c.id === catId) {
+              return {
+                ...c,
+                rows: c.rows.map(r => r.id === rowId ? { ...r, [field]: value } : r)
+              };
+            }
+            return c;
+          })
+        };
+      }
+      return s;
+    });
+    saveToFirebase(updatedSheets);
+  };
+
+  const handleDeleteRow = (catId, rowId) => {
+    const updatedSheets = sheets.map(s => {
+      if (s.id === currentSheet.id) {
+        return {
+          ...s,
+          categories: s.categories.map(c => {
+            if (c.id === catId) {
+              return { ...c, rows: c.rows.filter(r => r.id !== rowId) };
+            }
+            return c;
+          })
+        };
+      }
+      return s;
+    });
+    saveToFirebase(updatedSheets);
+  };
+
+  const handleMoveRow = (catId, rowIndex, direction) => {
+    const cat = currentSheet.categories.find(c => c.id === catId);
+    if (!cat) return;
+    const rows = [...cat.rows];
+    const targetIdx = direction === 'up' ? rowIndex - 1 : rowIndex + 1;
+    if (targetIdx < 0 || targetIdx >= rows.length) return;
+
+    const temp = rows[rowIndex];
+    rows[rowIndex] = rows[targetIdx];
+    rows[targetIdx] = temp;
+
+    const updatedSheets = sheets.map(s => {
+      if (s.id === currentSheet.id) {
+        return {
+          ...s,
+          categories: s.categories.map(c => c.id === catId ? { ...c, rows } : c)
+        };
+      }
+      return s;
+    });
+    saveToFirebase(updatedSheets);
+  };
+
+  // EXPORT & IMPORT FUNCTIONS
+  const exportToExcel = () => {
+    if (!window.XLSX) {
+      alert("Excel 模組還在載入中，請稍後再試！");
+      return;
+    }
+    const wb = window.XLSX.utils.book_new();
+
+    sheets.forEach(sheet => {
+      const data = [];
+      data.push([sheet.title]);
+      data.push([]); // blank
+
+      sheet.categories.forEach(cat => {
+        data.push([`【${cat.name}】`]);
+        data.push(['狀態', '時間', '活動/項目', '地點/備註地標', '估算金額', '幣別', '詳細備註']);
+        cat.rows.forEach(r => {
+          data.push([
+            r.status ? '已完成' : '未完成',
+            r.time,
+            r.title,
+            r.location,
+            r.cost,
+            r.currency,
+            r.note
+          ]);
+        });
+        data.push([]); // blank row between categories
+      });
+
+      const ws = window.XLSX.utils.aoa_to_sheet(data);
+      window.XLSX.utils.book_append_sheet(wb, ws, sheet.title.substring(0, 31)); // sheet title max 31 chars
+    });
+
+    window.XLSX.writeFile(wb, `旅行行程規劃_${new Date().toISOString().slice(0,10)}.xlsx`);
+    showToast("已成功匯出多頁面 Excel 檔案！", "success");
+  };
+
+  const importFromExcel = (e) => {
+    const file = e.target.files[0];
+    if (!file || !window.XLSX) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = window.XLSX.read(bstr, { type: 'binary' });
+        
+        const importedSheets = wb.SheetNames.map((sheetName, idx) => {
+          const ws = wb.Sheets[sheetName];
+          const rawData = window.XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+          const categories = [];
+          let currentCat = { id: 'cat-imp-0', name: '匯入項目', rows: [] };
+
+          rawData.forEach((row) => {
+            if (!row || row.length === 0) return;
+            const firstCol = String(row[0] || '').trim();
+            
+            if (firstCol.startsWith('【') && firstCol.endsWith('】')) {
+              if (currentCat.rows.length > 0) categories.push(currentCat);
+              currentCat = {
+                id: 'cat-imp-' + Math.random(),
+                name: firstCol.replace(/[【】]/g, ''),
+                rows: []
+              };
+            } else if (firstCol !== '狀態' && firstCol !== sheetName) {
+              currentCat.rows.push({
+                id: 'r-imp-' + Math.random(),
+                status: firstCol === '已完成',
+                time: String(row[1] || '10:00'),
+                title: String(row[2] || '未命名項目'),
+                location: String(row[3] || ''),
+                cost: Number(row[4]) || 0,
+                currency: String(row[5] || 'TWD'),
+                note: String(row[6] || '')
+              });
+            }
+          });
+          if (currentCat.rows.length > 0) categories.push(currentCat);
+
+          return {
+            id: 'sheet-imp-' + Date.now() + '-' + idx,
+            title: sheetName,
+            categories: categories.length > 0 ? categories : [
+              { id: 'cat-empty', name: '預設類別', rows: [] }
+            ]
+          };
+        });
+
+        if (importedSheets.length > 0) {
+          saveToFirebase(importedSheets);
+          setActiveSheetId(importedSheets[0].id);
+          showToast("已成功將 Excel 資料匯入！", "success");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Excel 檔案解析失敗，請確認格式是否正確。");
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const exportToPNG = async () => {
+    if (!printAreaRef.current || !window.html2canvas) {
+      alert("畫布捕捉模組載入中，請稍後再試！");
+      return;
+    }
+    showToast("正在生成高解析度 PNG 圖片...", "info");
+    try {
+      const canvas = await window.html2canvas(printAreaRef.current, {
+        scale: 2,
+        backgroundColor: '#0f172a'
+      });
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = `${currentSheet.title}_行程單.png`;
+      link.click();
+      showToast("高清 PNG 圖檔下載完成！", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("PNG 匯出失敗", "error");
+    }
+  };
+
+  const exportToPDF = async () => {
+    if (!printAreaRef.current || !window.html2canvas || !window.jspdf) {
+      alert("PDF 模組載入中，請稍後再試！");
+      return;
+    }
+    showToast("正在生成 PDF 行程表...", "info");
+    try {
+      const canvas = await window.html2canvas(printAreaRef.current, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${currentSheet.title}_行程手冊.pdf`);
+      showToast("PDF 匯出成功！", "success");
+    } catch (err) {
+      console.error(err);
+      showToast("PDF 匯出失敗", "error");
+    }
+  };
+
+  // Calculate Column Totals
+  const calculateTotalCost = (rows) => {
+    return rows.reduce((acc, row) => acc + (Number(row.cost) || 0), 0);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col selection:bg-cyan-500 selection:text-white">
+      
+      {/* TOAST NOTIFICATION */}
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-md transition-all duration-300 animate-bounce ${
+          toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-300' :
+          toast.type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-300' :
+          'bg-slate-900/90 border-cyan-500/50 text-cyan-300'
+        }`}>
+          <Sparkles className="w-5 h-5" />
+          <span className="text-sm font-semibold">{toast.message}</span>
+        </div>
+      )}
+
+      {/* TOP HEADER */}
+      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        
+        {/* Logo & App Title */}
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-cyan-500/20">
+            <Compass className="w-6 h-6 text-white animate-spin-slow" />
+          </div>
+          <div>
+            <h1 className="text-xl font-extrabold bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
+              Cloud Travel Itinerary Studio
+            </h1>
+            <p className="text-xs text-slate-400">專業旅行行程規劃 & 雲端實時同步系統</p>
+          </div>
+        </div>
+
+        {/* Realtime Status Bar & Save Indicator */}
+        <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
+            isConnected 
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`}></span>
+            {isConnected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+            <span>{isConnected ? 'Firebase Realtime 連線中' : '離線模式 (Offline)'}</span>
+          </div>
+
+          <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800 text-slate-400">
+            <Clock className="w-3.5 h-3.5 text-cyan-400" />
+            <span>上次儲存: {lastSaved || '尚無紀錄'}</span>
+            {isSaving && <RefreshCw className="w-3 h-3 text-cyan-400 animate-spin ml-1" />}
+          </div>
+
+          {/* User Auth Profile */}
+          {currentUser ? (
+            <div className="flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs">
+                {(currentUser.displayName || currentUser.email)[0].toUpperCase()}
+              </div>
+              <span className="text-slate-200 font-sans font-medium">
+                {currentUser.displayName || currentUser.email.split('@')[0]}
+              </span>
+              <button 
+                onClick={handleSignOut} 
+                className="text-slate-400 hover:text-rose-400 transition" 
+                title="登出"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAuthModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-cyan-500/20"
+            >
+              <LogIn className="w-4 h-4" />
+              <span>註冊 / 登入雲端帳號</span>
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* EXPORT & TOOLBAR HEADER */}
+      <div className="bg-slate-900/60 border-b border-slate-800 px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+            <Layers className="w-4 h-4 text-cyan-400" /> 行程工具箱:
+          </span>
+          <button
+            onClick={handleAddCategory}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition"
+          >
+            <Plus className="w-3.5 h-3.5 text-cyan-400" /> 新增行程類別區塊
+          </button>
+        </div>
+
+        {/* Global Export Options */}
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition cursor-pointer">
+            <Upload className="w-3.5 h-3.5 text-emerald-400" />
+            <span>匯入 Excel</span>
+            <input type="file" accept=".xlsx, .xls" onChange={importFromExcel} className="hidden" />
+          </label>
+
+          <button
+            onClick={exportToExcel}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition shadow-md shadow-emerald-600/20"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>一鍵匯出 Excel</span>
+          </button>
+
+          <button
+            onClick={exportToPNG}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-medium transition shadow-md shadow-cyan-600/20"
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>匯出高清 PNG</span>
+          </button>
+
+          <button
+            onClick={exportToPDF}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-medium transition shadow-md shadow-purple-600/20"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>匯出 PDF 手冊</span>
+          </button>
+        </div>
+      </div>
+
+      {/* WORKSHEET / TAB NAVIGATION BAR */}
+      <div className="bg-slate-900 border-b border-slate-800 px-4 lg:px-8 py-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none">
+        {sheets.map((sheet) => (
+          <div
+            key={sheet.id}
+            onClick={() => setActiveSheetId(sheet.id)}
+            className={`group relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
+              sheet.id === activeSheetId
+                ? 'bg-cyan-500/10 border-cyan-500 text-cyan-300 shadow-lg shadow-cyan-500/10'
+                : 'bg-slate-950/50 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+            }`}
+          >
+            {editingSheetId === sheet.id ? (
+              <input
+                type="text"
+                autoFocus
+                value={tempSheetTitle}
+                onChange={(e) => setTempSheetTitle(e.target.value)}
+                onBlur={() => handleSheetTitleRename(sheet.id)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSheetTitleRename(sheet.id)}
+                className="bg-slate-950 text-cyan-300 border border-cyan-500 rounded px-1.5 py-0.5 focus:outline-none text-xs"
+              />
+            ) : (
+              <span 
+                onDoubleClick={() => {
+                  setEditingSheetId(sheet.id);
+                  setTempSheetTitle(sheet.title);
+                }}
+                title="雙擊名稱可即時修改標題"
+              >
+                {sheet.title}
+              </span>
+            )}
+
+            {/* Tab Actions */}
+            <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDuplicateSheet(sheet);
+                }}
+                className="p-1 hover:text-cyan-300 transition"
+                title="複製此頁面"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteSheet(sheet.id);
+                }}
+                className="p-1 hover:text-rose-400 transition"
+                title="刪除此頁面"
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        ))}
+
+        <button
+          onClick={handleAddSheet}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>新增分頁</span>
+        </button>
+      </div>
+
+      {/* MAIN MAIN CONTENT CANVAS */}
+      <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
+        
+        {/* PRINTABLE / EXPORTABLE CONTAINER */}
+        <div ref={printAreaRef} className="space-y-6 bg-slate-950 p-2 rounded-2xl">
+          
+          {/* Active Sheet Banner Title */}
+          <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider mb-1">
+                <Calendar className="w-4 h-4" /> 當前旅行日誌工作表
+              </div>
+              <h2 className="text-2xl font-extrabold text-slate-100">
+                {currentSheet?.title}
+              </h2>
+            </div>
+            
+            <div className="flex items-center gap-3 text-xs text-slate-400 font-mono bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
+              <span>總分類: {currentSheet?.categories?.length || 0} 個</span>
+              <span>•</span>
+              <span>總花費預算: NT$ / JPY {
+                currentSheet?.categories?.reduce((acc, cat) => acc + calculateTotalCost(cat.rows), 0).toLocaleString()
+              }</span>
+            </div>
+          </div>
+
+          {/* CATEGORIES & EDITABLE TABLES */}
+          {currentSheet?.categories?.map((category, catIndex) => {
+            const catTotal = calculateTotalCost(category.rows);
+
+            return (
+              <div 
+                key={category.id} 
+                className="bg-slate-900/60 border border-slate-800/90 rounded-2xl overflow-hidden shadow-xl transition hover:border-slate-700"
+              >
+                {/* Category Header */}
+                <div className="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500"></span>
+                    
+                    {editingCatId === category.id ? (
+                      <input
+                        type="text"
+                        autoFocus
+                        value={tempCatTitle}
+                        onChange={(e) => setTempCatTitle(e.target.value)}
+                        onBlur={() => handleRenameCategory(category.id)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleRenameCategory(category.id)}
+                        className="bg-slate-950 text-cyan-300 border border-cyan-500 rounded px-2 py-1 text-sm font-bold focus:outline-none"
+                      />
+                    ) : (
+                      <h3 
+                        onDoubleClick={() => {
+                          setEditingCatId(category.id);
+                          setTempCatTitle(category.name);
+                        }}
+                        className="font-bold text-base text-slate-100 hover:text-cyan-300 transition cursor-pointer"
+                        title="雙擊即時更名分類"
+                      >
+                        {category.name}
+                      </h3>
+                    )}
+
+                    <span className="text-xs text-slate-500 font-mono">({category.rows.length} 個項目)</span>
+                  </div>
+
+                  {/* Category Controls */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleMoveCategory(catIndex, 'up')}
+                      disabled={catIndex === 0}
+                      className="p-1.5 hover:bg-slate-800 text-slate-400 disabled:opacity-30 rounded-lg transition"
+                      title="分類向上移動"
+                    >
+                      <MoveUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleMoveCategory(catIndex, 'down')}
+                      disabled={catIndex === currentSheet.categories.length - 1}
+                      className="p-1.5 hover:bg-slate-800 text-slate-400 disabled:opacity-30 rounded-lg transition"
+                      title="分類向下移動"
+                    >
+                      <MoveDown className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCategory(category.id)}
+                      className="p-1.5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-lg transition"
+                      title="刪除此分類區塊"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Table View */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-300 border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950/80 text-slate-400 font-mono uppercase border-b border-slate-800">
+                        <th className="py-3 px-4 w-12 text-center">狀態</th>
+                        <th className="py-3 px-4 w-24">時間</th>
+                        <th className="py-3 px-4 min-w-[180px]">活動 / 行程名稱</th>
+                        <th className="py-3 px-4 min-w-[160px]">地點 / 導航鏈結</th>
+                        <th className="py-3 px-4 w-28">預算/金額</th>
+                        <th className="py-3 px-4 w-20">幣別</th>
+                        <th className="py-3 px-4 min-w-[200px]">詳細備註 / 訂位代碼</th>
+                        <th className="py-3 px-4 w-24 text-center">順序/操作</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/60">
+                      {category.rows.map((row, rIdx) => (
+                        <tr key={row.id} className="hover:bg-slate-800/40 transition group">
+                          
+                          {/* Checkbox */}
+                          <td className="py-2.5 px-4 text-center">
+                            <input
+                              type="checkbox"
+                              checked={row.status || false}
+                              onChange={(e) => handleUpdateRow(category.id, row.id, 'status', e.target.checked)}
+                              className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
+                            />
+                          </td>
+
+                          {/* Time */}
+                          <td className="py-2.5 px-4 font-mono">
+                            <input
+                              type="text"
+                              value={row.time}
+                              onChange={(e) => handleUpdateRow(category.id, row.id, 'time', e.target.value)}
+                              className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-slate-200 focus:outline-none py-0.5"
+                            />
+                          </td>
+
+                          {/* Title */}
+                          <td className="py-2.5 px-4 font-semibold">
+                            <input
+                              type="text"
+                              value={row.title}
+                              onChange={(e) => handleUpdateRow(category.id, row.id, 'title', e.target.value)}
+                              className={`w-full bg-transparent border-b border-transparent focus:border-cyan-500 focus:outline-none py-0.5 ${
+                                row.status ? 'line-through text-slate-500' : 'text-slate-100'
+                              }`}
+                            />
+                          </td>
+
+                          {/* Location */}
+                          <td className="py-2.5 px-4">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                              <input
+                                type="text"
+                                value={row.location}
+                                onChange={(e) => handleUpdateRow(category.id, row.id, 'location', e.target.value)}
+                                className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-slate-300 focus:outline-none py-0.5"
+                              />
+                            </div>
+                          </td>
+
+                          {/* Cost */}
+                          <td className="py-2.5 px-4 font-mono">
+                            <input
+                              type="number"
+                              value={row.cost}
+                              onChange={(e) => handleUpdateRow(category.id, row.id, 'cost', Number(e.target.value))}
+                              className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-cyan-400 font-bold focus:outline-none py-0.5"
+                            />
+                          </td>
+
+                          {/* Currency */}
+                          <td className="py-2.5 px-4">
+                            <select
+                              value={row.currency || 'TWD'}
+                              onChange={(e) => handleUpdateRow(category.id, row.id, 'currency', e.target.value)}
+                              className="bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-slate-300 focus:outline-none text-[11px]"
+                            >
+                              <option value="TWD">TWD</option>
+                              <option value="JPY">JPY</option>
+                              <option value="USD">USD</option>
+                              <option value="EUR">EUR</option>
+                              <option value="KRW">KRW</option>
+                            </select>
+                          </td>
+
+                          {/* Note */}
+                          <td className="py-2.5 px-4">
+                            <input
+                              type="text"
+                              value={row.note}
+                              onChange={(e) => handleUpdateRow(category.id, row.id, 'note', e.target.value)}
+                              className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-slate-400 focus:outline-none py-0.5"
+                              placeholder="新增註記..."
+                            />
+                          </td>
+
+                          {/* Row Actions */}
+                          <td className="py-2.5 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1 opacity-40 group-hover:opacity-100 transition">
+                              <button
+                                onClick={() => handleMoveRow(category.id, rIdx, 'up')}
+                                disabled={rIdx === 0}
+                                className="p-1 hover:text-cyan-300 disabled:opacity-20"
+                                title="上移"
+                              >
+                                <MoveUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleMoveRow(category.id, rIdx, 'down')}
+                                disabled={rIdx === category.rows.length - 1}
+                                className="p-1 hover:text-cyan-300 disabled:opacity-20"
+                                title="下移"
+                              >
+                                <MoveDown className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRow(category.id, row.id)}
+                                className="p-1 hover:text-rose-400"
+                                title="刪除"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+
+                    {/* Table Footer with Category Subtotal */}
+                    <tfoot>
+                      <tr className="bg-slate-950/60 font-semibold border-t border-slate-800">
+                        <td colSpan={4} className="py-2.5 px-4 text-right text-slate-400">
+                          區塊花費小計 ({category.name}):
+                        </td>
+                        <td colSpan={4} className="py-2.5 px-4 font-mono text-cyan-400 text-sm">
+                          ${catTotal.toLocaleString()}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                {/* Add Row Button */}
+                <div className="p-3 bg-slate-950/40 border-t border-slate-800/80">
+                  <button
+                    onClick={() => handleAddRow(category.id)}
+                    className="flex items-center gap-2 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>新增行程項目到【{category.name}】</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+
+          {currentSheet?.categories?.length === 0 && (
+            <div className="text-center py-12 bg-slate-900/30 rounded-2xl border border-dashed border-slate-800">
+              <Layers className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+              <p className="text-slate-400 text-sm font-medium">此頁面尚無任何類別區塊</p>
+              <button
+                onClick={handleAddCategory}
+                className="mt-3 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition"
+              >
+                立即建立第一個類別
+              </button>
+            </div>
+          )}
+
+        </div>
+
+      </main>
+
+      {/* AUTHENTICATION MODAL */}
+      {authModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setAuthModalOpen(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition"
+            >
+              ✕
+            </button>
+
+            <div className="text-center">
+              <div className="inline-flex p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl mb-2">
+                <User className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-extrabold text-white">
+                {isRegister ? '建立 Firebase 帳號' : '登入旅行工作室'}
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                {isRegister ? '無須人工審核，即刻享有雲端實時同步' : '登入後自動同步個人專屬雲端行程'}
+              </p>
+            </div>
+
+            {authError && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
+              {isRegister && (
+                <div>
+                  <label className="block font-semibold text-slate-300 mb-1">真實姓名 (Display Name)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="請輸入您的全名"
+                    value={authName}
+                    onChange={(e) => setAuthName(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">電子郵件 (Email)</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="name@example.com"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">密碼 (Password)</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="至少 6 位數"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-cyan-500/20"
+              >
+                {isRegister ? '立即免費註冊' : '登入並開啟同步'}
+              </button>
+            </form>
+
+            <div className="text-center pt-2 border-t border-slate-800 text-xs text-slate-400">
+              {isRegister ? '已經有帳號了？' : '還沒有帳號嗎？'}
+              <button
+                type="button"
+                onClick={() => setIsRegister(!isRegister)}
+                className="ml-1.5 text-cyan-400 hover:underline font-bold"
+              >
+                {isRegister ? '點此直接登入' : '立即免費註冊'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER */}
+      <footer className="border-t border-slate-800/80 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
+        GitHub Ready • Firebase Realtime Database Integrated • Export Excel, PNG, PDF Supported
+      </footer>
+
+    </div>
+  );
+}
