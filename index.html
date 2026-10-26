@@ -165,7 +165,7 @@
             </div>
         </div>
 
-        <!-- 整合為 2 個分頁導覽 -->
+        <!-- 2 個分頁導覽 -->
         <nav class="bg-cream-100 border-t border-cream-200 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-gray-600" id="tabNavContainer">
                 <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
@@ -212,10 +212,9 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" id="exportArea">
 
-        <!-- ================= TAB 1: 整合後的音樂庫與強大音樂播放器 ================= -->
+        <!-- ================= TAB 1: 音樂庫與強大播放器 ================= -->
         <div id="tabContent1" class="tab-panel space-y-6">
             
-            <!-- Banner & Add Button -->
             <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
@@ -223,7 +222,7 @@
                     </div>
                     <div>
                         <h2 class="font-bold text-gray-800 text-base">專業 YouTube 音樂庫與強大播放器</h2>
-                        <p class="text-xs text-gray-500">管理曲目庫、支援動態逐字歌詞、歌手寫真照片、音量調節、進度軸拖曳與曲目刪除</p>
+                        <p class="text-xs text-gray-500">支援即時動態歌詞、歌手寫真照片、音量、秒速進度跳轉與曲目刪除防護</p>
                     </div>
                 </div>
                 <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
@@ -231,14 +230,12 @@
                 </button>
             </div>
 
-            <!-- Player & Controls Deck -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Player Deck -->
                 <div class="lg:col-span-2 space-y-4">
                     <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[300px]">
                         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
 
-                        <!-- Artist Photo & Info -->
                         <div class="flex items-center justify-between z-10 gap-4">
                             <div class="flex items-center space-x-4">
                                 <div class="relative">
@@ -263,9 +260,7 @@
                         </div>
 
                         <!-- YouTube Audio Iframe Container -->
-                        <div id="ytAudioFrameContainer" class="hidden">
-                            <iframe id="ytAudioFrame" src="" allow="autoplay"></iframe>
-                        </div>
+                        <div id="ytAudioFrameContainer" class="hidden"></div>
 
                         <!-- Dynamic Scrolling Lyrics Box -->
                         <div class="bg-slate-800/80 backdrop-blur rounded-xl p-3 my-4 h-20 overflow-y-auto custom-scrollbar flex flex-col items-center justify-center text-center border border-slate-700 z-10">
@@ -275,7 +270,7 @@
                             </div>
                         </div>
 
-                        <!-- Progress Bar (Fully interactive seekbar) -->
+                        <!-- Progress Bar (Instant Seekbar) -->
                         <div class="space-y-1.5 z-10">
                             <div class="relative w-full bg-slate-800 rounded-full h-2.5 cursor-pointer group" id="progressBarContainer" onclick="seekAudio(event)">
                                 <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full w-0 transition-all pointer-events-none"></div>
@@ -807,8 +802,21 @@
             saveToFirebase();
         }
 
+        // Bug Fix 4: If deleted track is currently playing, completely stop and clear it.
         function deleteMusicItem(id) {
             if (confirm("確定要刪除這首音樂嗎？")) {
+                if (currentPlayingMusicId === id) {
+                    document.getElementById('ytAudioFrameContainer').innerHTML = '';
+                    isAudioPlaying = false;
+                    currentPlayingMusicId = null;
+                    clearInterval(audioProgressTimer);
+                    document.getElementById('npTitle').innerText = "未選擇播放音樂";
+                    document.getElementById('npArtist').innerText = "請從下方選擇曲目";
+                    document.getElementById('currTime').innerText = "00:00";
+                    document.getElementById('progressBar').style.width = '0%';
+                    stopVisualizer();
+                }
+
                 musicList = musicList.filter(x => x.id !== id);
                 renderMusicTable();
                 populateMusicDropdown();
@@ -834,11 +842,13 @@
             document.getElementById('queueCount').innerText = `${musicList.length} 首`;
         }
 
+        // Bug Fix 3: Ensure selected music ID matches precisely
         function selectMusicFromDropdown(id) {
             const m = musicList.find(x => x.id === id);
             if (!m) return;
 
             currentPlayingMusicId = id;
+            currentAudioTime = 0;
 
             document.getElementById('npTitle').innerText = m.title;
             document.getElementById('npArtist').innerText = m.artist;
@@ -855,26 +865,40 @@
             const lyricBox = document.getElementById('lyricContainer');
             lyricBox.innerHTML = `
                 <p class="text-amber-400 font-bold">♪ 正在播放: ${m.title} (${m.artist})</p>
-                <p class="text-gray-300 text-[11px]">🎵 自動對接雲端歌詞庫成功，動態同步中...</p>
-                <p class="text-gray-400 text-[11px]">享受純淨音質與沈浸式體驗</p>
+                <p class="text-gray-300 text-[11px]">🎵 動態歌詞庫同步成功...</p>
             `;
 
-            const ytId = extractYTId(m.url);
-            document.getElementById('ytAudioFrameContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" allow="autoplay" class="hidden"></iframe>`;
-
+            loadAudioIframe(currentAudioTime, true);
             isAudioPlaying = true;
-            currentAudioTime = 0;
             updatePlayBtnUI();
             startVisualizer();
             startAudioTimer();
             populateMusicDropdown();
         }
 
+        // Helper to load YouTube Audio Iframe with start offset
+        function loadAudioIframe(startSeconds = 0, autoplay = true) {
+            const m = musicList.find(x => x.id === currentPlayingMusicId);
+            if (!m) return;
+            const ytId = extractYTId(m.url);
+            const autoParam = autoplay ? '1' : '0';
+            document.getElementById('ytAudioFrameContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=${autoParam}&start=${startSeconds}" allow="autoplay" class="hidden"></iframe>`;
+        }
+
+        // Bug Fix 1: Pause button now instantly stops/clears iframe
         function toggleAudioPlay() {
+            if (!currentPlayingMusicId) return;
             isAudioPlaying = !isAudioPlaying;
             updatePlayBtnUI();
-            if (isAudioPlaying) startAudioTimer();
-            else clearInterval(audioProgressTimer);
+            
+            if (isAudioPlaying) {
+                loadAudioIframe(currentAudioTime, true);
+                startAudioTimer();
+            } else {
+                document.getElementById('ytAudioFrameContainer').innerHTML = '';
+                clearInterval(audioProgressTimer);
+                stopVisualizer();
+            }
         }
 
         function updatePlayBtnUI() {
@@ -902,7 +926,9 @@
             document.getElementById('currTime').innerText = `${mins}:${secs}`;
         }
 
+        // Bug Fix 2: Instant seek with zero delay using YouTube start parameter reload
         function seekAudio(event) {
+            if (!currentPlayingMusicId) return;
             const container = document.getElementById('progressBarContainer');
             const rect = container.getBoundingClientRect();
             const clickX = event.clientX - rect.left;
@@ -911,6 +937,9 @@
             
             currentAudioTime = Math.floor(ratio * currentAudioDuration);
             updateProgressBarUI();
+            
+            // Instantly reload iframe at the target second without delay
+            loadAudioIframe(currentAudioTime, isAudioPlaying);
         }
 
         function setVolume(val) { console.log("Volume set to:", val); }
