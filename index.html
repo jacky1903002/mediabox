@@ -1,1169 +1,1565 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged, 
-  updateProfile 
-} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-import { 
-  getDatabase, 
-  ref, 
-  set, 
-  onValue, 
-  onDisconnect 
-} from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
-import { 
-  Compass, Plus, Trash2, Edit3, MoveUp, MoveDown, Download, Upload, FileSpreadsheet, 
-  FileText, Image as ImageIcon, Save, Wifi, WifiOff, LogIn, LogOut, User, CheckCircle2, 
-  Copy, MapPin, DollarSign, Clock, Layers, Sparkles, AlertCircle, RefreshCw, Eye, Calendar
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediaBox Pro - 專業級多媒體播放與管理系統</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS XLSX -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-// ==========================================
-// 1. FIREBASE CONFIG & INITIALIZATION
-// ==========================================
-const firebaseConfig = {
-  apiKey: "AIzaSyBASZegMIn7bxgRaoz8b860PF8nUmGNgls",
-  authDomain: "mediabox-f57c7.firebaseapp.com",
-  projectId: "mediabox-f57c7",
-  storageBucket: "mediabox-f57c7.firebasestorage.app",
-  messagingSenderId: "617898895254",
-  appId: "1:617898895254:web:75888aa1c8e2979f829fb7",
-  measurementId: "G-S8KH7L3C41"
-};
-
-let app, auth, db;
-try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getDatabase(app);
-} catch (e) {
-  console.warn("Firebase Init fallback/warning:", e);
-}
-
-// Initial Sample Travel Data
-const defaultSheets = [
-  {
-    id: 'sheet-1',
-    title: 'Day 1: 東京抵達與新宿夜遊',
-    categories: [
-      {
-        id: 'cat-1-1',
-        name: '上午：交通與報到',
-        rows: [
-          { id: 'r1', time: '08:30', title: '成田機場入境 & 領取 JR Pass', location: '成田機場第一航廈', cost: 4000, currency: 'JPY', note: '確認過閘機與網卡設定', status: true },
-          { id: 'r2', time: '10:15', title: '搭乘 N\'EX 特快前往新宿', location: '新宿車站', cost: 3200, currency: 'JPY', note: '車程約 1 小時 20 分鐘', status: true }
-        ]
-      },
-      {
-        id: 'cat-1-2',
-        name: '下午 & 晚上：美食與觀光',
-        rows: [
-          { id: 'r3', time: '13:00', title: '入住飯店放行李', location: 'Hotel Gracery Shinjuku', cost: 0, currency: 'JPY', note: '訂單編號: #TK88203', status: false },
-          { id: 'r4', time: '18:00', title: '敘敘苑燒肉晚餐', location: '新宿歌舞伎町', cost: 12000, currency: 'JPY', note: '已線上預約 18:00 席位', status: false }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'sheet-2',
-    title: 'Day 2: 富士山與河口湖一日遊',
-    categories: [
-      {
-        id: 'cat-2-1',
-        name: '景點行程',
-        rows: [
-          { id: 'r5', time: '07:00', title: '新宿搭乘富士回遊列車', location: '河口湖站', cost: 4130, currency: 'JPY', note: '需提前買好早餐', status: false },
-          { id: 'r6', time: '10:30', title: '新倉山淺間公園看富士山', location: '新倉山淺間神社', cost: 0, currency: 'JPY', note: '準備階梯健行', status: false }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'sheet-3',
-    title: '總預算與備忘錄',
-    categories: [
-      {
-        id: 'cat-3-1',
-        name: '機票與住宿大筆支出',
-        rows: [
-          { id: 'r7', time: '-', title: '星宇航空 來回機票', location: 'TPE - NRT', cost: 18500, currency: 'TWD', note: '包含 23kg 托運行李', status: true },
-          { id: 'r8', time: '-', title: '新宿格拉斯麗飯店 3 晚', location: '新宿', cost: 14200, currency: 'TWD', note: '包含早餐', status: true }
-        ]
-      }
-    ]
-  }
-];
-
-export default function App() {
-  // Auth state
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
-  const [authEmail, setAuthEmail] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const [authName, setAuthName] = useState('');
-  const [authError, setAuthError] = useState('');
-
-  // Sync & Data states
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [sheets, setSheets] = useState(defaultSheets);
-  const [activeSheetId, setActiveSheetId] = useState('sheet-1');
-
-  // Inline edit state
-  const [editingSheetId, setEditingSheetId] = useState(null);
-  const [tempSheetTitle, setTempSheetTitle] = useState('');
-  const [editingCatId, setEditingCatId] = useState(null);
-  const [tempCatTitle, setTempCatTitle] = useState('');
-
-  // Toast Notification State
-  const [toast, setToast] = useState(null);
-
-  const printAreaRef = useRef(null);
-
-  // Load CDN scripts for Excel, PNG, PDF exports
-  useEffect(() => {
-    const loadScript = (src) => {
-      if (!document.querySelector(`script[src="${src}"]`)) {
-        const script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        document.body.appendChild(script);
-      }
-    };
-    loadScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
-    loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
-    loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-  }, []);
-
-  // Listen to Auth State
-  useEffect(() => {
-    if (!auth) return;
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      if (user) {
-        showToast(`歡迎回來，${user.displayName || user.email}！`, 'success');
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Listen to Realtime Database & Connection Status
-  useEffect(() => {
-    if (!db) return;
-
-    // Presence listener
-    const connectedRef = ref(db, '.info/connected');
-    const unsubConn = onValue(connectedRef, (snap) => {
-      setIsConnected(snap.val() === true);
-    });
-
-    // Realtime Data Sync for User
-    let unsubData = () => {};
-    if (currentUser) {
-      const userTripRef = ref(db, `travel_itineraries/${currentUser.uid}`);
-      unsubData = onValue(userTripRef, (snapshot) => {
-        const val = snapshot.val();
-        if (val && val.sheets) {
-          setSheets(val.sheets);
-          if (val.updatedAt) setLastSaved(val.updatedAt);
-        }
-      });
-    }
-
-    return () => {
-      unsubConn();
-      unsubData();
-    };
-  }, [currentUser]);
-
-  const showToast = (message, type = 'info') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
-  };
-
-  // Cloud Save Helper
-  const saveToFirebase = async (newSheets) => {
-    setSheets(newSheets);
-    const now = new Date().toLocaleString('zh-TW', { hour12: false });
-    setLastSaved(now);
-
-    if (currentUser && db && isConnected) {
-      setIsSaving(true);
-      try {
-        await set(ref(db, `travel_itineraries/${currentUser.uid}`), {
-          sheets: newSheets,
-          updatedAt: now,
-          userEmail: currentUser.email
-        });
-      } catch (err) {
-        console.error("Firebase save error:", err);
-        showToast("雲端儲存失敗，已保留在本地儲存", "error");
-      } finally {
-        setIsSaving(false);
-      }
-    }
-  };
-
-  // Auth Operations
-  const handleAuthSubmit = async (e) => {
-    e.preventDefault();
-    setAuthError('');
-    try {
-      if (isRegister) {
-        const res = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
-        if (authName) {
-          await updateProfile(res.user, { displayName: authName });
-        }
-        showToast("帳號註冊成功！", "success");
-      } else {
-        await signInWithEmailAndPassword(auth, authEmail, authPassword);
-        showToast("登入成功！", "success");
-      }
-      setAuthModalOpen(false);
-      setAuthEmail('');
-      setAuthPassword('');
-      setAuthName('');
-    } catch (err) {
-      setAuthError(err.message || '認證失敗，請檢查輸入內容');
-    }
-  };
-
-  const handleSignOut = async () => {
-    if (auth) {
-      await signOut(auth);
-      showToast("已安全登出", "info");
-    }
-  };
-
-  // Sheet (Tab) Operations
-  const currentSheet = sheets.find(s => s.id === activeSheetId) || sheets[0];
-
-  const handleAddSheet = () => {
-    const newId = 'sheet-' + Date.now();
-    const newSheet = {
-      id: newId,
-      title: `新行程頁面 ${sheets.length + 1}`,
-      categories: [
-        {
-          id: 'cat-' + Date.now(),
-          name: '行程類別 1',
-          rows: [
-            { id: 'r-' + Date.now(), time: '10:00', title: '新增活動項目', location: '地點名稱', cost: 0, currency: 'TWD', note: '備註欄位', status: false }
-          ]
-        }
-      ]
-    };
-    const updated = [...sheets, newSheet];
-    saveToFirebase(updated);
-    setActiveSheetId(newId);
-    showToast("已新增工作表頁面", "success");
-  };
-
-  const handleDuplicateSheet = (sheetToClone) => {
-    const newId = 'sheet-' + Date.now();
-    const cloned = {
-      ...JSON.parse(JSON.stringify(sheetToClone)),
-      id: newId,
-      title: `${sheetToClone.title} (副本)`
-    };
-    const updated = [...sheets, cloned];
-    saveToFirebase(updated);
-    setActiveSheetId(newId);
-    showToast("已複製工作表", "success");
-  };
-
-  const handleDeleteSheet = (sheetId) => {
-    if (sheets.length <= 1) {
-      alert("最少需要保留一個工作表頁面！");
-      return;
-    }
-    if (confirm("確定要刪除此工作表頁面及其所有內容嗎？")) {
-      const updated = sheets.filter(s => s.id !== sheetId);
-      saveToFirebase(updated);
-      if (activeSheetId === sheetId) {
-        setActiveSheetId(updated[0].id);
-      }
-      showToast("已刪除工作表", "info");
-    }
-  };
-
-  const handleSheetTitleRename = (sheetId) => {
-    if (!tempSheetTitle.trim()) return;
-    const updated = sheets.map(s => s.id === sheetId ? { ...s, title: tempSheetTitle } : s);
-    saveToFirebase(updated);
-    setEditingSheetId(null);
-    showToast("已更新頁面名稱", "success");
-  };
-
-  // Category Operations
-  const handleAddCategory = () => {
-    if (!currentSheet) return;
-    const newCat = {
-      id: 'cat-' + Date.now(),
-      name: '全新行程類別',
-      rows: []
-    };
-    const updatedSheets = sheets.map(s => {
-      if (s.id === currentSheet.id) {
-        return { ...s, categories: [...s.categories, newCat] };
-      }
-      return s;
-    });
-    saveToFirebase(updatedSheets);
-  };
-
-  const handleRenameCategory = (catId) => {
-    if (!tempCatTitle.trim()) return;
-    const updatedSheets = sheets.map(s => {
-      if (s.id === currentSheet.id) {
-        return {
-          ...s,
-          categories: s.categories.map(c => c.id === catId ? { ...c, name: tempCatTitle } : c)
-        };
-      }
-      return s;
-    });
-    saveToFirebase(updatedSheets);
-    setEditingCatId(null);
-  };
-
-  const handleDeleteCategory = (catId) => {
-    if (confirm("確定刪除此分類區塊嗎？內含的所有項目也會刪除。")) {
-      const updatedSheets = sheets.map(s => {
-        if (s.id === currentSheet.id) {
-          return {
-            ...s,
-            categories: s.categories.filter(c => c.id !== catId)
-          };
-        }
-        return s;
-      });
-      saveToFirebase(updatedSheets);
-    }
-  };
-
-  const handleMoveCategory = (index, direction) => {
-    const categories = [...currentSheet.categories];
-    const targetIdx = direction === 'up' ? index - 1 : index + 1;
-    if (targetIdx < 0 || targetIdx >= categories.length) return;
-
-    const temp = categories[index];
-    categories[index] = categories[targetIdx];
-    categories[targetIdx] = temp;
-
-    const updatedSheets = sheets.map(s => s.id === currentSheet.id ? { ...s, categories } : s);
-    saveToFirebase(updatedSheets);
-  };
-
-  // Row Operations
-  const handleAddRow = (catId) => {
-    const newRow = {
-      id: 'r-' + Date.now(),
-      time: '12:00',
-      title: '新行程項目',
-      location: '未設定地點',
-      cost: 0,
-      currency: 'TWD',
-      note: '',
-      status: false
-    };
-
-    const updatedSheets = sheets.map(s => {
-      if (s.id === currentSheet.id) {
-        return {
-          ...s,
-          categories: s.categories.map(c => c.id === catId ? { ...c, rows: [...c.rows, newRow] } : c)
-        };
-      }
-      return s;
-    });
-    saveToFirebase(updatedSheets);
-  };
-
-  const handleUpdateRow = (catId, rowId, field, value) => {
-    const updatedSheets = sheets.map(s => {
-      if (s.id === currentSheet.id) {
-        return {
-          ...s,
-          categories: s.categories.map(c => {
-            if (c.id === catId) {
-              return {
-                ...c,
-                rows: c.rows.map(r => r.id === rowId ? { ...r, [field]: value } : r)
-              };
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: {
+                            50: '#fcfbf7',
+                            100: '#f5f2eb',
+                            200: '#e8e4dc',
+                            300: '#dad4c8',
+                            800: '#4a453e',
+                            900: '#2d2925',
+                        },
+                        accent: {
+                            gold: '#d97706',
+                            coral: '#f97316',
+                            sage: '#059669',
+                            slate: '#334155'
+                        }
+                    }
+                }
             }
-            return c;
-          })
-        };
-      }
-      return s;
-    });
-    saveToFirebase(updatedSheets);
-  };
-
-  const handleDeleteRow = (catId, rowId) => {
-    const updatedSheets = sheets.map(s => {
-      if (s.id === currentSheet.id) {
-        return {
-          ...s,
-          categories: s.categories.map(c => {
-            if (c.id === catId) {
-              return { ...c, rows: c.rows.filter(r => r.id !== rowId) };
-            }
-            return c;
-          })
-        };
-      }
-      return s;
-    });
-    saveToFirebase(updatedSheets);
-  };
-
-  const handleMoveRow = (catId, rowIndex, direction) => {
-    const cat = currentSheet.categories.find(c => c.id === catId);
-    if (!cat) return;
-    const rows = [...cat.rows];
-    const targetIdx = direction === 'up' ? rowIndex - 1 : rowIndex + 1;
-    if (targetIdx < 0 || targetIdx >= rows.length) return;
-
-    const temp = rows[rowIndex];
-    rows[rowIndex] = rows[targetIdx];
-    rows[targetIdx] = temp;
-
-    const updatedSheets = sheets.map(s => {
-      if (s.id === currentSheet.id) {
-        return {
-          ...s,
-          categories: s.categories.map(c => c.id === catId ? { ...c, rows } : c)
-        };
-      }
-      return s;
-    });
-    saveToFirebase(updatedSheets);
-  };
-
-  // EXPORT & IMPORT FUNCTIONS
-  const exportToExcel = () => {
-    if (!window.XLSX) {
-      alert("Excel 模組還在載入中，請稍後再試！");
-      return;
-    }
-    const wb = window.XLSX.utils.book_new();
-
-    sheets.forEach(sheet => {
-      const data = [];
-      data.push([sheet.title]);
-      data.push([]); // blank
-
-      sheet.categories.forEach(cat => {
-        data.push([`【${cat.name}】`]);
-        data.push(['狀態', '時間', '活動/項目', '地點/備註地標', '估算金額', '幣別', '詳細備註']);
-        cat.rows.forEach(r => {
-          data.push([
-            r.status ? '已完成' : '未完成',
-            r.time,
-            r.title,
-            r.location,
-            r.cost,
-            r.currency,
-            r.note
-          ]);
-        });
-        data.push([]); // blank row between categories
-      });
-
-      const ws = window.XLSX.utils.aoa_to_sheet(data);
-      window.XLSX.utils.book_append_sheet(wb, ws, sheet.title.substring(0, 31)); // sheet title max 31 chars
-    });
-
-    window.XLSX.writeFile(wb, `旅行行程規劃_${new Date().toISOString().slice(0,10)}.xlsx`);
-    showToast("已成功匯出多頁面 Excel 檔案！", "success");
-  };
-
-  const importFromExcel = (e) => {
-    const file = e.target.files[0];
-    if (!file || !window.XLSX) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target.result;
-        const wb = window.XLSX.read(bstr, { type: 'binary' });
-        
-        const importedSheets = wb.SheetNames.map((sheetName, idx) => {
-          const ws = wb.Sheets[sheetName];
-          const rawData = window.XLSX.utils.sheet_to_json(ws, { header: 1 });
-
-          const categories = [];
-          let currentCat = { id: 'cat-imp-0', name: '匯入項目', rows: [] };
-
-          rawData.forEach((row) => {
-            if (!row || row.length === 0) return;
-            const firstCol = String(row[0] || '').trim();
-            
-            if (firstCol.startsWith('【') && firstCol.endsWith('】')) {
-              if (currentCat.rows.length > 0) categories.push(currentCat);
-              currentCat = {
-                id: 'cat-imp-' + Math.random(),
-                name: firstCol.replace(/[【】]/g, ''),
-                rows: []
-              };
-            } else if (firstCol !== '狀態' && firstCol !== sheetName) {
-              currentCat.rows.push({
-                id: 'r-imp-' + Math.random(),
-                status: firstCol === '已完成',
-                time: String(row[1] || '10:00'),
-                title: String(row[2] || '未命名項目'),
-                location: String(row[3] || ''),
-                cost: Number(row[4]) || 0,
-                currency: String(row[5] || 'TWD'),
-                note: String(row[6] || '')
-              });
-            }
-          });
-          if (currentCat.rows.length > 0) categories.push(currentCat);
-
-          return {
-            id: 'sheet-imp-' + Date.now() + '-' + idx,
-            title: sheetName,
-            categories: categories.length > 0 ? categories : [
-              { id: 'cat-empty', name: '預設類別', rows: [] }
-            ]
-          };
-        });
-
-        if (importedSheets.length > 0) {
-          saveToFirebase(importedSheets);
-          setActiveSheetId(importedSheets[0].id);
-          showToast("已成功將 Excel 資料匯入！", "success");
         }
-      } catch (err) {
-        console.error(err);
-        alert("Excel 檔案解析失敗，請確認格式是否正確。");
-      }
-    };
-    reader.readAsBinaryString(file);
-  };
+    </script>
+    <style>
+        body {
+            background-color: #fcfbf7;
+            color: #2d3748;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .card-cream {
+            background-color: #ffffff;
+            border: 1px solid #e8e4dc;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f5f2eb;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .tab-btn.active {
+            border-bottom: 3px solid #f97316;
+            color: #ea580c;
+            font-weight: 700;
+            background-color: #ffffff;
+        }
+        /* Visualizer Animation */
+        @keyframes barGrow {
+            0%, 100% { height: 6px; }
+            50% { height: 28px; }
+        }
+        .v-bar {
+            width: 4px;
+            background: linear-gradient(to top, #f97316, #fbbf24);
+            border-radius: 2px;
+            display: inline-block;
+            margin: 0 1px;
+        }
+        .v-bar.animating {
+            animation: barGrow 1.2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
 
-  const exportToPNG = async () => {
-    if (!printAreaRef.current || !window.html2canvas) {
-      alert("畫布捕捉模組載入中，請稍後再試！");
-      return;
-    }
-    showToast("正在生成高解析度 PNG 圖片...", "info");
-    try {
-      const canvas = await window.html2canvas(printAreaRef.current, {
-        scale: 2,
-        backgroundColor: '#0f172a'
-      });
-      const image = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = image;
-      link.download = `${currentSheet.title}_行程單.png`;
-      link.click();
-      showToast("高清 PNG 圖檔下載完成！", "success");
-    } catch (err) {
-      console.error(err);
-      showToast("PNG 匯出失敗", "error");
-    }
-  };
+    <!-- Firebase SDK Modular Import via script type module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-  const exportToPDF = async () => {
-    if (!printAreaRef.current || !window.html2canvas || !window.jspdf) {
-      alert("PDF 模組載入中，請稍後再試！");
-      return;
-    }
-    showToast("正在生成 PDF 行程表...", "info");
-    try {
-      const canvas = await window.html2canvas(printAreaRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${currentSheet.title}_行程手冊.pdf`);
-      showToast("PDF 匯出成功！", "success");
-    } catch (err) {
-      console.error(err);
-      showToast("PDF 匯出失敗", "error");
-    }
-  };
+        // Firebase Configuration provided by user
+        const firebaseConfig = {
+            apiKey: "AIzaSyBASZegMIn7bxgRaoz8b860PF8nUmGNgls",
+            authDomain: "mediabox-f57c7.firebaseapp.com",
+            projectId: "mediabox-f57c7",
+            storageBucket: "mediabox-f57c7.firebasestorage.app",
+            messagingSenderId: "617898895254",
+            appId: "1:617898895254:web:75888aa1c8e2979f829fb7",
+            measurementId: "G-S8KH7L3C41",
+            databaseURL: "https://mediabox-f57c7-default-rtdb.firebaseio.com"
+        };
 
-  // Calculate Column Totals
-  const calculateTotalCost = (rows) => {
-    return rows.reduce((acc, row) => acc + (Number(row.cost) || 0), 0);
-  };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col selection:bg-cyan-500 selection:text-white">
-      
-      {/* TOAST NOTIFICATION */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border backdrop-blur-md transition-all duration-300 animate-bounce ${
-          toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-300' :
-          toast.type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-300' :
-          'bg-slate-900/90 border-cyan-500/50 text-cyan-300'
-        }`}>
-          <Sparkles className="w-5 h-5" />
-          <span className="text-sm font-semibold">{toast.message}</span>
-        </div>
-      )}
+        // Export Firebase handlers to window context
+        window.fbAuth = auth;
+        window.fbDb = db;
+        window.fbServices = {
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged,
+            updateProfile,
+            ref,
+            set,
+            get,
+            onValue
+        };
+    </script>
 
-      {/* TOP HEADER */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
-        
-        {/* Logo & App Title */}
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 rounded-2xl shadow-lg shadow-cyan-500/20">
-            <Compass className="w-6 h-6 text-white animate-spin-slow" />
-          </div>
-          <div>
-            <h1 className="text-xl font-extrabold bg-gradient-to-r from-cyan-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
-              Cloud Travel Itinerary Studio
-            </h1>
-            <p className="text-xs text-slate-400">專業旅行行程規劃 & 雲端實時同步系統</p>
-          </div>
-        </div>
-
-        {/* Realtime Status Bar & Save Indicator */}
-        <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${
-            isConnected 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-              : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`}></span>
-            {isConnected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
-            <span>{isConnected ? 'Firebase Realtime 連線中' : '離線模式 (Offline)'}</span>
-          </div>
-
-          <div className="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-full border border-slate-800 text-slate-400">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
-            <span>上次儲存: {lastSaved || '尚無紀錄'}</span>
-            {isSaving && <RefreshCw className="w-3 h-3 text-cyan-400 animate-spin ml-1" />}
-          </div>
-
-          {/* User Auth Profile */}
-          {currentUser ? (
-            <div className="flex items-center gap-3 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-xs">
-                {(currentUser.displayName || currentUser.email)[0].toUpperCase()}
-              </div>
-              <span className="text-slate-200 font-sans font-medium">
-                {currentUser.displayName || currentUser.email.split('@')[0]}
-              </span>
-              <button 
-                onClick={handleSignOut} 
-                className="text-slate-400 hover:text-rose-400 transition" 
-                title="登出"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => setAuthModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-cyan-500/20"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>註冊 / 登入雲端帳號</span>
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* EXPORT & TOOLBAR HEADER */}
-      <div className="bg-slate-900/60 border-b border-slate-800 px-4 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <Layers className="w-4 h-4 text-cyan-400" /> 行程工具箱:
-          </span>
-          <button
-            onClick={handleAddCategory}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition"
-          >
-            <Plus className="w-3.5 h-3.5 text-cyan-400" /> 新增行程類別區塊
-          </button>
-        </div>
-
-        {/* Global Export Options */}
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition cursor-pointer">
-            <Upload className="w-3.5 h-3.5 text-emerald-400" />
-            <span>匯入 Excel</span>
-            <input type="file" accept=".xlsx, .xls" onChange={importFromExcel} className="hidden" />
-          </label>
-
-          <button
-            onClick={exportToExcel}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-medium transition shadow-md shadow-emerald-600/20"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>一鍵匯出 Excel</span>
-          </button>
-
-          <button
-            onClick={exportToPNG}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-medium transition shadow-md shadow-cyan-600/20"
-          >
-            <ImageIcon className="w-3.5 h-3.5" />
-            <span>匯出高清 PNG</span>
-          </button>
-
-          <button
-            onClick={exportToPDF}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-medium transition shadow-md shadow-purple-600/20"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>匯出 PDF 手冊</span>
-          </button>
-        </div>
-      </div>
-
-      {/* WORKSHEET / TAB NAVIGATION BAR */}
-      <div className="bg-slate-900 border-b border-slate-800 px-4 lg:px-8 py-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none">
-        {sheets.map((sheet) => (
-          <div
-            key={sheet.id}
-            onClick={() => setActiveSheetId(sheet.id)}
-            className={`group relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer whitespace-nowrap border ${
-              sheet.id === activeSheetId
-                ? 'bg-cyan-500/10 border-cyan-500 text-cyan-300 shadow-lg shadow-cyan-500/10'
-                : 'bg-slate-950/50 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-            }`}
-          >
-            {editingSheetId === sheet.id ? (
-              <input
-                type="text"
-                autoFocus
-                value={tempSheetTitle}
-                onChange={(e) => setTempSheetTitle(e.target.value)}
-                onBlur={() => handleSheetTitleRename(sheet.id)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSheetTitleRename(sheet.id)}
-                className="bg-slate-950 text-cyan-300 border border-cyan-500 rounded px-1.5 py-0.5 focus:outline-none text-xs"
-              />
-            ) : (
-              <span 
-                onDoubleClick={() => {
-                  setEditingSheetId(sheet.id);
-                  setTempSheetTitle(sheet.title);
-                }}
-                title="雙擊名稱可即時修改標題"
-              >
-                {sheet.title}
-              </span>
-            )}
-
-            {/* Tab Actions */}
-            <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDuplicateSheet(sheet);
-                }}
-                className="p-1 hover:text-cyan-300 transition"
-                title="複製此頁面"
-              >
-                <Copy className="w-3 h-3" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteSheet(sheet.id);
-                }}
-                className="p-1 hover:text-rose-400 transition"
-                title="刪除此頁面"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        ))}
-
-        <button
-          onClick={handleAddSheet}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700 text-cyan-400 border border-slate-700 transition shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>新增分頁</span>
-        </button>
-      </div>
-
-      {/* MAIN MAIN CONTENT CANVAS */}
-      <main className="flex-1 p-4 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
-        
-        {/* PRINTABLE / EXPORTABLE CONTAINER */}
-        <div ref={printAreaRef} className="space-y-6 bg-slate-950 p-2 rounded-2xl">
-          
-          {/* Active Sheet Banner Title */}
-          <div className="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-wider mb-1">
-                <Calendar className="w-4 h-4" /> 當前旅行日誌工作表
-              </div>
-              <h2 className="text-2xl font-extrabold text-slate-100">
-                {currentSheet?.title}
-              </h2>
-            </div>
-            
-            <div className="flex items-center gap-3 text-xs text-slate-400 font-mono bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
-              <span>總分類: {currentSheet?.categories?.length || 0} 個</span>
-              <span>•</span>
-              <span>總花費預算: NT$ / JPY {
-                currentSheet?.categories?.reduce((acc, cat) => acc + calculateTotalCost(cat.rows), 0).toLocaleString()
-              }</span>
-            </div>
-          </div>
-
-          {/* CATEGORIES & EDITABLE TABLES */}
-          {currentSheet?.categories?.map((category, catIndex) => {
-            const catTotal = calculateTotalCost(category.rows);
-
-            return (
-              <div 
-                key={category.id} 
-                className="bg-slate-900/60 border border-slate-800/90 rounded-2xl overflow-hidden shadow-xl transition hover:border-slate-700"
-              >
-                {/* Category Header */}
-                <div className="bg-slate-900 px-5 py-3.5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 to-indigo-500"></span>
-                    
-                    {editingCatId === category.id ? (
-                      <input
-                        type="text"
-                        autoFocus
-                        value={tempCatTitle}
-                        onChange={(e) => setTempCatTitle(e.target.value)}
-                        onBlur={() => handleRenameCategory(category.id)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleRenameCategory(category.id)}
-                        className="bg-slate-950 text-cyan-300 border border-cyan-500 rounded px-2 py-1 text-sm font-bold focus:outline-none"
-                      />
-                    ) : (
-                      <h3 
-                        onDoubleClick={() => {
-                          setEditingCatId(category.id);
-                          setTempCatTitle(category.name);
-                        }}
-                        className="font-bold text-base text-slate-100 hover:text-cyan-300 transition cursor-pointer"
-                        title="雙擊即時更名分類"
-                      >
-                        {category.name}
-                      </h3>
-                    )}
-
-                    <span className="text-xs text-slate-500 font-mono">({category.rows.length} 個項目)</span>
-                  </div>
-
-                  {/* Category Controls */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleMoveCategory(catIndex, 'up')}
-                      disabled={catIndex === 0}
-                      className="p-1.5 hover:bg-slate-800 text-slate-400 disabled:opacity-30 rounded-lg transition"
-                      title="分類向上移動"
-                    >
-                      <MoveUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleMoveCategory(catIndex, 'down')}
-                      disabled={catIndex === currentSheet.categories.length - 1}
-                      className="p-1.5 hover:bg-slate-800 text-slate-400 disabled:opacity-30 rounded-lg transition"
-                      title="分類向下移動"
-                    >
-                      <MoveDown className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCategory(category.id)}
-                      className="p-1.5 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 rounded-lg transition"
-                      title="刪除此分類區塊"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="bg-white border-b border-cream-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid font-bold fa-compact-disc text-xl animate-spin-slow"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-xl text-slate-800 tracking-tight flex items-center gap-2">
+                            MediaBox <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold border border-amber-300">PRO</span>
+                        </h1>
+                        <p class="text-xs text-gray-500">專業多媒體播放與數據庫系統</p>
+                    </div>
                 </div>
 
-                {/* Table View */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs text-slate-300 border-collapse">
-                    <thead>
-                      <tr className="bg-slate-950/80 text-slate-400 font-mono uppercase border-b border-slate-800">
-                        <th className="py-3 px-4 w-12 text-center">狀態</th>
-                        <th className="py-3 px-4 w-24">時間</th>
-                        <th className="py-3 px-4 min-w-[180px]">活動 / 行程名稱</th>
-                        <th className="py-3 px-4 min-w-[160px]">地點 / 導航鏈結</th>
-                        <th className="py-3 px-4 w-28">預算/金額</th>
-                        <th className="py-3 px-4 w-20">幣別</th>
-                        <th className="py-3 px-4 min-w-[200px]">詳細備註 / 訂位代碼</th>
-                        <th className="py-3 px-4 w-24 text-center">順序/操作</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60">
-                      {category.rows.map((row, rIdx) => (
-                        <tr key={row.id} className="hover:bg-slate-800/40 transition group">
-                          
-                          {/* Checkbox */}
-                          <td className="py-2.5 px-4 text-center">
-                            <input
-                              type="checkbox"
-                              checked={row.status || false}
-                              onChange={(e) => handleUpdateRow(category.id, row.id, 'status', e.target.checked)}
-                              className="w-4 h-4 rounded bg-slate-950 border-slate-700 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
-                            />
-                          </td>
+                <!-- Status & Save Timestamp Bar -->
+                <div class="hidden md:flex items-center space-x-6 text-sm">
+                    <!-- Connection Status Indicator -->
+                    <div class="flex items-center space-x-2 bg-cream-100 px-3 py-1.5 rounded-full border border-cream-200">
+                        <span id="connDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="connStatus" class="font-medium text-xs text-gray-700">🟢 已連線數據庫</span>
+                    </div>
 
-                          {/* Time */}
-                          <td className="py-2.5 px-4 font-mono">
-                            <input
-                              type="text"
-                              value={row.time}
-                              onChange={(e) => handleUpdateRow(category.id, row.id, 'time', e.target.value)}
-                              className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-slate-200 focus:outline-none py-0.5"
-                            />
-                          </td>
-
-                          {/* Title */}
-                          <td className="py-2.5 px-4 font-semibold">
-                            <input
-                              type="text"
-                              value={row.title}
-                              onChange={(e) => handleUpdateRow(category.id, row.id, 'title', e.target.value)}
-                              className={`w-full bg-transparent border-b border-transparent focus:border-cyan-500 focus:outline-none py-0.5 ${
-                                row.status ? 'line-through text-slate-500' : 'text-slate-100'
-                              }`}
-                            />
-                          </td>
-
-                          {/* Location */}
-                          <td className="py-2.5 px-4">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                              <input
-                                type="text"
-                                value={row.location}
-                                onChange={(e) => handleUpdateRow(category.id, row.id, 'location', e.target.value)}
-                                className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-slate-300 focus:outline-none py-0.5"
-                              />
-                            </div>
-                          </td>
-
-                          {/* Cost */}
-                          <td className="py-2.5 px-4 font-mono">
-                            <input
-                              type="number"
-                              value={row.cost}
-                              onChange={(e) => handleUpdateRow(category.id, row.id, 'cost', Number(e.target.value))}
-                              className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-cyan-400 font-bold focus:outline-none py-0.5"
-                            />
-                          </td>
-
-                          {/* Currency */}
-                          <td className="py-2.5 px-4">
-                            <select
-                              value={row.currency || 'TWD'}
-                              onChange={(e) => handleUpdateRow(category.id, row.id, 'currency', e.target.value)}
-                              className="bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-slate-300 focus:outline-none text-[11px]"
-                            >
-                              <option value="TWD">TWD</option>
-                              <option value="JPY">JPY</option>
-                              <option value="USD">USD</option>
-                              <option value="EUR">EUR</option>
-                              <option value="KRW">KRW</option>
-                            </select>
-                          </td>
-
-                          {/* Note */}
-                          <td className="py-2.5 px-4">
-                            <input
-                              type="text"
-                              value={row.note}
-                              onChange={(e) => handleUpdateRow(category.id, row.id, 'note', e.target.value)}
-                              className="w-full bg-transparent border-b border-transparent focus:border-cyan-500 text-slate-400 focus:outline-none py-0.5"
-                              placeholder="新增註記..."
-                            />
-                          </td>
-
-                          {/* Row Actions */}
-                          <td className="py-2.5 px-4 text-center">
-                            <div className="flex items-center justify-center gap-1 opacity-40 group-hover:opacity-100 transition">
-                              <button
-                                onClick={() => handleMoveRow(category.id, rIdx, 'up')}
-                                disabled={rIdx === 0}
-                                className="p-1 hover:text-cyan-300 disabled:opacity-20"
-                                title="上移"
-                              >
-                                <MoveUp className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() => handleMoveRow(category.id, rIdx, 'down')}
-                                disabled={rIdx === category.rows.length - 1}
-                                className="p-1 hover:text-cyan-300 disabled:opacity-20"
-                                title="下移"
-                              >
-                                <MoveDown className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteRow(category.id, row.id)}
-                                className="p-1 hover:text-rose-400"
-                                title="刪除"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-
-                    {/* Table Footer with Category Subtotal */}
-                    <tfoot>
-                      <tr className="bg-slate-950/60 font-semibold border-t border-slate-800">
-                        <td colSpan={4} className="py-2.5 px-4 text-right text-slate-400">
-                          區塊花費小計 ({category.name}):
-                        </td>
-                        <td colSpan={4} className="py-2.5 px-4 font-mono text-cyan-400 text-sm">
-                          ${catTotal.toLocaleString()}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                    <!-- Last Saved Time Indicator -->
+                    <div class="flex items-center space-x-2 text-xs text-gray-600 bg-cream-50 px-3 py-1.5 rounded-lg border border-cream-200">
+                        <i class="fa-regular fa-clock text-amber-600"></i>
+                        <span>上次儲存時間: <strong id="lastSaveTime" class="text-gray-800 font-mono">未連線</strong></span>
+                    </div>
                 </div>
 
-                {/* Add Row Button */}
-                <div className="p-3 bg-slate-950/40 border-t border-slate-800/80">
-                  <button
-                    onClick={() => handleAddRow(category.id)}
-                    className="flex items-center gap-2 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>新增行程項目到【{category.name}】</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                <!-- User Profile & Auth Trigger -->
+                <div class="flex items-center space-x-3">
+                    <div id="userInfoBox" class="hidden flex items-center space-x-2 bg-cream-100 p-1.5 pr-3 rounded-full border border-cream-200">
+                        <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">
+                            U
+                        </div>
+                        <span id="userNameDisplay" class="text-xs font-semibold text-gray-800 max-w-[120px] truncate">使用者</span>
+                        <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 text-sm ml-1 transition" title="登出">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
 
-          {currentSheet?.categories?.length === 0 && (
-            <div className="text-center py-12 bg-slate-900/30 rounded-2xl border border-dashed border-slate-800">
-              <Layers className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-              <p className="text-slate-400 text-sm font-medium">此頁面尚無任何類別區塊</p>
-              <button
-                onClick={handleAddCategory}
-                className="mt-3 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition"
-              >
-                立即建立第一個類別
-              </button>
+                    <button id="loginBtnTrigger" onclick="openAuthModal()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition">
+                        <i class="fa-solid fa-user-lock mr-1.5"></i> 登入 / 註冊
+                    </button>
+                </div>
             </div>
-          )}
-
         </div>
 
-      </main>
+        <!-- NAVIGATION TABS (DOUBLE CLICK TO RENAME) -->
+        <nav class="bg-cream-100 border-t border-cream-200 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-gray-600" id="tabNavContainer">
+                <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
+                    <i class="fa-solid fa-music text-amber-600"></i>
+                    <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">分頁一: 音樂網址管理</span>
+                    <i class="fa-solid fa-pen text-[10px] text-gray-400 opacity-0 group-hover:opacity-100"></i>
+                </button>
+                <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
+                    <i class="fa-solid fa-sliders text-amber-600"></i>
+                    <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">分頁二: 專業強大音樂播放器</span>
+                </button>
+                <button onclick="switchTab(3)" id="tabBtn3" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
+                    <i class="fa-solid fa-video text-amber-600"></i>
+                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">分頁三: 影音網址管理</span>
+                </button>
+                <button onclick="switchTab(4)" id="tabBtn4" class="tab-btn px-4 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
+                    <i class="fa-solid fa-film text-amber-600"></i>
+                    <span id="tabTitle4" class="tab-title" ondblclick="editTabTitle(4)">分頁四: 影音播放清單與劇院</span>
+                </button>
+            </div>
+        </nav>
+    </header>
 
-      {/* AUTHENTICATION MODAL */}
-      {authModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 relative">
-            <button
-              onClick={() => setAuthModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-slate-300 transition"
-            >
-              ✕
-            </button>
-
-            <div className="text-center">
-              <div className="inline-flex p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl mb-2">
-                <User className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-extrabold text-white">
-                {isRegister ? '建立 Firebase 帳號' : '登入旅行工作室'}
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                {isRegister ? '無須人工審核，即刻享有雲端實時同步' : '登入後自動同步個人專屬雲端行程'}
-              </p>
+    <!-- GLOBAL TOOLBAR FOR DATA & EXPORT OPERATIONS -->
+    <section class="bg-white border-b border-cream-200 py-2.5 px-4 sm:px-6 lg:px-8 shadow-inner">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-2 text-xs font-semibold text-gray-600">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
+                <span>當前分頁工具箱 (可即時進行數據轉換與導出)</span>
             </div>
 
-            {authError && (
-              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{authError}</span>
-              </div>
-            )}
+            <!-- Action Export/Import Buttons -->
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+                <!-- Excel Import -->
+                <label class="cursor-pointer bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                    <span>一鍵匯入 EXCEL</span>
+                    <input type="file" accept=".xlsx, .xls" onchange="importExcel(event)" class="hidden">
+                </label>
 
-            <form onSubmit={handleAuthSubmit} className="space-y-4 text-xs">
-              {isRegister && (
+                <!-- Excel Export -->
+                <button onclick="exportExcel()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-export text-emerald-600"></i>
+                    <span>一鍵匯出 EXCEL</span>
+                </button>
+
+                <!-- High Res PNG Export -->
+                <button onclick="exportPNG()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-image text-blue-600"></i>
+                    <span>匯出高畫質 PNG</span>
+                </button>
+
+                <!-- PDF Export -->
+                <button onclick="exportPDF()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-pdf text-red-600"></i>
+                    <span>匯出高畫質 PDF</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT CONTAINERS -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" id="exportArea">
+
+        <!-- ================= TAB 1: YOUTUBE MUSIC LINK MANAGER ================= -->
+        <div id="tabContent1" class="tab-panel space-y-6">
+            <!-- Header Banner -->
+            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
                 <div>
-                  <label className="block font-semibold text-slate-300 mb-1">真實姓名 (Display Name)</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="請輸入您的全名"
-                    value={authName}
-                    onChange={(e) => setAuthName(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition"
-                  />
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-music text-amber-500"></i> YouTube 音樂網址資料庫
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">建立與管理您的 YouTube 音樂資源，系統將自動同步並支援即時強大音樂播放器。</p>
                 </div>
-              )}
-
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1">電子郵件 (Email)</label>
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-300 mb-1">密碼 (Password)</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="至少 6 位數"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-slate-200 focus:outline-none focus:border-cyan-500 transition"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl font-bold transition shadow-lg shadow-cyan-500/20"
-              >
-                {isRegister ? '立即免費註冊' : '登入並開啟同步'}
-              </button>
-            </form>
-
-            <div className="text-center pt-2 border-t border-slate-800 text-xs text-slate-400">
-              {isRegister ? '已經有帳號了？' : '還沒有帳號嗎？'}
-              <button
-                type="button"
-                onClick={() => setIsRegister(!isRegister)}
-                className="ml-1.5 text-cyan-400 hover:underline font-bold"
-              >
-                {isRegister ? '點此直接登入' : '立即免費註冊'}
-              </button>
+                <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> 新增音樂連結
+                </button>
             </div>
-          </div>
+
+            <!-- Music Stats Overview -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="card-cream p-4 rounded-xl border-l-4 border-l-amber-500">
+                    <p class="text-xs text-gray-500">總音樂曲目</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="mTotalCount">0</h3>
+                </div>
+                <div class="card-cream p-4 rounded-xl border-l-4 border-l-orange-500">
+                    <p class="text-xs text-gray-500">流派分類數</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="mGenreCount">0</h3>
+                </div>
+                <div class="card-cream p-4 rounded-xl border-l-4 border-l-emerald-500">
+                    <p class="text-xs text-gray-500">平均評分</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="mAvgRating">0.0 <span class="text-xs font-normal text-amber-500">★</span></h3>
+                </div>
+                <div class="card-cream p-4 rounded-xl border-l-4 border-l-blue-500">
+                    <p class="text-xs text-gray-500">播放模式狀態</p>
+                    <h3 class="text-sm font-bold text-gray-700 mt-2 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i> 就緒 (連線Tab 2)
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Music Table & Charts Split -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Music Data Table -->
+                <div class="lg:col-span-2 card-cream rounded-2xl p-5 overflow-hidden flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-list-ul text-amber-500"></i> 音樂曲目清單
+                        </h3>
+                        <div class="relative w-48">
+                            <input type="text" id="musicSearch" oninput="renderMusicTable()" placeholder="搜尋曲目或歌手..." class="w-full text-xs pl-8 pr-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none focus:border-amber-500">
+                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto flex-1 custom-scrollbar">
+                        <table class="w-full text-xs text-left text-gray-600">
+                            <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
+                                <tr>
+                                    <th class="p-3">標題 / 歌手</th>
+                                    <th class="p-3">流派</th>
+                                    <th class="p-3">長度</th>
+                                    <th class="p-3">評分</th>
+                                    <th class="p-3 text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="musicTableBody" class="divide-y divide-cream-100">
+                                <!-- Dynamic Music Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Music Analytics Chart -->
+                <div class="card-cream rounded-2xl p-5 flex flex-col">
+                    <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-amber-500"></i> 音樂流派分布圖表
+                    </h3>
+                    <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
+                        <canvas id="musicGenreChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-      )}
 
-      {/* FOOTER */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-4 px-6 text-center text-xs text-slate-500">
-        GitHub Ready • Firebase Realtime Database Integrated • Export Excel, PNG, PDF Supported
-      </footer>
+        <!-- ================= TAB 2: ADVANCED MUSIC PLAYER DASHBOARD ================= -->
+        <div id="tabContent2" class="tab-panel hidden space-y-6">
+            <div class="card-cream p-5 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
+                
+                <!-- Music Dropdown Selection Header -->
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-cream-200">
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
+                            <i class="fa-solid fa-headphones text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800 text-base">強大 YouTube 專業音樂播放器</h2>
+                            <p class="text-xs text-gray-500">下拉選單自由切換由分頁一建立的曲目庫</p>
+                        </div>
+                    </div>
 
+                    <!-- Dropdown Selector -->
+                    <div class="w-full md:w-96 flex items-center gap-2">
+                        <label class="text-xs font-bold text-gray-600 whitespace-nowrap">選擇音樂:</label>
+                        <select id="playerMusicSelect" onchange="selectMusicFromDropdown(this.value)" class="w-full bg-cream-50 border border-amber-300 font-semibold text-xs text-gray-800 py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <!-- Populated dynamically from Tab 1 -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Main Interactive Player Controls & Canvas -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    
+                    <!-- Player Deck -->
+                    <div class="lg:col-span-2 space-y-6">
+                        
+                        <!-- Track Display Card -->
+                        <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[240px]">
+                            <!-- Subtle Glow Accent -->
+                            <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
+
+                            <div class="flex justify-between items-start z-10">
+                                <div>
+                                    <span class="text-[10px] uppercase tracking-widest px-2.5 py-1 bg-amber-500/20 text-amber-300 rounded-full font-bold border border-amber-500/30" id="npGenre">AUDIO PLAYER</span>
+                                    <h2 class="text-2xl font-black text-white mt-2 leading-tight" id="npTitle">未選擇播放音樂</h2>
+                                    <p class="text-xs text-gray-400 mt-1" id="npArtist">請從選單選擇曲目</p>
+                                </div>
+                                <!-- Visualizer Bars -->
+                                <div class="flex items-end h-8 space-x-1" id="vBars">
+                                    <div class="v-bar"></div>
+                                    <div class="v-bar"></div>
+                                    <div class="v-bar"></div>
+                                    <div class="v-bar"></div>
+                                    <div class="v-bar"></div>
+                                </div>
+                            </div>
+
+                            <!-- YouTube Audio Engine Hidden Container -->
+                            <div class="hidden">
+                                <div id="ytAudioFrame"></div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="space-y-1.5 z-10 mt-6">
+                                <div class="relative w-full bg-slate-800 rounded-full h-2 cursor-pointer" id="progressBarContainer" onclick="seekAudio(event)">
+                                    <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full w-0 transition-all"></div>
+                                </div>
+                                <div class="flex justify-between text-[11px] font-mono text-gray-400">
+                                    <span id="currTime">00:00</span>
+                                    <span id="totalDuration">00:00</span>
+                                </div>
+                            </div>
+
+                            <!-- Playback Control Buttons -->
+                            <div class="flex items-center justify-between z-10 pt-2">
+                                <div class="flex items-center space-x-3">
+                                    <button onclick="toggleShuffle()" id="shuffleBtn" class="text-gray-400 hover:text-white transition text-xs" title="隨機播放">
+                                        <i class="fa-solid fa-shuffle"></i>
+                                    </button>
+                                    <button onclick="playPrevMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition">
+                                        <i class="fa-solid fa-backward-step"></i>
+                                    </button>
+                                    <button onclick="toggleAudioPlay()" id="masterPlayBtn" class="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white flex items-center justify-center text-xl shadow-lg transition">
+                                        <i class="fa-solid fa-play ml-0.5"></i>
+                                    </button>
+                                    <button onclick="playNextMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition">
+                                        <i class="fa-solid fa-forward-step"></i>
+                                    </button>
+                                    <button onclick="toggleLoop()" id="loopBtn" class="text-gray-400 hover:text-white transition text-xs" title="單曲循環">
+                                        <i class="fa-solid fa-repeat"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Volume & Speed -->
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="toggleMute()" id="muteBtn" class="text-gray-400 hover:text-white text-xs">
+                                            <i class="fa-solid fa-volume-high"></i>
+                                        </button>
+                                        <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-16 accent-amber-500 cursor-pointer">
+                                    </div>
+                                    <select onchange="setPlaybackRate(this.value)" class="bg-slate-800 text-xs text-gray-300 rounded px-1.5 py-1 focus:outline-none">
+                                        <option value="0.75">0.75x</option>
+                                        <option value="1" selected>1.0x</option>
+                                        <option value="1.25">1.25x</option>
+                                        <option value="1.5">1.5x</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes & Lyrics View -->
+                        <div class="card-cream rounded-xl p-4">
+                            <h4 class="font-bold text-xs text-gray-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-note-sticky text-amber-500"></i> 曲目備註與筆記
+                            </h4>
+                            <p class="text-xs text-gray-600 leading-relaxed bg-cream-50 p-3 rounded-lg border border-cream-200" id="npNotes">
+                                點擊選單選擇音樂後顯示筆記...
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Queue / History Side List -->
+                    <div class="card-cream rounded-2xl p-5 flex flex-col h-full">
+                        <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-list text-amber-500"></i> 播放佇列</span>
+                            <span class="text-xs text-gray-400 font-normal" id="queueCount">0 首</span>
+                        </h3>
+                        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[340px]" id="musicQueueContainer">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: YOUTUBE VIDEO LINK MANAGER ================= -->
+        <div id="tabContent3" class="tab-panel hidden space-y-6">
+            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-video text-amber-500"></i> YouTube 影音網址資料庫
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">管理您的影音資源、頻道來源與分類，資料即時連線至 Tab 4 影音劇院。</p>
+                </div>
+                <button onclick="openVideoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> 新增影音連結
+                </button>
+            </div>
+
+            <!-- Video Stats -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="card-cream p-4 rounded-xl border-l-4 border-l-amber-500">
+                    <p class="text-xs text-gray-500">總影片數</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="vTotalCount">0</h3>
+                </div>
+                <div class="card-cream p-4 rounded-xl border-l-4 border-l-orange-500">
+                    <p class="text-xs text-gray-500">影片類別數</p>
+                    <h3 class="text-2xl font-black text-gray-800 mt-1" id="vCatCount">0</h3>
+                </div>
+                <div class="card-cream p-4 rounded-xl border-l-4 border-l-emerald-500">
+                    <p class="text-xs text-gray-500">劇院同步狀態</p>
+                    <h3 class="text-sm font-bold text-emerald-600 mt-2 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-check"></i> 劇院連結已上線
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Table & Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Video Table -->
+                <div class="lg:col-span-2 card-cream rounded-2xl p-5 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-film text-amber-500"></i> 影音資源清單
+                        </h3>
+                        <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋標題或頻道..." class="text-xs px-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none">
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar flex-1">
+                        <table class="w-full text-xs text-left text-gray-600">
+                            <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
+                                <tr>
+                                    <th class="p-3">影片標題 / 頻道</th>
+                                    <th class="p-3">分類</th>
+                                    <th class="p-3">解析度</th>
+                                    <th class="p-3 text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="videoTableBody" class="divide-y divide-cream-100">
+                                <!-- Dynamic Video Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Category Chart -->
+                <div class="card-cream rounded-2xl p-5 flex flex-col">
+                    <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-bar text-amber-500"></i> 影片類別分布圖
+                    </h3>
+                    <div class="relative flex-1 min-h-[220px] flex items-center justify-center">
+                        <canvas id="videoCatChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: VIDEO PLAYLIST & THEATER PLAYER ================= -->
+        <div id="tabContent4" class="tab-panel hidden space-y-6">
+            <div class="card-cream p-5 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
+                
+                <!-- Video Select Header -->
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-4 border-b border-cream-200">
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shadow">
+                            <i class="fa-solid fa-tv text-lg"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800 text-base">YouTube 影音劇院播放器</h2>
+                            <p class="text-xs text-gray-500">下拉選單自由選擇由分頁三建立的影片播放清單</p>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Selector -->
+                    <div class="w-full md:w-96 flex items-center gap-2">
+                        <label class="text-xs font-bold text-gray-600 whitespace-nowrap">選擇影片:</label>
+                        <select id="playerVideoSelect" onchange="selectVideoFromDropdown(this.value)" class="w-full bg-cream-50 border border-amber-300 font-semibold text-xs text-gray-800 py-2 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+                            <!-- Populated dynamically from Tab 3 -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Theater Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                    <!-- Theater Screen Container -->
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="card-cream rounded-2xl overflow-hidden bg-black shadow-2xl relative aspect-video flex items-center justify-center" id="theaterContainer">
+                            <iframe id="ytVideoIframe" class="w-full h-full" src="" title="YouTube Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+
+                        <!-- Video Info Panel -->
+                        <div class="card-cream p-5 rounded-2xl space-y-3">
+                            <div class="flex justify-between items-start gap-4">
+                                <div>
+                                    <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-orange-100 text-orange-800 rounded" id="vpCategory">GENERAL</span>
+                                    <h3 class="text-lg font-bold text-gray-800 mt-1" id="vpTitle">未選擇影片</h3>
+                                    <p class="text-xs text-gray-500" id="vpChannel">頻道: --</p>
+                                </div>
+                                <span class="text-xs font-mono bg-cream-100 text-gray-700 px-2.5 py-1 rounded border border-cream-200" id="vpQuality">HD 1080P</span>
+                            </div>
+                            <p class="text-xs text-gray-600 bg-cream-50 p-3 rounded-xl border border-cream-200 leading-relaxed" id="vpDesc">
+                                影片簡介資訊...
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Playlist & Related Charts -->
+                    <div class="space-y-6">
+                        <!-- Video Playlist Sidebar -->
+                        <div class="card-cream rounded-2xl p-5 flex flex-col">
+                            <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-list-check text-orange-500"></i> 劇院播放清單</span>
+                                <span class="text-xs text-gray-400" id="videoPlaylistCount">0 部</span>
+                            </h3>
+                            <div class="space-y-2 overflow-y-auto max-h-[280px] custom-scrollbar" id="videoPlaylistContainer">
+                                <!-- Dynamic List -->
+                            </div>
+                        </div>
+
+                        <!-- Video Category Visual Graph -->
+                        <div class="card-cream rounded-2xl p-5">
+                            <h4 class="font-bold text-xs text-gray-700 mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-chart-pie text-orange-500"></i> 影片種類佔比
+                            </h4>
+                            <div class="relative h-44 flex items-center justify-center">
+                                <canvas id="theaterCatChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-cream-200 py-4 px-4 text-center text-xs text-gray-500">
+        <p>MediaBox Pro © 2026 多媒體管理與播放平台 | 專業級米白色系統介面 | 即時 Firebase Realtime Database 驅動</p>
+    </footer>
+
+    <!-- AUTH MODAL -->
+    <div id="authModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-cream-200 space-y-4">
+            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
+                <h3 class="font-bold text-lg text-gray-800" id="authModalTitle">會員登入 / 註冊</h3>
+                <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <!-- Auth Toggle Tabs -->
+                <div class="flex bg-cream-100 p-1 rounded-xl">
+                    <button onclick="setAuthMode('login')" id="authTabLogin" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800">登入</button>
+                    <button onclick="setAuthMode('register')" id="authTabRegister" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500">註冊新帳號</button>
+                </div>
+
+                <div id="realNameField" class="hidden space-y-1">
+                    <label class="text-xs font-semibold text-gray-700">真實姓名 (無需審核，註冊即通過)</label>
+                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-700">電子郵件 (Email)</label>
+                    <input type="email" id="authEmail" placeholder="user@example.com" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-700">密碼 (Password)</label>
+                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div id="authError" class="text-xs text-red-500 hidden bg-red-50 p-2 rounded border border-red-200"></div>
+
+                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs rounded-xl shadow hover:opacity-95 transition">
+                    確定送出
+                </button>
+            </div>
+        </div>
     </div>
-  );
-}
+
+    <!-- MUSIC MODAL (ADD / EDIT) -->
+    <div id="musicModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
+            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
+                <h3 class="font-bold text-base text-gray-800" id="musicModalTitle">新增 YouTube 音樂網址</h3>
+                <button onclick="closeMusicModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                    <label class="text-xs font-semibold text-gray-700">音樂標題 *</label>
+                    <input type="text" id="mFormTitle" placeholder="例如: Shape of You" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">演唱 / 演奏者 *</label>
+                    <input type="text" id="mFormArtist" placeholder="Ed Sheeran" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">音樂流派 (Genre)</label>
+                    <input type="text" id="mFormGenre" placeholder="Pop / Jazz / Classical" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div class="col-span-2">
+                    <label class="text-xs font-semibold text-gray-700">YouTube 音樂網址或ID *</label>
+                    <input type="text" id="mFormUrl" placeholder="https://www.youtube.com/watch?v=JGwWNGJdvx8" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">時長 (分:秒)</label>
+                    <input type="text" id="mFormDuration" placeholder="03:55" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">評分 (1 - 5 星)</label>
+                    <select id="mFormRating" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                        <option value="5">5 ★★★★★</option>
+                        <option value="4">4 ★★★★☆</option>
+                        <option value="3">3 ★★★☆☆</option>
+                        <option value="2">2 ★★☆☆☆</option>
+                        <option value="1">1 ★☆☆☆☆</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-xs font-semibold text-gray-700">曲目筆記 / 歌詞備註</label>
+                    <textarea id="mFormNotes" rows="2" placeholder="撰寫相關文字筆記..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeMusicModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
+                <button onclick="saveMusicItem()" class="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow">儲存曲目</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIDEO MODAL (ADD / EDIT) -->
+    <div id="videoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
+            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
+                <h3 class="font-bold text-base text-gray-800" id="videoModalTitle">新增 YouTube 影音網址</h3>
+                <button onclick="closeVideoModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="col-span-2">
+                    <label class="text-xs font-semibold text-gray-700">影片標題 *</label>
+                    <input type="text" id="vFormTitle" placeholder="4K 高畫質風景導覽" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">頻道 / 來源 *</label>
+                    <input type="text" id="vFormChannel" placeholder="National Geographic" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">影片類別</label>
+                    <input type="text" id="vFormCategory" placeholder="紀錄片 / 娛樂 / 教學" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div class="col-span-2">
+                    <label class="text-xs font-semibold text-gray-700">YouTube 影片網址或ID *</label>
+                    <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-700">解析度</label>
+                    <select id="vFormResolution" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                        <option value="4K 2160P">4K 2160P</option>
+                        <option value="HD 1080P" selected>HD 1080P</option>
+                        <option value="HD 720P">HD 720P</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="text-xs font-semibold text-gray-700">影片簡介說明</label>
+                    <textarea id="vFormDesc" rows="2" placeholder="說明..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeVideoModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
+                <button onclick="saveVideoItem()" class="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-xl shadow">儲存影片</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP JAVASCRIPT LOGIC -->
+    <script>
+        // APP GLOBAL STATE
+        let activeTab = 1;
+        let currentUser = null;
+        let authMode = 'login'; // 'login' or 'register'
+        let currentEditMusicId = null;
+        let currentEditVideoId = null;
+
+        // Custom Tab Titles State
+        let tabTitles = {
+            1: "分頁一: 我想放各種youtube音樂網址",
+            2: "分頁二: 產生強大的音樂播放器",
+            3: "分頁三: 我想放各種youtube影像網址",
+            4: "分頁四: 影音播放清單與劇院"
+        };
+
+        // Data Models
+        let musicList = [
+            { id: 'm1', title: 'Lofi Hip Hop - Beats to Relax', artist: 'Lofi Girl', genre: 'Lofi', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', duration: '03:45', rating: 5, notes: '適合專注與研讀音樂' },
+            { id: 'm2', title: 'Relaxing Piano Music', artist: 'Calm Studio', genre: 'Piano', url: 'https://www.youtube.com/watch?v=1ZYbU82GVz4', duration: '04:20', rating: 4, notes: '舒緩身心的鋼琴曲' },
+            { id: 'm3', title: 'Jazz Coffee Shop BGM', artist: 'Jazz Cafe', genre: 'Jazz', url: 'https://www.youtube.com/watch?v=2gliGmotbyQ', duration: '05:10', rating: 5, notes: '咖啡廳悠閒爵士樂' }
+        ];
+
+        let videoList = [
+            { id: 'v1', title: '4K Tropical Island Nature Drone Video', channel: 'Nature Relaxation', category: '風光紀錄', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', resolution: '4K 2160P', desc: '絕美的熱帶島嶼鳥瞰自然風光。' },
+            { id: 'v2', title: 'Relaxing Aquarium Fish 4K Video', channel: 'Sea Life', category: '放鬆水族', url: 'https://www.youtube.com/watch?v=2g811Ko7K8U', resolution: 'HD 1080P', desc: '高清海底世界水族箱放鬆影片。' }
+        ];
+
+        // Player States
+        let currentPlayingMusicId = null;
+        let currentPlayingVideoId = null;
+        let isAudioPlaying = false;
+        let isShuffle = false;
+        let isLoop = false;
+
+        // Charts Reference
+        let musicGenreChartObj = null;
+        let videoCatChartObj = null;
+        let theaterCatChartObj = null;
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            initFirebaseListeners();
+            renderTabTitles();
+            renderMusicTable();
+            renderVideoTable();
+            populateMusicDropdown();
+            populateVideoDropdown();
+            initCharts();
+            
+            // Auto Select First Items
+            if(musicList.length > 0) selectMusicFromDropdown(musicList[0].id);
+            if(videoList.length > 0) selectVideoFromDropdown(videoList[0].id);
+        });
+
+        // ------------------ FIREBASE REALTIME SYNC & AUTH ------------------
+        function initFirebaseListeners() {
+            setTimeout(() => {
+                if (window.fbAuth && window.fbServices) {
+                    const { onAuthStateChanged } = window.fbServices;
+                    onAuthStateChanged(window.fbAuth, (user) => {
+                        if (user) {
+                            currentUser = user;
+                            updateUserUI();
+                            loadUserDataFromFirebase();
+                        } else {
+                            currentUser = null;
+                            updateUserUI();
+                        }
+                    });
+
+                    // Database Connection Monitor
+                    const { ref, onValue } = window.fbServices;
+                    const connectedRef = ref(window.fbDb, ".info/connected");
+                    onValue(connectedRef, (snap) => {
+                        const connDot = document.getElementById('connDot');
+                        const connStatus = document.getElementById('connStatus');
+                        if (snap.val() === true) {
+                            connDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                            connStatus.innerText = "🟢 已連線數據庫";
+                        } else {
+                            connDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+                            connStatus.innerText = "🔴 離線模式 (預設資料庫)";
+                        }
+                    });
+                }
+            }, 1000);
+        }
+
+        function saveToFirebase() {
+            const now = new Date();
+            const timeStr = now.getFullYear() + '-' +
+                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                String(now.getDate()).padStart(2, '0') + ' ' +
+                String(now.getHours()).padStart(2, '0') + ':' +
+                String(now.getMinutes()).padStart(2, '0') + ':' +
+                String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('lastSaveTime').innerText = timeStr;
+
+            if (currentUser && window.fbServices) {
+                const { ref, set } = window.fbServices;
+                const userId = currentUser.uid;
+                set(ref(window.fbDb, 'users/' + userId + '/data'), {
+                    musicList,
+                    videoList,
+                    tabTitles,
+                    lastSaved: timeStr
+                });
+            }
+        }
+
+        function loadUserDataFromFirebase() {
+            if (!currentUser || !window.fbServices) return;
+            const { ref, get } = window.fbServices;
+            get(ref(window.fbDb, 'users/' + currentUser.uid + '/data')).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.musicList) musicList = data.musicList;
+                    if (data.videoList) videoList = data.videoList;
+                    if (data.tabTitles) tabTitles = data.tabTitles;
+                    if (data.lastSaved) document.getElementById('lastSaveTime').innerText = data.lastSaved;
+
+                    renderTabTitles();
+                    renderMusicTable();
+                    renderVideoTable();
+                    populateMusicDropdown();
+                    populateVideoDropdown();
+                    updateCharts();
+                }
+            });
+        }
+
+        function updateUserUI() {
+            const userInfoBox = document.getElementById('userInfoBox');
+            const loginBtnTrigger = document.getElementById('loginBtnTrigger');
+            const userNameDisplay = document.getElementById('userNameDisplay');
+            const userAvatar = document.getElementById('userAvatar');
+
+            if (currentUser) {
+                userInfoBox.classList.remove('hidden');
+                loginBtnTrigger.classList.add('hidden');
+                const name = currentUser.displayName || currentUser.email.split('@')[0];
+                userNameDisplay.innerText = name;
+                userAvatar.innerText = name.charAt(0).toUpperCase();
+            } else {
+                userInfoBox.classList.add('hidden');
+                loginBtnTrigger.classList.remove('hidden');
+            }
+        }
+
+        // ------------------ AUTH MODAL HANDLERS ------------------
+        function openAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+        }
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+        }
+        function setAuthMode(mode) {
+            authMode = mode;
+            const btnLogin = document.getElementById('authTabLogin');
+            const btnReg = document.getElementById('authTabRegister');
+            const realNameField = document.getElementById('realNameField');
+
+            if (mode === 'login') {
+                btnLogin.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800";
+                btnReg.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
+                realNameField.classList.add('hidden');
+            } else {
+                btnReg.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800";
+                btnLogin.className = "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
+                realNameField.classList.remove('hidden');
+            }
+        }
+
+        async function handleAuthSubmit() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value.trim();
+            const realName = document.getElementById('authRealName').value.trim();
+            const errorDiv = document.getElementById('authError');
+            errorDiv.classList.add('hidden');
+
+            if (!email || !password) {
+                errorDiv.innerText = "請輸入 Email 及密碼";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = window.fbServices;
+
+            try {
+                if (authMode === 'register') {
+                    if (!realName) {
+                        errorDiv.innerText = "請填寫真實姓名";
+                        errorDiv.classList.remove('hidden');
+                        return;
+                    }
+                    const res = await createUserWithEmailAndPassword(window.fbAuth, email, password);
+                    await updateProfile(res.user, { displayName: realName });
+                    currentUser = res.user;
+                    saveToFirebase(); // Init user dataset
+                } else {
+                    const res = await signInWithEmailAndPassword(window.fbAuth, email, password);
+                    currentUser = res.user;
+                }
+                closeAuthModal();
+                updateUserUI();
+            } catch (err) {
+                errorDiv.innerText = "驗證失敗: " + err.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            if (window.fbServices) {
+                window.fbServices.signOut(window.fbAuth).then(() => {
+                    currentUser = null;
+                    updateUserUI();
+                    document.getElementById('lastSaveTime').innerText = "未連線";
+                });
+            }
+        }
+
+        // ------------------ TAB NAVIGATION & EDITABLE TITLES ------------------
+        function switchTab(index) {
+            activeTab = index;
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                if (idx + 1 === index) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            document.querySelectorAll('.tab-panel').forEach((panel, idx) => {
+                if (idx + 1 === index) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderTabTitles() {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`tabTitle${i}`);
+                if (el) el.innerText = tabTitles[i] || `分頁 ${i}`;
+            }
+        }
+
+        function editTabTitle(tabNum) {
+            const currentText = tabTitles[tabNum];
+            const newName = prompt(`請輸入分頁 ${tabNum} 的新名稱:`, currentText);
+            if (newName !== null && newName.trim() !== "") {
+                tabTitles[tabNum] = newName.trim();
+                renderTabTitles();
+                saveToFirebase();
+            }
+        }
+
+        // ------------------ TAB 1: MUSIC MANAGEMENT LOGIC ------------------
+        function extractYTId(url) {
+            if (!url) return '';
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+            return match ? match[1] : url;
+        }
+
+        function renderMusicTable() {
+            const query = document.getElementById('musicSearch')?.value.toLowerCase() || '';
+            const tbody = document.getElementById('musicTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = musicList.filter(m => m.title.toLowerCase().includes(query) || m.artist.toLowerCase().includes(query));
+
+            filtered.forEach(m => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-cream-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-800">
+                        <div>${m.title}</div>
+                        <div class="text-[10px] text-gray-400">${m.artist}</div>
+                    </td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-medium">${m.genre}</span></td>
+                    <td class="p-3 font-mono">${m.duration || '--'}</td>
+                    <td class="p-3 text-amber-500 font-bold">${'★'.repeat(m.rating)}${'☆'.repeat(5 - m.rating)}</td>
+                    <td class="p-3 text-center space-x-2">
+                        <button onclick="playMusicDirectly('${m.id}')" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
+                        <button onclick="editMusicModal('${m.id}')" class="text-blue-500 hover:text-blue-700" title="編輯"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update stats
+            document.getElementById('mTotalCount').innerText = musicList.length;
+            const genres = [...new Set(musicList.map(m => m.genre))];
+            document.getElementById('mGenreCount').innerText = genres.length;
+            const avg = musicList.length ? (musicList.reduce((acc, cur) => acc + Number(cur.rating), 0) / musicList.length).toFixed(1) : '0.0';
+            document.getElementById('mAvgRating').innerText = avg + ' ★';
+
+            updateCharts();
+        }
+
+        function openMusicModal() {
+            currentEditMusicId = null;
+            document.getElementById('musicModalTitle').innerText = "新增 YouTube 音樂網址";
+            document.getElementById('mFormTitle').value = '';
+            document.getElementById('mFormArtist').value = '';
+            document.getElementById('mFormGenre').value = '';
+            document.getElementById('mFormUrl').value = '';
+            document.getElementById('mFormDuration').value = '';
+            document.getElementById('mFormRating').value = '5';
+            document.getElementById('mFormNotes').value = '';
+            document.getElementById('musicModal').classList.remove('hidden');
+        }
+
+        function editMusicModal(id) {
+            const m = musicList.find(x => x.id === id);
+            if (!m) return;
+            currentEditMusicId = id;
+            document.getElementById('musicModalTitle').innerText = "編輯 YouTube 音樂網址";
+            document.getElementById('mFormTitle').value = m.title;
+            document.getElementById('mFormArtist').value = m.artist;
+            document.getElementById('mFormGenre').value = m.genre;
+            document.getElementById('mFormUrl').value = m.url;
+            document.getElementById('mFormDuration').value = m.duration;
+            document.getElementById('mFormRating').value = m.rating;
+            document.getElementById('mFormNotes').value = m.notes;
+            document.getElementById('musicModal').classList.remove('hidden');
+        }
+
+        function closeMusicModal() {
+            document.getElementById('musicModal').classList.add('hidden');
+        }
+
+        function saveMusicItem() {
+            const title = document.getElementById('mFormTitle').value.trim();
+            const artist = document.getElementById('mFormArtist').value.trim();
+            const url = document.getElementById('mFormUrl').value.trim();
+            if (!title || !artist || !url) {
+                alert("請填寫標題、演唱者與 YouTube 網址");
+                return;
+            }
+
+            const item = {
+                id: currentEditMusicId || 'm_' + Date.now(),
+                title,
+                artist,
+                genre: document.getElementById('mFormGenre').value.trim() || 'General',
+                url,
+                duration: document.getElementById('mFormDuration').value.trim() || '03:00',
+                rating: Number(document.getElementById('mFormRating').value),
+                notes: document.getElementById('mFormNotes').value.trim()
+            };
+
+            if (currentEditMusicId) {
+                const idx = musicList.findIndex(x => x.id === currentEditMusicId);
+                if (idx !== -1) musicList[idx] = item;
+            } else {
+                musicList.push(item);
+            }
+
+            closeMusicModal();
+            renderMusicTable();
+            populateMusicDropdown();
+            saveToFirebase();
+        }
+
+        function deleteMusicItem(id) {
+            if (confirm("確定要刪除這首音樂項目嗎？")) {
+                musicList = musicList.filter(x => x.id !== id);
+                renderMusicTable();
+                populateMusicDropdown();
+                saveToFirebase();
+            }
+        }
+
+        function playMusicDirectly(id) {
+            switchTab(2);
+            selectMusicFromDropdown(id);
+        }
+
+        // ------------------ TAB 2: MUSIC PLAYER LOGIC ------------------
+        function populateMusicDropdown() {
+            const select = document.getElementById('playerMusicSelect');
+            if(!select) return;
+            select.innerHTML = '';
+            musicList.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.innerText = `${m.title} - ${m.artist}`;
+                select.appendChild(opt);
+            });
+
+            // Populate side queue
+            const queue = document.getElementById('musicQueueContainer');
+            queue.innerHTML = '';
+            musicList.forEach((m, idx) => {
+                const div = document.createElement('div');
+                div.className = `p-2.5 rounded-xl border border-cream-200 cursor-pointer hover:bg-cream-100 flex items-center justify-between text-xs transition ${m.id === currentPlayingMusicId ? 'bg-amber-100/60 border-amber-300 font-bold' : 'bg-white'}`;
+                div.onclick = () => selectMusicFromDropdown(m.id);
+                div.innerHTML = `
+                    <div class="truncate mr-2">
+                        <div class="text-gray-800 truncate">${idx + 1}. ${m.title}</div>
+                        <div class="text-[10px] text-gray-400">${m.artist}</div>
+                    </div>
+                    <span class="font-mono text-gray-500 text-[10px]">${m.duration}</span>
+                `;
+                queue.appendChild(div);
+            });
+
+            document.getElementById('queueCount').innerText = `${musicList.length} 首`;
+        }
+
+        function selectMusicFromDropdown(id) {
+            const m = musicList.find(x => x.id === id);
+            if (!m) return;
+
+            currentPlayingMusicId = id;
+            document.getElementById('playerMusicSelect').value = id;
+
+            // Update NP UI
+            document.getElementById('npTitle').innerText = m.title;
+            document.getElementById('npArtist').innerText = m.artist;
+            document.getElementById('npGenre').innerText = m.genre;
+            document.getElementById('npNotes').innerText = m.notes || "暫無筆記細節。";
+            document.getElementById('totalDuration').innerText = m.duration;
+
+            // Load iframe
+            const ytId = extractYTId(m.url);
+            const iframe = document.getElementById('ytAudioFrame');
+            iframe.innerHTML = `<iframe id="ytPlayerEmbed" src="https://www.youtube.com/embed/${ytId}?enablejsapi=1&autoplay=1" allow="autoplay" class="hidden"></iframe>`;
+
+            isAudioPlaying = true;
+            updatePlayBtnUI();
+            startVisualizer();
+            populateMusicDropdown(); // Highlight active
+        }
+
+        function toggleAudioPlay() {
+            isAudioPlaying = !isAudioPlaying;
+            updatePlayBtnUI();
+        }
+
+        function updatePlayBtnUI() {
+            const btn = document.getElementById('masterPlayBtn');
+            if (isAudioPlaying) {
+                btn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+                startVisualizer();
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-play ml-0.5"></i>`;
+                stopVisualizer();
+            }
+        }
+
+        function playNextMusic() {
+            if (musicList.length === 0) return;
+            let idx = musicList.findIndex(x => x.id === currentPlayingMusicId);
+            if (isShuffle) {
+                idx = Math.floor(Math.random() * musicList.length);
+            } else {
+                idx = (idx + 1) % musicList.length;
+            }
+            selectMusicFromDropdown(musicList[idx].id);
+        }
+
+        function playPrevMusic() {
+            if (musicList.length === 0) return;
+            let idx = musicList.findIndex(x => x.id === currentPlayingMusicId);
+            idx = (idx - 1 + musicList.length) % musicList.length;
+            selectMusicFromDropdown(musicList[idx].id);
+        }
+
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            document.getElementById('shuffleBtn').classList.toggle('text-amber-400', isShuffle);
+        }
+
+        function toggleLoop() {
+            isLoop = !isLoop;
+            document.getElementById('loopBtn').classList.toggle('text-amber-400', isLoop);
+        }
+
+        function startVisualizer() {
+            document.querySelectorAll('.v-bar').forEach(bar => bar.classList.add('animating'));
+        }
+        function stopVisualizer() {
+            document.querySelectorAll('.v-bar').forEach(bar => bar.classList.remove('animating'));
+        }
+
+        // ------------------ TAB 3: VIDEO MANAGEMENT LOGIC ------------------
+        function renderVideoTable() {
+            const query = document.getElementById('videoSearch')?.value.toLowerCase() || '';
+            const tbody = document.getElementById('videoTableBody');
+            tbody.innerHTML = '';
+
+            const filtered = videoList.filter(v => v.title.toLowerCase().includes(query) || v.channel.toLowerCase().includes(query));
+
+            filtered.forEach(v => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-cream-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-800">
+                        <div>${v.title}</div>
+                        <div class="text-[10px] text-gray-400">${v.channel}</div>
+                    </td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium">${v.category}</span></td>
+                    <td class="p-3 font-mono text-gray-600">${v.resolution}</td>
+                    <td class="p-3 text-center space-x-2">
+                        <button onclick="playVideoDirectly('${v.id}')" class="text-orange-600 hover:text-orange-800 font-bold" title="劇院播放"><i class="fa-solid fa-circle-play text-base"></i></button>
+                        <button onclick="editVideoModal('${v.id}')" class="text-blue-500 hover:text-blue-700" title="編輯"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteVideoItem('${v.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('vTotalCount').innerText = videoList.length;
+            const cats = [...new Set(videoList.map(v => v.category))];
+            document.getElementById('vCatCount').innerText = cats.length;
+
+            updateCharts();
+        }
+
+        function openVideoModal() {
+            currentEditVideoId = null;
+            document.getElementById('videoModalTitle').innerText = "新增 YouTube 影音網址";
+            document.getElementById('vFormTitle').value = '';
+            document.getElementById('vFormChannel').value = '';
+            document.getElementById('vFormCategory').value = '';
+            document.getElementById('vFormUrl').value = '';
+            document.getElementById('vFormResolution').value = 'HD 1080P';
+            document.getElementById('vFormDesc').value = '';
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function editVideoModal(id) {
+            const v = videoList.find(x => x.id === id);
+            if (!v) return;
+            currentEditVideoId = id;
+            document.getElementById('videoModalTitle').innerText = "編輯 YouTube 影音網址";
+            document.getElementById('vFormTitle').value = v.title;
+            document.getElementById('vFormChannel').value = v.channel;
+            document.getElementById('vFormCategory').value = v.category;
+            document.getElementById('vFormUrl').value = v.url;
+            document.getElementById('vFormResolution').value = v.resolution;
+            document.getElementById('vFormDesc').value = v.desc;
+            document.getElementById('videoModal').classList.remove('hidden');
+        }
+
+        function closeVideoModal() {
+            document.getElementById('videoModal').classList.add('hidden');
+        }
+
+        function saveVideoItem() {
+            const title = document.getElementById('vFormTitle').value.trim();
+            const channel = document.getElementById('vFormChannel').value.trim();
+            const url = document.getElementById('vFormUrl').value.trim();
+            if (!title || !channel || !url) {
+                alert("請填寫影片標題、頻道與 YouTube 網址");
+                return;
+            }
+
+            const item = {
+                id: currentEditVideoId || 'v_' + Date.now(),
+                title,
+                channel,
+                category: document.getElementById('vFormCategory').value.trim() || 'General',
+                url,
+                resolution: document.getElementById('vFormResolution').value,
+                desc: document.getElementById('vFormDesc').value.trim()
+            };
+
+            if (currentEditVideoId) {
+                const idx = videoList.findIndex(x => x.id === currentEditVideoId);
+                if (idx !== -1) videoList[idx] = item;
+            } else {
+                videoList.push(item);
+            }
+
+            closeVideoModal();
+            renderVideoTable();
+            populateVideoDropdown();
+            saveToFirebase();
+        }
+
+        function deleteVideoItem(id) {
+            if (confirm("確定刪除此影音項目？")) {
+                videoList = videoList.filter(x => x.id !== id);
+                renderVideoTable();
+                populateVideoDropdown();
+                saveToFirebase();
+            }
+        }
+
+        function playVideoDirectly(id) {
+            switchTab(4);
+            selectVideoFromDropdown(id);
+        }
+
+        // ------------------ TAB 4: THEATER PLAYER LOGIC ------------------
+        function populateVideoDropdown() {
+            const select = document.getElementById('playerVideoSelect');
+            if(!select) return;
+            select.innerHTML = '';
+            videoList.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.innerText = `${v.title} (${v.channel})`;
+                select.appendChild(opt);
+            });
+
+            // Populate theater playlist
+            const list = document.getElementById('videoPlaylistContainer');
+            list.innerHTML = '';
+            videoList.forEach((v, idx) => {
+                const div = document.createElement('div');
+                div.className = `p-2.5 rounded-xl border border-cream-200 cursor-pointer hover:bg-cream-100 flex items-center justify-between text-xs transition ${v.id === currentPlayingVideoId ? 'bg-orange-100/60 border-orange-300 font-bold' : 'bg-white'}`;
+                div.onclick = () => selectVideoFromDropdown(v.id);
+                div.innerHTML = `
+                    <div class="truncate mr-2">
+                        <div class="text-gray-800 truncate">${idx + 1}. ${v.title}</div>
+                        <div class="text-[10px] text-gray-400">${v.channel} • ${v.category}</div>
+                    </div>
+                    <span class="text-[10px] text-orange-600 font-mono">${v.resolution}</span>
+                `;
+                list.appendChild(div);
+            });
+
+            document.getElementById('videoPlaylistCount').innerText = `${videoList.length} 部`;
+        }
+
+        function selectVideoFromDropdown(id) {
+            const v = videoList.find(x => x.id === id);
+            if (!v) return;
+
+            currentPlayingVideoId = id;
+            document.getElementById('playerVideoSelect').value = id;
+
+            // Embed YT iframe
+            const ytId = extractYTId(v.url);
+            document.getElementById('ytVideoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+
+            // UI updates
+            document.getElementById('vpTitle').innerText = v.title;
+            document.getElementById('vpChannel').innerText = `頻道: ${v.channel}`;
+            document.getElementById('vpCategory').innerText = v.category;
+            document.getElementById('vpQuality').innerText = v.resolution;
+            document.getElementById('vpDesc').innerText = v.desc || "暫無影片詳細說明。";
+
+            populateVideoDropdown();
+        }
+
+        // ------------------ CHARTS INTEGRATION ------------------
+        function initCharts() {
+            const ctx1 = document.getElementById('musicGenreChart').getContext('2d');
+            musicGenreChartObj = new Chart(ctx1, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#f97316', '#10b981', '#3b82f6', '#8b5cf6'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx2 = document.getElementById('videoCatChart').getContext('2d');
+            videoCatChartObj = new Chart(ctx2, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: '影片數量', data: [], backgroundColor: '#f97316' }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx3 = document.getElementById('theaterCatChart').getContext('2d');
+            theaterCatChartObj = new Chart(ctx3, {
+                type: 'pie',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f97316', '#d97706', '#059669', '#2563eb', '#7c3aed'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            updateCharts();
+        }
+
+        function updateCharts() {
+            if (!musicGenreChartObj || !videoCatChartObj || !theaterCatChartObj) return;
+
+            // Music Genres Count
+            const musicGenres = {};
+            musicList.forEach(m => musicGenres[m.genre] = (musicGenres[m.genre] || 0) + 1);
+            musicGenreChartObj.data.labels = Object.keys(musicGenres);
+            musicGenreChartObj.data.datasets[0].data = Object.values(musicGenres);
+            musicGenreChartObj.update();
+
+            // Video Categories Count
+            const videoCats = {};
+            videoList.forEach(v => videoCats[v.category] = (videoCats[v.category] || 0) + 1);
+            videoCatChartObj.data.labels = Object.keys(videoCats);
+            videoCatChartObj.data.datasets[0].data = Object.values(videoCats);
+            videoCatChartObj.update();
+
+            theaterCatChartObj.data.labels = Object.keys(videoCats);
+            theaterCatChartObj.data.datasets[0].data = Object.values(videoCats);
+            theaterCatChartObj.update();
+        }
+
+        // ------------------ IMPORT & EXPORT FEATURES ------------------
+        function exportExcel() {
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Music
+            const musicSheetData = musicList.map(m => ({
+                '音樂標題': m.title,
+                '演唱者': m.artist,
+                '流派': m.genre,
+                'YouTube 網址': m.url,
+                '時長': m.duration,
+                '評分': m.rating,
+                '筆記備註': m.notes
+            }));
+            const ws1 = XLSX.utils.json_to_sheet(musicSheetData);
+            XLSX.utils.book_append_sheet(wb, ws1, "音樂網址庫");
+
+            // Sheet 2: Videos
+            const videoSheetData = videoList.map(v => ({
+                '影片標題': v.title,
+                '頻道名稱': v.channel,
+                '分類': v.category,
+                'YouTube 網址': v.url,
+                '解析度': v.resolution,
+                '簡介': v.desc
+            }));
+            const ws2 = XLSX.utils.json_to_sheet(videoSheetData);
+            XLSX.utils.book_append_sheet(wb, ws2, "影音網址庫");
+
+            XLSX.writeFile(wb, `MediaBox_Pro_Export_${Date.now()}.xlsx`);
+        }
+
+        function importExcel(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // Try parse sheet 1 (Music)
+                if (workbook.SheetNames.length > 0) {
+                    const sheet1 = workbook.Sheets[workbook.SheetNames[0]];
+                    const json1 = XLSX.utils.sheet_to_json(sheet1);
+                    if (json1.length > 0) {
+                        musicList = json1.map((row, idx) => ({
+                            id: 'm_imp_' + idx + '_' + Date.now(),
+                            title: row['音樂標題'] || row['Title'] || '未命名音樂',
+                            artist: row['演唱者'] || row['Artist'] || '未知歌手',
+                            genre: row['流派'] || row['Genre'] || 'General',
+                            url: row['YouTube 網址'] || row['URL'] || '',
+                            duration: row['時長'] || '03:30',
+                            rating: row['評分'] ? Number(row['評分']) : 5,
+                            notes: row['筆記備註'] || ''
+                        }));
+                    }
+                }
+
+                // Try parse sheet 2 (Video)
+                if (workbook.SheetNames.length > 1) {
+                    const sheet2 = workbook.Sheets[workbook.SheetNames[1]];
+                    const json2 = XLSX.utils.sheet_to_json(sheet2);
+                    if (json2.length > 0) {
+                        videoList = json2.map((row, idx) => ({
+                            id: 'v_imp_' + idx + '_' + Date.now(),
+                            title: row['影片標題'] || row['Title'] || '未命名影片',
+                            channel: row['頻道名稱'] || row['Channel'] || '未知頻道',
+                            category: row['分類'] || row['Category'] || 'General',
+                            url: row['YouTube 網址'] || row['URL'] || '',
+                            resolution: row['解析度'] || 'HD 1080P',
+                            desc: row['簡介'] || ''
+                        }));
+                    }
+                }
+
+                renderMusicTable();
+                renderVideoTable();
+                populateMusicDropdown();
+                populateVideoDropdown();
+                saveToFirebase();
+                alert("Excel 資料一鍵匯入成功！");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function exportPNG() {
+            const target = document.getElementById('exportArea');
+            html2canvas(target, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `MediaBox_Tab${activeTab}_HD.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function exportPDF() {
+            const target = document.getElementById('exportArea');
+            html2canvas(target, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgProps = pdf.getImageProperties(imgData);
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save(`MediaBox_Report_Tab${activeTab}.pdf`);
+            });
+        }
+    </script>
+</body>
+</html>
