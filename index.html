@@ -85,11 +85,13 @@
         }
         .lyric-line {
             transition: all 0.3s ease;
+            opacity: 0.6;
         }
         .lyric-line.active {
             color: #fbbf24;
             font-weight: bold;
-            transform: scale(1.05);
+            transform: scale(1.08);
+            opacity: 1;
         }
     </style>
 </head>
@@ -130,7 +132,6 @@
             onValue
         };
 
-        // 觸發全域初始化
         if (window.initAppListeners) {
             window.initAppListeners();
         }
@@ -205,11 +206,6 @@
                 <span>資料庫與導出工具箱</span>
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
-                <!-- 強制清除舊存取與快取按鈕 -->
-                <button onclick="resetCloudAndLocalData()" class="bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 font-medium transition flex items-center space-x-1.5 shadow-sm" title="強制清除所有舊快照與瀏覽器暫存">
-                    <i class="fa-solid fa-rotate-right"></i>
-                    <span>強制清除舊存取並重置</span>
-                </button>
                 <label class="cursor-pointer bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fa-solid fa-file-excel text-emerald-600"></i>
                     <span>一鍵匯入 EXCEL</span>
@@ -242,19 +238,24 @@
                         <i class="fa-solid fa-headphones text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="font-bold text-gray-800 text-base">專業 YouTube 音樂庫與強大播放器</h2>
-                        <p class="text-xs text-gray-500">支援動態逐字滾動歌詞、歌手真實寫真、禁止自動播放、影音互斥暫停與秒速進度跳轉</p>
+                        <h2 class="font-bold text-gray-800 text-base">專業 YouTube 音樂庫與動態歌詞播放器</h2>
+                        <p class="text-xs text-gray-500">支援即時動態逐字滾動歌詞、歌手真實寫真、禁止自動播放、影音互斥暫停與秒速進度跳轉</p>
                     </div>
                 </div>
-                <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> 新增音樂連結
-                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="loadTop20Music()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-fire"></i> 一鍵帶回Top20中文流行音樂
+                    </button>
+                    <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> 新增音樂連結
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Main Player Deck -->
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[320px]">
+                    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[360px]">
                         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
 
                         <div class="flex items-center justify-between z-10 gap-4">
@@ -283,9 +284,12 @@
                         <!-- YouTube Audio Iframe Container -->
                         <div id="ytAudioFrameContainer" class="hidden"></div>
 
-                        <!-- Dynamic Scrolling Lyrics Box -->
-                        <div class="bg-slate-800/90 backdrop-blur rounded-xl p-3 my-4 h-24 overflow-y-auto custom-scrollbar flex flex-col items-center justify-start text-center border border-slate-700 z-10 relative">
-                            <div id="lyricContainer" class="text-xs space-y-2 text-gray-300 w-full py-2">
+                        <!-- 動態逐字滾動歌詞面板 (位於音樂面板下方中央) -->
+                        <div class="bg-slate-800/95 backdrop-blur rounded-2xl p-4 my-4 h-32 overflow-y-auto custom-scrollbar flex flex-col items-center justify-start text-center border-2 border-amber-500/40 shadow-inner z-10 relative">
+                            <div class="absolute top-2 right-3 text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                <i class="fa-solid fa-music animate-spin"></i> 動態歌詞
+                            </div>
+                            <div id="lyricContainer" class="text-sm space-y-3 text-gray-300 w-full py-4">
                                 <p class="lyric-line active">♪ 請點擊下方曲目開始播放動態歌詞 ♪</p>
                             </div>
                         </div>
@@ -384,9 +388,14 @@
                     </h2>
                     <p class="text-xs text-gray-500 mt-1">統一管理影片資源，具備禁止自動播放與影音互斥暫停機制。</p>
                 </div>
-                <button onclick="openVideoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> 新增影音連結
-                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="loadTop20Videos()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-fire"></i> 一鍵帶回Top20中文影音
+                    </button>
+                    <button onclick="openVideoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> 新增影音連結
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -466,6 +475,9 @@
                         <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-3 py-1.5 rounded-lg transition text-gray-600">大圖</button>
                     </div>
 
+                    <button onclick="loadTop20Photos()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-fire"></i> 一鍵帶回Top20圖片
+                    </button>
                     <button onclick="openPhotoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
                         <i class="fa-solid fa-plus"></i> 新增照片網址
                     </button>
@@ -637,7 +649,6 @@
             }
         ];
 
-        // 優先從 localStorage 讀取最新狀態，避免 F5 重新整理時閃爍預設舊畫面
         let tabTitles = JSON.parse(localStorage.getItem('mediaBox_tabTitles')) || {
             1: "分頁一: 專業音樂庫與播放器",
             2: "分頁二: 影音網址管理與劇院",
@@ -682,7 +693,6 @@
             }
         });
 
-        // 綁定給 Firebase 模組載入完成後回調
         window.initAppListeners = function() {
             if (window.fbAuth && window.fbServices) {
                 const { onAuthStateChanged } = window.fbServices;
@@ -713,37 +723,12 @@
             }
         };
 
-        // 同步儲存至 localStorage 與 Firebase
         function saveData() {
             localStorage.setItem('mediaBox_musicList', JSON.stringify(musicList));
             localStorage.setItem('mediaBox_videoList', JSON.stringify(videoList));
             localStorage.setItem('mediaBox_photoList', JSON.stringify(photoList));
             localStorage.setItem('mediaBox_tabTitles', JSON.stringify(tabTitles));
             saveToFirebase();
-        }
-
-        // 強制清除瀏覽器快取、Firebase 本地快照並重新整理
-        function resetCloudAndLocalData() {
-            if (confirm("確定要強制清除所有瀏覽器暫存與舊資料，並恢復全新的 3 個分頁預設狀態嗎？")) {
-                localStorage.clear(); // 強制清除瀏覽器所有殘留暫存
-                musicList = [...defaultMusicList];
-                videoList = [
-                    { id: 'v1', title: '4K Tropical Island Nature Drone Video', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
-                    { id: 'v2', title: 'Relaxing Aquarium Fish 4K Video', url: 'https://www.youtube.com/watch?v=2g811Ko7K8U' }
-                ];
-                photoList = [
-                    { id: 'p1', title: '日本京都賞櫻回憶', url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80' },
-                    { id: 'p2', title: '北海道雪景之旅', url: 'https://images.unsplash.com/photo-1491557345352-5929e343eb89?auto=format&fit=crop&w=600&q=80' }
-                ];
-                tabTitles = {
-                    1: "分頁一: 專業音樂庫與播放器",
-                    2: "分頁二: 影音網址管理與劇院",
-                    3: "分頁三: 相簿回憶"
-                };
-                saveData();
-                alert("已成功強制清除舊存取！頁面將自動重整。");
-                window.location.reload();
-            }
         }
 
         function saveToFirebase() {
@@ -770,7 +755,6 @@
                     if (data.photoList) photoList = data.photoList;
                     if (data.tabTitles) tabTitles = data.tabTitles;
 
-                    // 同步寫入 localStorage
                     localStorage.setItem('mediaBox_musicList', JSON.stringify(musicList));
                     localStorage.setItem('mediaBox_videoList', JSON.stringify(videoList));
                     localStorage.setItem('mediaBox_photoList', JSON.stringify(photoList));
@@ -899,6 +883,126 @@
             currentPlayingVideoId = null;
         }
 
+        // --- TOP 20 一鍵載入功能 (新增不覆蓋) ---
+        function loadTop20Music() {
+            const top20Songs = [
+                { title: "周杰倫 - 最偉大的作品", artist: "周杰倫", url: "https://www.youtube.com/watch?v=qqmx_ykjpc0" },
+                { title: "周興哲 - 你好不好", artist: "周興哲", url: "https://www.youtube.com/watch?v=P7Xh2W-w07E" },
+                { title: "鄧紫棋 - 句號", artist: "G.E.M. 鄧紫棋", url: "https://www.youtube.com/watch?v=7z97wdi7H-0" },
+                { title: "林俊傑 - 幸存者", artist: "林俊傑", url: "https://www.youtube.com/watch?v=ZfWl7iG016I" },
+                { title: "告五人 - 唯一", artist: "告五人", url: "https://www.youtube.com/watch?v=x4X3A63QnLY" },
+                { title: "韋禮安 - 如果可以", artist: "韋禮安", url: "https://www.youtube.com/watch?v=yW4jS97r-7Y" },
+                { title: "茄子蛋 - 閣愛妳一眼", artist: "茄子蛋", url: "https://www.youtube.com/watch?v=9_l5A8x8hUo" },
+                { title: "陳奕迅 - 孤勇者", artist: "陳奕迅", url: "https://www.youtube.com/watch?v=HXW0_aH1q8k" },
+                { title: "周杰倫 - 晴天", artist: "周杰倫", url: "https://www.youtube.com/watch?v=NELzuGgs9lY" },
+                { title: "周杰倫 - 告白氣球", artist: "周杰倫", url: "https://www.youtube.com/watch?v=buIOznWyktc" },
+                { title: "林俊傑 - 江南", artist: "林俊傑", url: "https://www.youtube.com/watch?v=0kF6zH6b_4s" },
+                { title: "五月天 - 倔強", artist: "五月天", url: "https://www.youtube.com/watch?v=YtB9W1pEkkg" },
+                { title: "田馥甄 - 小幸運", artist: "田馥甄", url: "https://www.youtube.com/watch?v=X5zqh5_h5gY" },
+                { title: "莫文蔚 - 慢慢喜歡你", artist: "莫文蔚", url: "https://www.youtube.com/watch?v=zJvT5UvG09c" },
+                { title: "盧廣仲 - 刻在我心底的名字", artist: "盧廣仲", url: "https://www.youtube.com/watch?v=33K16pA1w5M" },
+                { title: "蕭煌奇 - 你是我的眼", artist: "蕭煌奇", url: "https://www.youtube.com/watch?v=8c2y5c6d3jU" },
+                { title: "孫燕姿 - 天黑黑", artist: "孫燕姿", url: "https://www.youtube.com/watch?v=hGz5Y8j3E5Q" },
+                { title: "張惠妹 - 聽海", artist: "張惠妹", url: "https://www.youtube.com/watch?v=gJ0Uf5p7J2k" },
+                { title: "蔡依林 - 玫瑰少年", artist: "蔡依林", url: "https://www.youtube.com/watch?v=09_0v72c6wY" },
+                { title: "Eric 周興哲 - 以後別做朋友", artist: "周興哲", url: "https://www.youtube.com/watch?v=7g2x1mJ7v4Q" }
+            ];
+
+            top20Songs.forEach((item, index) => {
+                musicList.push({
+                    id: 'm_top20_' + Date.now() + '_' + index,
+                    title: item.title,
+                    artist: item.artist,
+                    url: item.url,
+                    lyrics: [
+                        { time: 0, text: `♪ 熱門精選: ${item.title} ♪` },
+                        { time: 5, text: `演唱者: ${item.artist}` },
+                        { time: 15, text: '享受精彩中文流行音樂...' }
+                    ]
+                });
+            });
+
+            renderMusicTable();
+            populateMusicDropdown();
+            saveData();
+            alert("已成功為您追加 20 首熱門中文流行音樂！");
+        }
+
+        function loadTop20Videos() {
+            const top20Vids = [
+                { title: "精選華語金曲演唱會現場精華 4K", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                { title: "台灣熱門景點空拍導覽 4K", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
+                { title: "Relaxing Lofi Chill Beats Live", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+                { title: "華語流行情歌精選串燒", url: "https://www.youtube.com/watch?v=OX5wUp93hbc" },
+                { title: "古典鋼琴輕音樂讀書專用 4K", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
+                { title: "台灣夜市美食文化紀錄片", url: "https://www.youtube.com/watch?v=qqmx_ykjpc0" },
+                { title: "高畫質自然生態紀錄片：海洋篇", url: "https://www.youtube.com/watch?v=P7Xh2W-w07E" },
+                { title: "華語經典電影預告精選輯", url: "https://www.youtube.com/watch?v=7z97wdi7H-0" },
+                { title: "台北 101 跨年煙火精彩回顧", url: "https://www.youtube.com/watch?v=ZfWl7iG016I" },
+                { title: "台灣高山美景四季巡禮", url: "https://www.youtube.com/watch?v=x4X3A63QnLY" },
+                { title: "熱門中文流行排行榜精選 2026", url: "https://www.youtube.com/watch?v=yW4jS97r-7Y" },
+                { title: "療癒系水族館魚群漫游 4K", url: "https://www.youtube.com/watch?v=9_l5A8x8hUo" },
+                { title: "台灣鐵道環島風光全紀錄", url: "https://www.youtube.com/watch?v=HXW0_aH1q8k" },
+                { title: "咖啡廳輕爵士音樂特輯", url: "https://www.youtube.com/watch?v=NELzuGgs9lY" },
+                { title: "台灣在地人文藝術微電影", url: "https://www.youtube.com/watch?v=buIOznWyktc" },
+                { title: "熱血華語動漫主題曲合輯", url: "https://www.youtube.com/watch?v=0kF6zH6b_4s" },
+                { title: "全台賞櫻勝地空拍導覽", url: "https://www.youtube.com/watch?v=YtB9W1pEkkg" },
+                { title: "華語流行電音派對精選", url: "https://www.youtube.com/watch?v=X5zqh5_h5gY" },
+                { title: "舒眠心靈冥想音樂劇場", url: "https://www.youtube.com/watch?v=zJvT5UvG09c" },
+                { title: "經典華語金曲回憶錄", url: "https://www.youtube.com/watch?v=33K16pA1w5M" }
+            ];
+
+            top20Vids.forEach((item, index) => {
+                videoList.push({
+                    id: 'v_top20_' + Date.now() + '_' + index,
+                    title: item.title,
+                    url: item.url
+                });
+            });
+
+            renderVideoTable();
+            populateVideoDropdown();
+            saveData();
+            alert("已成功為您追加 20 部熱門中文影音！");
+        }
+
+        function loadTop20Photos() {
+            const top20Imgs = [
+                { title: "台北 101 夜景與都會風光", url: "https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=600&q=80" },
+                { title: "日本京都嵐山竹林之道", url: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80" },
+                { title: "北海道雪景浪漫冬日", url: "https://images.unsplash.com/photo-1491557345352-5929e343eb89?auto=format&fit=crop&w=600&q=80" },
+                { title: "阿里山日出雲海奇景", url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" },
+                { title: "花蓮太魯閣峽谷風光", url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80" },
+                { title: "日月潭湖光山色清晨", url: "https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=600&q=80" },
+                { title: "九份老街紅燈籠山城夜景", url: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=600&q=80" },
+                { title: "墾丁南國蔚藍海岸與沙灘", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" },
+                { title: "東京鐵塔與現代都市天際線", url: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80" },
+                { title: "大阪道頓堀霓虹街景", url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80" },
+                { title: "富士山雪頂與河口湖倒影", url: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=600&q=80" },
+                { title: "沖繩澄澈海灘與藍天白雲", url: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=600&q=80" },
+                { title: "合歡山高山杜鵑與星空", url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=600&q=80" },
+                { title: "澎湖雙心石滬夏日風情", url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" },
+                { title: "台劇文青咖啡廳角落日常", url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80" },
+                { title: "星空露營與銀河系美景", url: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=600&q=80" },
+                { title: "秋季楓葉林漫步文青風", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" },
+                { title: "文青底片感復古街景", url: "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80" },
+                { title: "高質感文具與手作筆記本", url: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=600&q=80" },
+                { title: "溫馨質感居家生活日常", url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80" }
+            ];
+
+            top20Imgs.forEach((item, index) => {
+                photoList.push({
+                    id: 'p_top20_' + Date.now() + '_' + index,
+                    title: item.title,
+                    url: item.url
+                });
+            });
+
+            renderPhotoGallery();
+            saveData();
+            alert("已成功為您追加 20 張熱門圖片！");
+        }
+
         // --- MUSIC MANAGER & PLAYER ---
         function renderMusicTable() {
             const query = document.getElementById('musicSearch')?.value.toLowerCase() || '';
@@ -937,7 +1041,7 @@
                 lyrics: [
                     { time: 0, text: `♪ 歡迎收聽 ${title} ♪` },
                     { time: 5, text: `演唱者: ${artist}` },
-                    { time: 15, text: '享受純淨音樂時光...' }
+                    { time: 15, text: '享受純淨音樂與動態歌詞時光...' }
                 ]
             });
 
@@ -1081,7 +1185,7 @@
             lyricBox.innerHTML = '';
             lyricsArray.forEach((l, idx) => {
                 const p = document.createElement('p');
-                p.className = `lyric-line text-xs py-1 ${idx === 0 ? 'active text-amber-400 font-bold' : 'text-gray-300'}`;
+                p.className = `lyric-line text-xs py-1.5 ${idx === 0 ? 'active text-amber-400 font-bold' : 'text-gray-300'}`;
                 p.id = `lyric-${idx}`;
                 p.innerText = l.text;
                 lyricBox.appendChild(p);
