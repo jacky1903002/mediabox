@@ -631,13 +631,21 @@
             3: "頁面三: 相簿回憶系統"
         };
 
-        let musicList = JSON.parse(localStorage.getItem('mediaBox_musicList')) || [...mandatoryTop20ChineseSongs];
-        let videoList = JSON.parse(localStorage.getItem('mediaBox_videoList')) || [...mandatoryTop20ChineseVideos];
+        // 讀取 LocalStorage 資料，若無資料才預設載入預設清單，確保 F5 重新整理不會回復被刪除的項目
+        let musicList = localStorage.getItem('mediaBox_musicList') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_musicList')) 
+            : [...mandatoryTop20ChineseSongs];
 
-        let photoList = JSON.parse(localStorage.getItem('mediaBox_photoList')) || [
-            { id: 'p1', title: '台北都會夜景', url: 'https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=600&q=80' },
-            { id: 'p2', title: '日月潭晨曦美景', url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=600&q=80' }
-        ];
+        let videoList = localStorage.getItem('mediaBox_videoList') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_videoList')) 
+            : [...mandatoryTop20ChineseVideos];
+
+        let photoList = localStorage.getItem('mediaBox_photoList') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_photoList')) 
+            : [
+                { id: 'p1', title: '台北都會夜景', url: 'https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=600&q=80' },
+                { id: 'p2', title: '日月潭晨曦美景', url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=600&q=80' }
+            ];
 
         let currentPlayingMusicId = null;
         let currentPlayingVideoId = null;
@@ -837,6 +845,9 @@
 
         // --- 強制載入 TOP 20 華語/中文清單 ---
         function loadTop20Music() {
+            if (musicList.length > 0 && !confirm("載入 Top20 歌曲將會重置目前的歌曲播放清單，確定要繼續嗎？")) {
+                return;
+            }
             musicList = JSON.parse(JSON.stringify(mandatoryTop20ChineseSongs));
             selectedMusicIds = [];
             renderMusicTable();
@@ -847,6 +858,9 @@
         }
 
         function loadTop20Videos() {
+            if (videoList.length > 0 && !confirm("載入 Top20 影音將會重置目前的影音播放清單，確定要繼續嗎？")) {
+                return;
+            }
             videoList = JSON.parse(JSON.stringify(mandatoryTop20ChineseVideos));
             selectedVideoIds = [];
             renderVideoTable();
