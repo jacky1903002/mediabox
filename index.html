@@ -796,7 +796,11 @@
             }
         }
 
+        // 切換頁面時停止前一個頁面的播放
         function switchTab(index) {
+            pauseAudioPlayer();
+            pauseVideoPlayer();
+
             activeTab = index;
             document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
                 btn.classList.toggle('active', idx + 1 === index);
