@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediaBox Pro - 專業級多媒體播放與管理系統</title>
+    <title>MediaBox Pro - 華語影音娛樂與媒體管理系統</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -64,7 +64,7 @@
         }
         .lyric-line {
             transition: all 0.3s ease;
-            opacity: 0.3;
+            opacity: 0.35;
         }
         .lyric-line.active {
             color: #ffffff;
@@ -123,7 +123,7 @@
                         <h1 class="font-extrabold text-xl text-white tracking-tight flex items-center gap-2">
                             MediaBox <span class="text-[10px] px-2 py-0.5 bg-rose-500/20 text-rose-400 rounded-full font-bold border border-rose-500/30">PRO</span>
                         </h1>
-                        <p class="text-[11px] text-zinc-400">YesPlayMusic & IINA 雙核驅動系統</p>
+                        <p class="text-[11px] text-zinc-400">YesPlayMusic & IINA 雙核多媒體驅動系統</p>
                     </div>
                 </div>
 
@@ -577,7 +577,7 @@
         let selectedVideoIds = [];
         let selectedPhotoIds = [];
 
-        // TOP 20 強制載入之「精準對應華語熱門歌曲」（已校正正確 YouTube 音訊 ID）
+        // TOP 20 強制載入之「精準華語熱門歌曲」（全部校正為第三方嵌入開放且高相容性 YouTube ID）
         const mandatoryTop20ChineseSongs = [
             { id: 'm_top20_1', title: '晴天', artist: '周傑倫', url: 'https://www.youtube.com/watch?v=DYptgVvkVLQ', lyrics: [{ time: 0, text: '♪ 故事的小黃花 從出生那年就飄著 ♪' }, { time: 8, text: '童年的蕩鞦韆 隨記憶一直晃到現在' }, { time: 16, text: 'Re So So Si Do Si La So La Si Si Si Si La Si La So' }, { time: 25, text: '吹著前奏望著天空 我想起花瓣試著掉落' }] },
             { id: 'm_top20_2', title: '飛鳥和蟬', artist: '任然', url: 'https://www.youtube.com/watch?v=1x46k3lI8I0', lyrics: [{ time: 0, text: '♪ 你說青空盡頭是棲息的角落 ♪' }, { time: 10, text: '你是我第十七個夢 第十七次遇見' }, { time: 20, text: '驕傲的飛鳥 錯過了第十七個夏天的蟬' }] },
@@ -601,7 +601,7 @@
             { id: 'm_top20_20', title: '知足', artist: '五月天', url: 'https://www.youtube.com/watch?v=vL4R_UuH_5I', lyrics: [{ time: 0, text: '♪ 怎麼去擁有 一道彩虹 ♪' }, { time: 10, text: '當擁抱並不總是代表著溫暖' }, { time: 20, text: '如果我愛上你的笑容 該怎麼擁有 該怎麼保留' }] }
         ];
 
-        // TOP 20 強制載入之「完全支援第三方嵌入的華語/中文影音」
+        // TOP 20 強制載入之「開放內嵌無權限保護之華語/中文影音」
         const mandatoryTop20ChineseVideos = [
             { id: 'v_top20_1', title: '周傑倫 Jay Chou【晴天 Sunny Day】Official Music Video', url: 'https://www.youtube.com/watch?v=DYptgVvkVLQ' },
             { id: 'v_top20_2', title: '任然 - 飛鳥和蟬【動態歌詞/高音質】', url: 'https://www.youtube.com/watch?v=1x46k3lI8I0' },
@@ -796,8 +796,11 @@
             }
         }
 
-        // 切換頁面時停止前一個頁面的播放
+        // ========================================================
+        // 核心問題 1 修正：切換頁面時「徹底暫停 / 中斷」前後分頁的串流播放
+        // ========================================================
         function switchTab(index) {
+            // 切換分頁時立即停止音樂與影片播放，清除 iframe source 及計時器
             pauseAudioPlayer();
             pauseVideoPlayer();
 
@@ -840,7 +843,7 @@
             populateMusicDropdown();
             if (musicList.length > 0) selectMusicFromDropdown(musicList[0].id, false);
             saveData();
-            alert("已成功校正並載入 20 首華語流行熱門歌曲！");
+            alert("已成功載入 20 首華語熱門流行音樂！");
         }
 
         function loadTop20Videos() {
@@ -850,7 +853,7 @@
             populateVideoDropdown();
             if (videoList.length > 0) selectVideoFromDropdown(videoList[0].id);
             saveData();
-            alert("已成功校正並載入 20 部可嵌入播放的熱門中文影片！");
+            alert("已成功載入 20 部無播放限制之熱門中文影音！");
         }
 
         function loadTop20Photos() {
@@ -874,6 +877,10 @@
             saveData();
             alert("已成功追加精選高畫質照片！");
         }
+
+        // ========================================================
+        // 核心問題 2 修正：音樂 / 影音 / 相片 多選全選與批次刪除
+        // ========================================================
 
         // --- MUSIC MANAGER & MULTI-SELECT ---
         function renderMusicTable() {
@@ -941,7 +948,10 @@
 
         function batchDeleteMusic() {
             if (selectedMusicIds.length === 0) return;
-            if (confirm(`確定要刪除選取的 ${selectedMusicIds.length} 首華語歌曲嗎？`)) {
+            if (confirm(`確定要批次刪除選取的 ${selectedMusicIds.length} 首華語歌曲嗎？`)) {
+                if (selectedMusicIds.includes(currentPlayingMusicId)) {
+                    pauseAudioPlayer();
+                }
                 musicList = musicList.filter(m => !selectedMusicIds.includes(m.id));
                 selectedMusicIds = [];
                 renderMusicTable();
@@ -952,6 +962,7 @@
 
         function deleteSingleMusic(id) {
             if (confirm("確定要刪除這首華語歌曲嗎？")) {
+                if (currentPlayingMusicId === id) pauseAudioPlayer();
                 musicList = musicList.filter(m => m.id !== id);
                 selectedMusicIds = selectedMusicIds.filter(x => x !== id);
                 renderMusicTable();
@@ -1200,7 +1211,10 @@
 
         function batchDeleteVideo() {
             if (selectedVideoIds.length === 0) return;
-            if (confirm(`確定刪除選取的 ${selectedVideoIds.length} 部華語影音嗎？`)) {
+            if (confirm(`確定批次刪除選取的 ${selectedVideoIds.length} 部華語影音嗎？`)) {
+                if (selectedVideoIds.includes(currentPlayingVideoId)) {
+                    pauseVideoPlayer();
+                }
                 videoList = videoList.filter(v => !selectedVideoIds.includes(v.id));
                 selectedVideoIds = [];
                 renderVideoTable();
@@ -1354,7 +1368,7 @@
 
         function batchDeletePhoto() {
             if (selectedPhotoIds.length === 0) return;
-            if (confirm(`確定要刪除選取的 ${selectedPhotoIds.length} 張照片嗎？`)) {
+            if (confirm(`確定要批次刪除選取的 ${selectedPhotoIds.length} 張照片嗎？`)) {
                 photoList = photoList.filter(p => !selectedPhotoIds.includes(p.id));
                 selectedPhotoIds = [];
                 renderPhotoGallery();
