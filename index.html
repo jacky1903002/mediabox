@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediaBox Pro - 專業級多媒體播放與管理系統</title>
+    <title>MediaBox Pro - YesPlayMusic & IINA Integrated Player</title>
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- SheetJS XLSX -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- html2canvas -->
@@ -19,22 +18,21 @@
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        cream: {
-                            50: '#fcfbf7',
-                            100: '#f5f2eb',
-                            200: '#e8e4dc',
-                            300: '#dad4c8',
-                            800: '#4a453e',
-                            900: '#2d2925',
+                        ypm: {
+                            red: '#335eea',
+                            bg: '#f5f5f7',
+                            card: '#ffffff',
+                            darkBg: '#121212',
+                            darkCard: '#1e1e1e'
                         },
-                        accent: {
-                            gold: '#d97706',
-                            coral: '#f97316',
-                            sage: '#059669',
-                            slate: '#334155'
+                        iina: {
+                            bg: '#0f0f11',
+                            bar: 'rgba(28, 28, 32, 0.85)',
+                            accent: '#007aff'
                         }
                     }
                 }
@@ -43,59 +41,83 @@
     </script>
     <style>
         body {
-            background-color: #fcfbf7;
-            color: #2d3748;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            user-select: none;
         }
-        .card-cream {
-            background-color: #ffffff;
-            border: 1px solid #e8e4dc;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+
+        /* Glassmorphism effects for IINA & YPM */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
         }
+        .dark .glass-panel {
+            background: rgba(30, 30, 35, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .iina-glass {
+            background: rgba(20, 20, 25, 0.78);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f5f2eb;
+            background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
+            background: rgba(150, 150, 150, 0.3);
+            border-radius: 99px;
         }
-        .tab-btn.active {
-            border-bottom: 3px solid #f97316;
-            color: #ea580c;
-            font-weight: 700;
-            background-color: #ffffff;
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(150, 150, 150, 0.5);
         }
-        @keyframes barGrow {
-            0%, 100% { height: 6px; }
-            50% { height: 28px; }
-        }
-        .v-bar {
-            width: 4px;
-            background: linear-gradient(to top, #f97316, #fbbf24);
-            border-radius: 2px;
-            display: inline-block;
-            margin: 0 1px;
-        }
-        .v-bar.animating {
-            animation: barGrow 1.2s infinite ease-in-out;
-        }
+
+        /* Lyrics Animations */
         .lyric-line {
-            transition: all 0.3s ease;
-            opacity: 0.6;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0.4;
+            transform: scale(0.96);
+            transform-origin: left center;
         }
         .lyric-line.active {
-            color: #fbbf24;
-            font-weight: bold;
-            transform: scale(1.08);
             opacity: 1;
+            transform: scale(1.06);
+            color: #335eea;
+            font-weight: 800;
+        }
+        .dark .lyric-line.active {
+            color: #60a5fa;
+        }
+
+        /* OSD Overlay for IINA */
+        .osd-overlay {
+            animation: fadeOutOSD 2s forwards;
+        }
+        @keyframes fadeOutOSD {
+            0% { opacity: 1; transform: scale(1); }
+            70% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.95); }
+        }
+
+        /* Tab button transition */
+        .nav-tab-btn.active {
+            background-color: #335eea;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(51, 94, 234, 0.3);
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col custom-scrollbar">
+<body class="h-full bg-ypm-bg dark:bg-ypm-darkBg text-slate-800 dark:text-slate-100 flex flex-col custom-scrollbar transition-colors duration-300">
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -137,472 +159,529 @@
         }
     </script>
 
-    <!-- HEADER / NAVIGATION BAR -->
-    <header class="bg-white border-b border-cream-200 sticky top-0 z-40 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-md">
-                        <i class="fa-solid font-bold fa-compact-disc text-xl"></i>
+    <!-- TOP HEADER / NAV BAR -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-200/60 dark:border-slate-800/80 px-4 sm:px-8 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <!-- Brand Logo & macOS Traffic Lights style -->
+            <div class="flex items-center space-x-4">
+                <div class="flex space-x-1.5 mr-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500 inline-block shadow-sm"></span>
+                    <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block shadow-sm"></span>
+                    <span class="w-3 h-3 rounded-full bg-green-500 inline-block shadow-sm"></span>
+                </div>
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid fa-play text-sm"></i>
                     </div>
                     <div>
-                        <h1 class="font-extrabold text-xl text-slate-800 tracking-tight flex items-center gap-2">
-                            MediaBox <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full font-semibold border border-amber-300">PRO</span>
+                        <h1 class="font-bold text-base tracking-tight leading-none flex items-center gap-1.5">
+                            MediaBox <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 rounded-md font-bold">PRO</span>
                         </h1>
-                        <p class="text-xs text-gray-500">專業多媒體播放與數據庫系統</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">YesPlayMusic & IINA Edition</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="hidden md:flex items-center space-x-6 text-sm">
-                    <div class="flex items-center space-x-2 bg-cream-100 px-3 py-1.5 rounded-full border border-cream-200">
-                        <span id="connDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="connStatus" class="font-medium text-xs text-gray-700">🟢 已連線數據庫</span>
-                    </div>
-                    <div class="flex items-center space-x-2 text-xs text-gray-600 bg-cream-50 px-3 py-1.5 rounded-lg border border-cream-200">
-                        <i class="fa-regular fa-clock text-amber-600"></i>
-                        <span>上次儲存時間: <strong id="lastSaveTime" class="text-gray-800 font-mono">未連線</strong></span>
-                    </div>
-                </div>
+            <!-- Tab Navigation Buttons -->
+            <nav class="flex items-center bg-slate-200/60 dark:bg-slate-800/60 p-1 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 space-x-1">
+                <button onclick="switchTab(1)" id="navTab1" class="nav-tab-btn active px-4 py-2 rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-music"></i>
+                    <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">YesPlayMusic 聽歌</span>
+                </button>
+                <button onclick="switchTab(2)" id="navTab2" class="nav-tab-btn px-4 py-2 rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-compact-disc"></i>
+                    <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">IINA 劇院</span>
+                </button>
+                <button onclick="switchTab(3)" id="navTab3" class="nav-tab-btn px-4 py-2 rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-images"></i>
+                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">相簿回憶</span>
+                </button>
+            </nav>
 
-                <div class="flex items-center space-x-3">
-                    <div id="userInfoBox" class="hidden flex items-center space-x-2 bg-cream-100 p-1.5 pr-3 rounded-full border border-cream-200">
-                        <div class="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">U</div>
-                        <span id="userNameDisplay" class="text-xs font-semibold text-gray-800 max-w-[120px] truncate">使用者</span>
-                        <button onclick="handleLogout()" class="text-gray-400 hover:text-red-500 text-sm ml-1 transition" title="登出">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                        </button>
-                    </div>
-                    <button id="loginBtnTrigger" onclick="openAuthModal()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition">
-                        <i class="fa-solid fa-user-lock mr-1.5"></i> 登入 / 註冊
-                    </button>
+            <!-- User Auth & Quick Actions -->
+            <div class="flex items-center space-x-3 text-xs">
+                <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center justify-center">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block"></i>
+                </button>
+
+                <div id="userInfoBox" class="hidden flex items-center space-x-2 bg-slate-200/50 dark:bg-slate-800/50 p-1 pr-3 rounded-full border border-slate-300/40">
+                    <div class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs" id="userAvatar">U</div>
+                    <span id="userNameDisplay" class="text-xs font-semibold max-w-[90px] truncate">使用者</span>
+                    <button onclick="handleLogout()" class="text-slate-400 hover:text-red-500 ml-1" title="登出"><i class="fa-solid fa-right-from-bracket"></i></button>
                 </div>
+                <button id="loginBtnTrigger" onclick="openAuthModal()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition">
+                    登入 / 註冊
+                </button>
             </div>
         </div>
-
-        <!-- 3 個分頁導覽 -->
-        <nav class="bg-cream-100 border-t border-cream-200 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-gray-600" id="tabNavContainer">
-                <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
-                    <i class="fa-solid fa-music text-amber-600"></i>
-                    <span id="tabTitle1" class="tab-title" ondblclick="editTabTitle(1)">分頁一: 專業音樂庫與播放器</span>
-                </button>
-                <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
-                    <i class="fa-solid fa-film text-amber-600"></i>
-                    <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">分頁二: 影音網址管理與劇院</span>
-                </button>
-                <button onclick="switchTab(3)" id="tabBtn3" class="tab-btn px-5 py-3 flex items-center space-x-2 whitespace-nowrap transition rounded-t-lg">
-                    <i class="fa-solid fa-images text-amber-600"></i>
-                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">分頁三: 相簿回憶</span>
-                </button>
-            </div>
-        </nav>
     </header>
 
-    <!-- GLOBAL TOOLBAR -->
-    <section class="bg-white border-b border-cream-200 py-2.5 px-4 sm:px-6 lg:px-8 shadow-inner">
-        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center space-x-2 text-xs font-semibold text-gray-600">
-                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i>
-                <span>資料庫與導出工具箱</span>
+    <!-- GLOBAL TOOLBAR (EXCEL / EXPORT / DATABASE STATUS) -->
+    <section class="bg-slate-100/70 dark:bg-slate-900/40 border-b border-slate-200/60 dark:border-slate-800/60 py-2 px-4 sm:px-8 text-xs">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-4 text-slate-500 dark:text-slate-400">
+                <div class="flex items-center space-x-1.5">
+                    <span id="connDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="connStatus" class="font-semibold text-slate-700 dark:text-slate-300">🟢 Firebase 連線中</span>
+                </div>
+                <div class="hidden sm:flex items-center space-x-1">
+                    <i class="fa-regular fa-clock"></i>
+                    <span>上次同步: <strong id="lastSaveTime" class="font-mono text-slate-700 dark:text-slate-300">未連線</strong></span>
+                </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2 text-xs">
-                <label class="cursor-pointer bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                    <span>一鍵匯入 EXCEL</span>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <label class="cursor-pointer bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-medium transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-excel text-emerald-600"></i> 匯入 EXCEL
                     <input type="file" accept=".xlsx, .xls" onchange="importExcel(event)" class="hidden">
                 </label>
-                <button onclick="exportExcel()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-export text-emerald-600"></i>
-                    <span>一鍵匯出 EXCEL</span>
+                <button onclick="exportExcel()" class="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-medium transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-export text-emerald-600"></i> 匯出 EXCEL
                 </button>
-                <button onclick="exportPNG()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-image text-blue-600"></i>
-                    <span>匯出高畫質 PNG</span>
+                <button onclick="exportPNG()" class="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-medium transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-image text-blue-600"></i> PNG 截圖
                 </button>
-                <button onclick="exportPDF()" class="bg-cream-100 hover:bg-cream-200 text-gray-700 px-3 py-1.5 rounded-lg border border-cream-300 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-pdf text-red-600"></i>
-                    <span>匯出高畫質 PDF</span>
+                <button onclick="exportPDF()" class="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 font-medium transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-file-pdf text-red-600"></i> 匯出 PDF
                 </button>
             </div>
         </div>
     </section>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN BODY -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" id="exportArea">
 
-        <!-- ================= TAB 1: 音樂庫與強大播放器 ================= -->
+        <!-- ================= PAGE 1 (TAB 1): YESPLAYMUSIC INTERFACE ================= -->
         <div id="tabContent1" class="tab-panel space-y-6">
-            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
-                        <i class="fa-solid fa-headphones text-lg"></i>
-                    </div>
-                    <div>
-                        <h2 class="font-bold text-gray-800 text-base">專業 YouTube 音樂庫與動態歌詞播放器</h2>
-                        <p class="text-xs text-gray-500">支援即時動態逐字滾動歌詞、歌手真實寫真、禁止自動播放、影音互斥暫停與秒速進度跳轉</p>
+            <!-- YesPlayMusic Top Header Navigation / Search -->
+            <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-white dark:bg-ypm-darkCard p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                <div class="flex items-center space-x-4">
+                    <div class="flex space-x-2 text-sm font-bold text-slate-400">
+                        <button onclick="setYpmSection('explore')" id="ypmSubExplore" class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 pb-0.5">發現音樂</button>
+                        <span>/</span>
+                        <button onclick="setYpmSection('library')" id="ypmSubLibrary" class="hover:text-slate-700 dark:hover:text-slate-200 pb-0.5">我的音樂庫</button>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="loadTop20Music()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-fire"></i> 一鍵帶回Top20中文流行音樂
+
+                <div class="flex items-center space-x-3">
+                    <div class="relative flex-1 md:w-64">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-xs text-slate-400"></i>
+                        <input type="text" id="musicSearch" oninput="renderMusicTable()" placeholder="搜尋歌曲、歌手..." class="w-full pl-9 pr-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs rounded-full border-none focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button onclick="loadTop20Music()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-full shadow-sm transition flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-fire"></i> Top20 流行歌單
                     </button>
-                    <button onclick="openMusicModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> 新增音樂連結
+                    <button onclick="openMusicModal()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full shadow-sm transition flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-plus"></i> 新增歌曲
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Main Player Deck -->
-                <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[360px]">
-                        <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/20 rounded-full blur-2xl"></div>
+            <!-- YesPlayMusic Main Grid: Player Deck + Sync Lyrics -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left Deck: Large Album Artwork & Controls (Apple Music / YesPlayMusic Style) -->
+                <div class="lg:col-span-5 bg-white dark:bg-ypm-darkCard p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col items-center justify-between min-h-[460px] relative overflow-hidden">
+                    <div id="ypmBlurBg" class="absolute inset-0 bg-cover bg-center blur-3xl opacity-20 pointer-events-none"></div>
 
-                        <div class="flex items-center justify-between z-10 gap-4">
-                            <div class="flex items-center space-x-4">
-                                <div class="relative">
-                                    <img id="npArtistPhoto" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80" alt="Artist" class="w-16 h-16 rounded-full object-cover border-2 border-amber-500 shadow-md">
-                                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-[10px] text-white">
-                                        <i class="fa-solid fa-microphone"></i>
-                                    </div>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] uppercase tracking-widest px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full font-bold border border-amber-500/30" id="npGenre">AUDIO</span>
-                                    <h2 class="text-xl font-black text-white mt-1 leading-tight" id="npTitle">未選擇播放音樂</h2>
-                                    <p class="text-xs text-gray-300 mt-0.5" id="npArtist">請從下方選擇曲目</p>
-                                </div>
-                            </div>
-                            <div class="flex items-end h-8 space-x-1" id="vBars">
-                                <div class="v-bar"></div>
-                                <div class="v-bar"></div>
-                                <div class="v-bar"></div>
-                                <div class="v-bar"></div>
-                                <div class="v-bar"></div>
+                    <!-- Album Cover Presentation -->
+                    <div class="relative w-56 h-56 sm:w-64 sm:h-64 my-2 group">
+                        <img id="npArtistPhoto" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80" alt="Cover" class="w-full h-full object-cover rounded-2xl shadow-2xl border border-slate-200/20 group-hover:scale-[1.02] transition duration-300">
+                        <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] text-white font-mono flex items-center gap-1">
+                            <i class="fa-solid fa-compact-disc animate-spin text-blue-400"></i>
+                            <span id="npGenre">HIGH-RES</span>
+                        </div>
+                    </div>
+
+                    <!-- Song Info Header -->
+                    <div class="text-center space-y-1 w-full z-10">
+                        <h2 id="npTitle" class="text-xl font-black truncate text-slate-800 dark:text-white">未選擇播放音樂</h2>
+                        <p id="npArtist" class="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">請從佇列或音樂庫選擇曲目</p>
+                    </div>
+
+                    <!-- YouTube Audio Iframe Holder (Hidden) -->
+                    <div id="ytAudioFrameContainer" class="hidden"></div>
+
+                    <!-- Audio Progress Bar -->
+                    <div class="w-full space-y-1.5 z-10 mt-4">
+                        <div class="relative w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 cursor-pointer group" id="progressBarContainer" onclick="seekAudio(event)">
+                            <div id="progressBar" class="bg-blue-600 h-1.5 rounded-full w-0 transition-all pointer-events-none relative">
+                                <span class="absolute right-0 -top-1 w-3 h-3 bg-blue-600 rounded-full shadow opacity-0 group-hover:opacity-100 transition"></span>
                             </div>
                         </div>
-
-                        <!-- YouTube Audio Iframe Container -->
-                        <div id="ytAudioFrameContainer" class="hidden"></div>
-
-                        <!-- 動態逐字滾動歌詞面板 (位於音樂面板下方中央) -->
-                        <div class="bg-slate-800/95 backdrop-blur rounded-2xl p-4 my-4 h-32 overflow-y-auto custom-scrollbar flex flex-col items-center justify-start text-center border-2 border-amber-500/40 shadow-inner z-10 relative">
-                            <div class="absolute top-2 right-3 text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                                <i class="fa-solid fa-music animate-spin"></i> 動態歌詞
-                            </div>
-                            <div id="lyricContainer" class="text-sm space-y-3 text-gray-300 w-full py-4">
-                                <p class="lyric-line active">♪ 請點擊下方曲目開始播放動態歌詞 ♪</p>
-                            </div>
+                        <div class="flex justify-between text-[10px] font-mono text-slate-400">
+                            <span id="currTime">00:00</span>
+                            <span id="totalDuration">04:05</span>
                         </div>
+                    </div>
 
-                        <!-- Progress Bar -->
-                        <div class="space-y-1.5 z-10">
-                            <div class="relative w-full bg-slate-800 rounded-full h-2.5 cursor-pointer group" id="progressBarContainer" onclick="seekAudio(event)">
-                                <div id="progressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full w-0 transition-all pointer-events-none"></div>
-                            </div>
-                            <div class="flex justify-between text-[11px] font-mono text-gray-400">
-                                <span id="currTime">00:00</span>
-                                <span id="totalDuration">04:05</span>
-                            </div>
+                    <!-- YesPlayMusic Control Bar -->
+                    <div class="flex items-center justify-between w-full z-10 pt-2">
+                        <button onclick="toggleShuffle()" id="shuffleBtn" class="text-slate-400 hover:text-blue-600 text-sm transition"><i class="fa-solid fa-shuffle"></i></button>
+                        <button onclick="playPrevMusic()" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 text-xl transition"><i class="fa-solid fa-backward-step"></i></button>
+                        
+                        <button onclick="toggleAudioPlay()" id="masterPlayBtn" class="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center text-2xl shadow-lg transition hover:scale-105 active:scale-95">
+                            <i class="fa-solid fa-play ml-1"></i>
+                        </button>
+
+                        <button onclick="playNextMusic()" class="text-slate-600 dark:text-slate-300 hover:text-blue-600 text-xl transition"><i class="fa-solid fa-forward-step"></i></button>
+                        <button onclick="toggleLoop()" id="loopBtn" class="text-slate-400 hover:text-blue-600 text-sm transition"><i class="fa-solid fa-repeat"></i></button>
+                    </div>
+
+                    <!-- Secondary Controls: Volume & Speed -->
+                    <div class="flex items-center justify-between w-full text-xs text-slate-500 z-10 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="toggleMute()" id="muteBtn" class="hover:text-blue-600"><i class="fa-solid fa-volume-high"></i></button>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-16 h-1 bg-slate-200 dark:bg-slate-700 accent-blue-600 rounded-lg cursor-pointer">
                         </div>
-
-                        <!-- Player Control Buttons -->
-                        <div class="flex items-center justify-between z-10 pt-2">
-                            <div class="flex items-center space-x-3">
-                                <button onclick="toggleShuffle()" id="shuffleBtn" class="text-gray-400 hover:text-white transition text-xs" title="隨機播放">
-                                    <i class="fa-solid fa-shuffle"></i>
-                                </button>
-                                <button onclick="playPrevMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="上一首">
-                                    <i class="fa-solid fa-backward-step"></i>
-                                </button>
-                                <button onclick="toggleAudioPlay()" id="masterPlayBtn" class="w-12 h-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 text-white flex items-center justify-center text-xl shadow-lg transition" title="播放/暫停">
-                                    <i class="fa-solid fa-play ml-0.5"></i>
-                                </button>
-                                <button onclick="playNextMusic()" class="text-gray-300 hover:text-amber-400 text-lg transition" title="下一首">
-                                    <i class="fa-solid fa-forward-step"></i>
-                                </button>
-                                <button onclick="toggleLoop()" id="loopBtn" class="text-gray-400 hover:text-white transition text-xs" title="單曲循環">
-                                    <i class="fa-solid fa-repeat"></i>
-                                </button>
-                            </div>
-
-                            <div class="flex items-center space-x-4">
-                                <div class="flex items-center space-x-2">
-                                    <button onclick="toggleMute()" id="muteBtn" class="text-gray-400 hover:text-white text-xs">
-                                        <i class="fa-solid fa-volume-high"></i>
-                                    </button>
-                                    <input type="range" id="volumeSlider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-16 accent-amber-500 cursor-pointer">
-                                </div>
-                                <select onchange="setPlaybackRate(this.value)" class="bg-slate-800 text-xs text-gray-300 rounded px-1.5 py-1 focus:outline-none">
-                                    <option value="0.75">0.75x</option>
-                                    <option value="1" selected>1.0x</option>
-                                    <option value="1.25">1.25x</option>
-                                    <option value="1.5">1.5x</option>
-                                </select>
-                            </div>
-                        </div>
+                        <select onchange="setPlaybackRate(this.value)" class="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-[11px] px-2 py-1 font-semibold focus:outline-none">
+                            <option value="0.75">0.75x</option>
+                            <option value="1" selected>1.0x 正常</option>
+                            <option value="1.25">1.25x</option>
+                            <option value="1.5">1.5x</option>
+                        </select>
                     </div>
                 </div>
 
-                <!-- Queue & Management Sidebar -->
-                <div class="card-cream rounded-2xl p-5 flex flex-col">
-                    <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
-                        <span class="flex items-center gap-2"><i class="fa-solid fa-list text-amber-500"></i> 播放佇列與管理</span>
-                        <span class="text-xs text-gray-400 font-normal" id="queueCount">0 首</span>
-                    </h3>
-                    <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 max-h-[300px]" id="musicQueueContainer"></div>
+                <!-- Right Deck: YesPlayMusic Synchronized Dynamic Lyric Panel & Queue -->
+                <div class="lg:col-span-7 flex flex-col space-y-6">
+                    <!-- Dynamic Lyric View -->
+                    <div class="bg-white dark:bg-ypm-darkCard p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm h-[320px] flex flex-col relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                                <i class="fa-solid fa-quote-left"></i> 動態逐字滾動歌詞 (YesPlayMusic Dynamic Lyrics)
+                            </span>
+                            <span class="text-[10px] bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 px-2 py-0.5 rounded-full font-semibold">即時同步</span>
+                        </div>
+                        <div id="lyricContainer" class="flex-1 overflow-y-auto custom-scrollbar space-y-5 py-6 px-2 text-left">
+                            <p class="lyric-line active text-sm">♪ 請點擊播放歌曲載入動態歌詞 ♪</p>
+                        </div>
+                    </div>
+
+                    <!-- Queue / Playlist Side Panel -->
+                    <div class="bg-white dark:bg-ypm-darkCard p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex-1 flex flex-col">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-list-ul text-blue-600"></i> 播放佇列 (Playing Queue)
+                            </h3>
+                            <span class="text-xs text-slate-400 font-normal" id="queueCount">0 首</span>
+                        </div>
+                        <div id="musicQueueContainer" class="space-y-2 overflow-y-auto custom-scrollbar max-h-[160px] pr-1"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Music Database Table -->
-            <div class="card-cream rounded-2xl p-5">
+            <!-- Music Database Table Management -->
+            <div class="bg-white dark:bg-ypm-darkCard p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-table-list text-amber-500"></i> 音樂曲目資料庫管理
+                    <h3 class="font-bold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-database text-blue-600"></i> 音樂曲目資料庫 (Music Track Manager)
                     </h3>
-                    <div class="relative w-48">
-                        <input type="text" id="musicSearch" oninput="renderMusicTable()" placeholder="搜尋曲目或歌手..." class="w-full text-xs pl-8 pr-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none focus:border-amber-500">
-                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-gray-400"></i>
-                    </div>
                 </div>
-                <div class="overflow-x-auto custom-scrollbar max-h-72">
-                    <table class="w-full text-xs text-left text-gray-600">
-                        <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200 sticky top-0">
+                <div class="overflow-x-auto custom-scrollbar max-h-64">
+                    <table class="w-full text-xs text-left text-slate-600 dark:text-slate-300">
+                        <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold uppercase sticky top-0">
                             <tr>
-                                <th class="p-3">音樂標題</th>
+                                <th class="p-3 rounded-l-xl">歌曲標題</th>
                                 <th class="p-3">歌手名稱</th>
-                                <th class="p-3 text-center">操作</th>
+                                <th class="p-3">音訊連結</th>
+                                <th class="p-3 text-center rounded-r-xl">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="musicTableBody" class="divide-y divide-cream-100"></tbody>
+                        <tbody id="musicTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 2: 影音網址管理與劇院 ================= -->
+        <!-- ================= PAGE 2 (TAB 2): IINA MEDIA PLAYER INTERFACE ================= -->
         <div id="tabContent2" class="tab-panel hidden space-y-6">
-            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/50 to-orange-50/50">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-film text-amber-500"></i> 影音網址管理與劇院中心
-                    </h2>
-                    <p class="text-xs text-gray-500 mt-1">統一管理影片資源，具備禁止自動播放與影音互斥暫停機制。</p>
+            
+            <!-- IINA Header Banner -->
+            <div class="bg-slate-900 text-white p-5 rounded-3xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
+                        <i class="fa-solid fa-film text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold flex items-center gap-2">
+                            IINA macOS 高級劇院影音播放系統
+                        </h2>
+                        <p class="text-xs text-slate-400">專為 macOS 設計的沉浸式影音播放介面：支援長寬比切換、倍速快速鍵、Picture-in-Picture 及 OSD 顯示</p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="loadTop20Videos()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-fire"></i> 一鍵帶回Top20中文影音
+                    <button onclick="loadTop20Videos()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-fire"></i> Top20 劇院影音
                     </button>
-                    <button onclick="openVideoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> 新增影音連結
+                    <button onclick="openVideoModal()" class="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> 新增影音
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 space-y-4">
-                    <div class="card-cream rounded-2xl overflow-hidden bg-black shadow-2xl relative aspect-video flex items-center justify-center">
-                        <iframe id="ytVideoIframe" class="w-full h-full" src="" title="YouTube Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    </div>
+            <!-- IINA Main Player Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Video Screen Deck -->
+                <div class="lg:col-span-8 space-y-4">
+                    
+                    <!-- IINA Player Window Container -->
+                    <div id="iinaPlayerWrapper" class="relative bg-black rounded-3xl overflow-hidden shadow-2xl border border-slate-800 group aspect-video flex items-center justify-center transition-all duration-300">
+                        
+                        <!-- Video Frame -->
+                        <div id="iinaAspectContainer" class="w-full h-full flex items-center justify-center transition-all duration-300">
+                            <iframe id="ytVideoIframe" class="w-full h-full border-0 pointer-events-auto" src="" title="IINA Video Player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
 
-                    <div class="card-cream p-5 rounded-2xl space-y-3">
-                        <div class="flex justify-between items-start gap-4">
-                            <div>
-                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-orange-100 text-orange-800 rounded">GENERAL</span>
-                                <h3 class="text-lg font-bold text-gray-800 mt-1" id="vpTitle">未選擇影片</h3>
+                        <!-- IINA On-Screen Display (OSD Overlay Notification) -->
+                        <div id="iinaOSD" class="absolute top-6 left-6 iina-glass px-4 py-2 rounded-xl text-white text-xs font-mono font-bold shadow-2xl hidden z-30 pointer-events-none border border-white/20">
+                            <span id="osdText">1.0x Speed</span>
+                        </div>
+
+                        <!-- macOS IINA Top Translucent Control Bar -->
+                        <div class="absolute top-0 inset-x-0 p-4 iina-glass opacity-0 group-hover:opacity-100 transition duration-300 flex justify-between items-center z-20">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500 inline-block cursor-pointer" onclick="pauseVideoPlayer()"></span>
+                                <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+                                <span class="w-3 h-3 rounded-full bg-green-500 inline-block" onclick="toggleFullscreenIINA()"></span>
+                                <span id="vpTitle" class="text-xs font-bold text-slate-200 ml-3 truncate max-w-xs">未選擇影片</span>
+                            </div>
+                            <div class="flex items-center space-x-3 text-xs text-slate-300">
+                                <span class="bg-blue-600/80 px-2 py-0.5 rounded text-[10px] font-bold">1080P HD</span>
+                                <button onclick="togglePipIINA()" class="hover:text-cyan-400" title="Picture in Picture"><i class="fa-solid fa-window-restore"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- macOS IINA Floating Bottom Control Overlay -->
+                        <div class="absolute bottom-4 inset-x-6 iina-glass p-3 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300 flex flex-col space-y-2 z-20">
+                            <!-- Quick Aspect Ratio & Speed Presets -->
+                            <div class="flex justify-between items-center text-[11px] text-slate-300 border-b border-white/10 pb-2">
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-slate-400 font-bold">螢幕比例:</span>
+                                    <button onclick="setIINAAspectRatio('16:9')" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">16:9</button>
+                                    <button onclick="setIINAAspectRatio('4:3')" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">4:3</button>
+                                    <button onclick="setIINAAspectRatio('21:9')" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">21:9</button>
+                                    <button onclick="setIINAAspectRatio('fit')" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">適應</button>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-slate-400 font-bold">倍速播放:</span>
+                                    <button onclick="setIINASpeed(0.5)" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">0.5x</button>
+                                    <button onclick="setIINASpeed(1.0)" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">1.0x</button>
+                                    <button onclick="setIINASpeed(1.25)" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">1.25x</button>
+                                    <button onclick="setIINASpeed(1.5)" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">1.5x</button>
+                                    <button onclick="setIINASpeed(2.0)" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 rounded font-mono">2.0x</button>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Control Buttons Bar -->
+                            <div class="flex items-center justify-between text-slate-200 text-sm pt-1">
+                                <div class="flex items-center space-x-4">
+                                    <button onclick="toggleVideoPlayIINA()" class="text-lg hover:text-cyan-400 transition" id="iinaPlayBtn"><i class="fa-solid fa-play"></i></button>
+                                    <button onclick="stopVideoIINA()" class="hover:text-red-400 transition"><i class="fa-solid fa-square"></i></button>
+                                    <span class="text-xs font-mono text-slate-400">IINA macOS Engine</span>
+                                </div>
+
+                                <div class="flex items-center space-x-3 text-xs">
+                                    <button onclick="showIINAOsd('字幕: 繁體中文 (Auto)')" class="hover:text-cyan-400 flex items-center gap-1"><i class="fa-solid fa-closed-captioning"></i> 字幕</button>
+                                    <button onclick="showIINAOsd('音訊: 立體聲 2.0')" class="hover:text-cyan-400 flex items-center gap-1"><i class="fa-solid fa-sliders"></i> 音軌</button>
+                                    <button onclick="toggleFullscreenIINA()" class="hover:text-cyan-400"><i class="fa-solid fa-expand"></i></button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-6">
-                    <div class="card-cream rounded-2xl p-5 space-y-4">
-                        <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-tv text-orange-500"></i> 劇院快速選擇
+                <!-- IINA Theater Playlist Sidebar -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="bg-white dark:bg-ypm-darkCard p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+                        <h3 class="font-bold text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-tv text-cyan-600"></i> 劇院快速選擇
                         </h3>
-                        <select id="playerVideoSelect" onchange="selectVideoFromDropdown(this.value)" class="w-full bg-cream-50 border border-amber-300 font-semibold text-xs text-gray-800 py-2.5 px-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <select id="playerVideoSelect" onchange="selectVideoFromDropdown(this.value)" class="w-full bg-slate-100 dark:bg-slate-800 border-none font-semibold text-xs text-slate-800 dark:text-slate-200 py-2.5 px-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-500">
                         </select>
                     </div>
 
-                    <div class="card-cream rounded-2xl p-5 flex flex-col">
-                        <h3 class="font-bold text-gray-800 text-sm mb-3 flex items-center justify-between">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-list-check text-orange-500"></i> 劇院播放清單</span>
-                            <span class="text-xs text-gray-400" id="videoPlaylistCount">0 部</span>
+                    <div class="bg-white dark:bg-ypm-darkCard p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col">
+                        <h3 class="font-bold text-sm mb-3 flex items-center justify-between">
+                            <span class="flex items-center gap-2"><i class="fa-solid fa-list-check text-cyan-600"></i> 劇院播放清單</span>
+                            <span class="text-xs text-slate-400" id="videoPlaylistCount">0 部</span>
                         </h3>
-                        <div class="space-y-2 overflow-y-auto max-h-[280px] custom-scrollbar" id="videoPlaylistContainer"></div>
+                        <div class="space-y-2 overflow-y-auto max-h-[260px] custom-scrollbar pr-1" id="videoPlaylistContainer"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="card-cream rounded-2xl p-5">
+            <!-- Video Data Table Management -->
+            <div class="bg-white dark:bg-ypm-darkCard p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
-                        <i class="fa-solid fa-table-list text-amber-500"></i> 影音網址資料管理表
+                    <h3 class="font-bold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-cyan-600"></i> 影音網址資料管理表
                     </h3>
-                    <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋影片標題..." class="text-xs px-3 py-1.5 bg-cream-50 border border-cream-200 rounded-lg focus:outline-none">
+                    <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋影片..." class="text-xs px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl focus:outline-none">
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-xs text-left text-gray-600">
-                        <thead class="bg-cream-100 text-gray-700 font-bold uppercase border-b border-cream-200">
+                    <table class="w-full text-xs text-left text-slate-600 dark:text-slate-300">
+                        <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold uppercase">
                             <tr>
-                                <th class="p-3">影片標題</th>
-                                <th class="p-3 text-center">操作</th>
+                                <th class="p-3 rounded-l-xl">影片標題</th>
+                                <th class="p-3">影片網址</th>
+                                <th class="p-3 text-center rounded-r-xl">操作</th>
                             </tr>
                         </thead>
-                        <tbody id="videoTableBody" class="divide-y divide-cream-100"></tbody>
+                        <tbody id="videoTableBody" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 3: 相簿回憶 ================= -->
+        <!-- ================= PAGE 3 (TAB 3): PHOTO MEMORIES ================= -->
         <div id="tabContent3" class="tab-panel hidden space-y-6">
-            <div class="card-cream p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-amber-50/70 via-white to-orange-50/70 border border-amber-100">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow">
-                        <i class="fa-solid fa-images text-lg"></i>
-                    </div>
-                    <div>
-                        <h2 class="font-bold text-gray-800 text-base">相簿回憶管理系統</h2>
-                        <p class="text-xs text-gray-500">新增照片網址並自由切換小圖、中圖、大圖顯示模式</p>
-                    </div>
+            <div class="bg-white dark:bg-ypm-darkCard p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-images text-indigo-600"></i> 相簿回憶管理系統
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">輕鬆儲存精選照片，自由切換小圖、中圖與大圖檢視模式</p>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <!-- Size Switcher Buttons -->
-                    <div class="flex bg-cream-100 p-1 rounded-xl border border-cream-200 text-xs font-bold">
-                        <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-3 py-1.5 rounded-lg transition text-gray-600">小圖</button>
-                        <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600">中圖</button>
-                        <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-3 py-1.5 rounded-lg transition text-gray-600">大圖</button>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Photo Size Selector Buttons -->
+                    <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl text-xs font-bold">
+                        <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-3 py-1.5 rounded-xl transition">小圖</button>
+                        <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-3 py-1.5 rounded-xl transition bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400">中圖</button>
+                        <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-3 py-1.5 rounded-xl transition">大圖</button>
                     </div>
 
-                    <button onclick="loadTop20Photos()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-fire"></i> 一鍵帶回Top20圖片
+                    <button onclick="loadTop20Photos()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-fire"></i> Top20 精選照片
                     </button>
-                    <button onclick="openPhotoModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-plus"></i> 新增照片網址
+                    <button onclick="openPhotoModal()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-2xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> 新增照片
                     </button>
                 </div>
             </div>
 
-            <!-- Photo Gallery Grid Container -->
-            <div class="card-cream rounded-2xl p-6">
+            <!-- Gallery Grid -->
+            <div class="bg-white dark:bg-ypm-darkCard p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
                 <div id="photoGalleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all"></div>
             </div>
         </div>
 
     </main>
 
-    <footer class="bg-white border-t border-cream-200 py-4 px-4 text-center text-xs text-gray-500">
-        <p>MediaBox Pro © 2026 多媒體管理與播放平台 | 專業級米白色系統介面 | 即時 Firebase Realtime Database 驅動</p>
+    <!-- FOOTER -->
+    <footer class="bg-white dark:bg-ypm-darkCard border-t border-slate-200/80 dark:border-slate-800 py-4 px-4 text-center text-xs text-slate-500">
+        <p>MediaBox Pro © 2026 多媒體管理平台 | 完全整合 YesPlayMusic 與 macOS IINA 介面 | Firebase Realtime Database 驅動</p>
     </footer>
 
     <!-- AUTH MODAL -->
-    <div id="authModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-cream-200 space-y-4">
-            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
-                <h3 class="font-bold text-lg text-gray-800">會員登入 / 註冊</h3>
-                <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+    <div id="authModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-ypm-darkCard rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-base">會員登入 / 註冊</h3>
+                <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="space-y-3">
-                <div class="flex bg-cream-100 p-1 rounded-xl">
-                    <button onclick="setAuthMode('login')" id="authTabLogin" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800">登入</button>
-                    <button onclick="setAuthMode('register')" id="authTabRegister" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500">註冊新帳號</button>
+            <div class="space-y-3 text-xs">
+                <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    <button onclick="setAuthMode('login')" id="authTabLogin" class="flex-1 py-1.5 font-bold rounded-lg transition bg-white dark:bg-slate-700 shadow-sm">登入</button>
+                    <button onclick="setAuthMode('register')" id="authTabRegister" class="flex-1 py-1.5 font-bold rounded-lg transition text-slate-400">註冊帳號</button>
                 </div>
                 <div id="realNameField" class="hidden space-y-1">
-                    <label class="text-xs font-semibold text-gray-700">真實姓名</label>
-                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-600 dark:text-slate-300">姓名</label>
+                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs font-semibold text-gray-700">電子郵件 (Email)</label>
-                    <input type="email" id="authEmail" placeholder="user@example.com" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-600 dark:text-slate-300">電子郵件 (Email)</label>
+                    <input type="email" id="authEmail" placeholder="user@example.com" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs font-semibold text-gray-700">密碼 (Password)</label>
-                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-600 dark:text-slate-300">密碼 (Password)</label>
+                    <input type="password" id="authPassword" placeholder="******" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none">
                 </div>
-                <div id="authError" class="text-xs text-red-500 hidden bg-red-50 p-2 rounded border border-red-200"></div>
-                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs rounded-xl shadow">確定送出</button>
+                <div id="authError" class="text-xs text-red-500 hidden bg-red-50 p-2 rounded-xl"></div>
+                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition">確定送出</button>
             </div>
         </div>
     </div>
 
     <!-- MUSIC MODAL -->
-    <div id="musicModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
-            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
-                <h3 class="font-bold text-base text-gray-800">新增 YouTube 音樂網址</h3>
-                <button onclick="closeMusicModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+    <div id="musicModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-ypm-darkCard rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-base">新增歌曲 (YesPlayMusic Format)</h3>
+                <button onclick="closeMusicModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="grid grid-cols-1 gap-3">
+            <div class="grid grid-cols-1 gap-3 text-xs">
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">音樂標題 *</label>
-                    <input type="text" id="mFormTitle" placeholder="例如: 像我這樣的人" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">歌曲標題 *</label>
+                    <input type="text" id="mFormTitle" placeholder="例如: 像我這樣的人" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none mt-1">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">歌手名稱 *</label>
-                    <input type="text" id="mFormArtist" placeholder="毛不易" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">歌手名稱 *</label>
+                    <input type="text" id="mFormArtist" placeholder="毛不易" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none mt-1">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">YouTube 音樂網址 *</label>
-                    <input type="text" id="mFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">YouTube 音樂網址 *</label>
+                    <input type="text" id="mFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none mt-1">
                 </div>
             </div>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="closeMusicModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
-                <button onclick="saveMusicItem()" class="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow">儲存曲目</button>
+            <div class="flex justify-end space-x-2 pt-2 text-xs">
+                <button onclick="closeMusicModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl font-bold">取消</button>
+                <button onclick="saveMusicItem()" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl shadow">儲存曲目</button>
             </div>
         </div>
     </div>
 
     <!-- VIDEO MODAL -->
-    <div id="videoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
-            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
-                <h3 class="font-bold text-base text-gray-800">新增 YouTube 影音網址</h3>
-                <button onclick="closeVideoModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+    <div id="videoModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-ypm-darkCard rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-base">新增 IINA 影音連結</h3>
+                <button onclick="closeVideoModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="grid grid-cols-1 gap-3">
+            <div class="grid grid-cols-1 gap-3 text-xs">
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">影片標題 *</label>
-                    <input type="text" id="vFormTitle" placeholder="4K 高畫質風景導覽" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">影片標題 *</label>
+                    <input type="text" id="vFormTitle" placeholder="4K 高畫質導覽" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none mt-1">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">YouTube 影片網址 *</label>
-                    <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">YouTube 影片網址 *</label>
+                    <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none mt-1">
                 </div>
             </div>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="closeVideoModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
-                <button onclick="saveVideoItem()" class="px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-xl shadow">儲存影片</button>
+            <div class="flex justify-end space-x-2 pt-2 text-xs">
+                <button onclick="closeVideoModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl font-bold">取消</button>
+                <button onclick="saveVideoItem()" class="px-4 py-2 bg-cyan-600 text-white font-bold rounded-xl shadow">儲存影片</button>
             </div>
         </div>
     </div>
 
     <!-- PHOTO MODAL -->
-    <div id="photoModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-cream-200 space-y-4">
-            <div class="flex justify-between items-center border-b border-cream-200 pb-3">
-                <h3 class="font-bold text-base text-gray-800">新增相簿回憶照片</h3>
-                <button onclick="closePhotoModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark"></i></button>
+    <div id="photoModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-ypm-darkCard rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-base">新增相簿回憶照片</h3>
+                <button onclick="closePhotoModal()" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="grid grid-cols-1 gap-3">
+            <div class="grid grid-cols-1 gap-3 text-xs">
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">照片標題 / 描述 *</label>
-                    <input type="text" id="pFormTitle" placeholder="例如: 2026 日本賞櫻回憶" class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">照片標題 *</label>
+                    <input type="text" id="pFormTitle" placeholder="2026 櫻花季回憶" class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none mt-1">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-gray-700">照片圖片網址 (URL) *</label>
-                    <input type="text" id="pFormUrl" placeholder="https://images.unsplash.com/photo-..." class="w-full text-xs p-2.5 bg-cream-50 border border-cream-300 rounded-xl">
+                    <label class="font-semibold text-slate-700 dark:text-slate-300">照片圖片網址 (URL) *</label>
+                    <input type="text" id="pFormUrl" placeholder="https://images.unsplash.com/photo-..." class="w-full p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl border-none mt-1">
                 </div>
             </div>
-            <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="closePhotoModal()" class="px-4 py-2 bg-cream-200 text-gray-700 text-xs font-bold rounded-xl">取消</button>
-                <button onclick="savePhotoItem()" class="px-4 py-2 bg-amber-500 text-white text-xs font-bold rounded-xl shadow">儲存照片</button>
+            <div class="flex justify-end space-x-2 pt-2 text-xs">
+                <button onclick="closePhotoModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl font-bold">取消</button>
+                <button onclick="savePhotoItem()" class="px-4 py-2 bg-indigo-600 text-white font-bold rounded-xl shadow">儲存照片</button>
             </div>
         </div>
     </div>
 
-    <!-- MAIN JAVASCRIPT LOGIC -->
+    <!-- APPLICATION LOGIC & JAVASCRIPT ENGINE -->
     <script>
         let activeTab = 1;
         let currentUser = null;
@@ -650,9 +729,9 @@
         ];
 
         let tabTitles = JSON.parse(localStorage.getItem('mediaBox_tabTitles')) || {
-            1: "分頁一: 專業音樂庫與播放器",
-            2: "分頁二: 影音網址管理與劇院",
-            3: "分頁三: 相簿回憶"
+            1: "YesPlayMusic 聽歌",
+            2: "IINA 劇院",
+            3: "相簿回憶"
         };
 
         let musicList = JSON.parse(localStorage.getItem('mediaBox_musicList')) || [...defaultMusicList];
@@ -670,14 +749,15 @@
         let currentPlayingMusicId = null;
         let currentPlayingVideoId = null;
         let isAudioPlaying = false;
+        let isVideoPlaying = false;
         let currentAudioTime = 0;
         let currentAudioDuration = 245;
         let audioProgressTimer = null;
 
         const artistPhotos = {
-            '毛不易': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
-            'Lofi Girl': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80',
-            'Calm Studio': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80'
+            '毛不易': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+            'Lofi Girl': 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+            'Calm Studio': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'
         };
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -687,11 +767,15 @@
             renderPhotoGallery();
             populateMusicDropdown();
             populateVideoDropdown();
-            
-            if(musicList.length > 0) {
+
+            if (musicList.length > 0) {
                 selectMusicFromDropdown(musicList[0].id, false);
             }
         });
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
 
         window.initAppListeners = function() {
             if (window.fbAuth && window.fbServices) {
@@ -713,10 +797,10 @@
                     const connDot = document.getElementById('connDot');
                     const connStatus = document.getElementById('connStatus');
                     if (snap.val() === true) {
-                        connDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
-                        connStatus.innerText = "🟢 已連線數據庫";
+                        connDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                        connStatus.innerText = "🟢 Firebase 連線中";
                     } else {
-                        connDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+                        connDot.className = "w-2 h-2 rounded-full bg-red-500";
                         connStatus.innerText = "🔴 離線模式";
                     }
                 });
@@ -748,17 +832,10 @@
             get(ref(window.fbDb, 'users/' + currentUser.uid + '/data')).then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    if (data.musicList && Array.isArray(data.musicList) && data.musicList.length > 0) {
-                        musicList = data.musicList;
-                    }
+                    if (data.musicList && Array.isArray(data.musicList) && data.musicList.length > 0) musicList = data.musicList;
                     if (data.videoList) videoList = data.videoList;
                     if (data.photoList) photoList = data.photoList;
                     if (data.tabTitles) tabTitles = data.tabTitles;
-
-                    localStorage.setItem('mediaBox_musicList', JSON.stringify(musicList));
-                    localStorage.setItem('mediaBox_videoList', JSON.stringify(videoList));
-                    localStorage.setItem('mediaBox_photoList', JSON.stringify(photoList));
-                    localStorage.setItem('mediaBox_tabTitles', JSON.stringify(tabTitles));
 
                     renderTabTitles();
                     renderMusicTable();
@@ -792,8 +869,8 @@
         function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
         function setAuthMode(mode) {
             authMode = mode;
-            document.getElementById('authTabLogin').className = mode === 'login' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
-            document.getElementById('authTabRegister').className = mode === 'register' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white shadow-sm text-gray-800" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-gray-500";
+            document.getElementById('authTabLogin').className = mode === 'login' ? "flex-1 py-1.5 font-bold rounded-lg transition bg-white dark:bg-slate-700 shadow-sm" : "flex-1 py-1.5 font-bold rounded-lg transition text-slate-400";
+            document.getElementById('authTabRegister').className = mode === 'register' ? "flex-1 py-1.5 font-bold rounded-lg transition bg-white dark:bg-slate-700 shadow-sm" : "flex-1 py-1.5 font-bold rounded-lg transition text-slate-400";
             document.getElementById('realNameField').classList.toggle('hidden', mode === 'login');
         }
 
@@ -840,7 +917,7 @@
 
         function switchTab(index) {
             activeTab = index;
-            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+            document.querySelectorAll('.nav-tab-btn').forEach((btn, idx) => {
                 btn.classList.toggle('active', idx + 1 === index);
             });
             document.querySelectorAll('.tab-panel').forEach((panel, idx) => {
@@ -870,140 +947,35 @@
             return match ? match[1] : url;
         }
 
+        // --- PAUSE/MUTUAL EXCLUSION ---
         function pauseAudioPlayer() {
             isAudioPlaying = false;
             updatePlayBtnUI();
             document.getElementById('ytAudioFrameContainer').innerHTML = '';
             clearInterval(audioProgressTimer);
-            stopVisualizer();
         }
 
         function pauseVideoPlayer() {
             document.getElementById('ytVideoIframe').src = '';
             currentPlayingVideoId = null;
+            isVideoPlaying = false;
+            const playBtn = document.getElementById('iinaPlayBtn');
+            if (playBtn) playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
         }
 
-        // --- TOP 20 一鍵載入功能 (使用穩定嵌入ID，新增不覆蓋) ---
-        function loadTop20Music() {
-            const top20Songs = [
-                { title: "Lofi Girl - Lofi Beats to Relax/Study", artist: "Lofi Girl", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Calm Studio - Relaxing Piano Music", artist: "Calm Studio", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Rick Astley - Never Gonna Give You Up", artist: "Rick Astley", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                { title: "Relaxing Sleep Music & Peaceful Guitar", artist: "Relaxing Music", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Coffee Shop Jazz Instrumental Music", artist: "Jazz Cafe", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Acoustic Guitar Chillout Session", artist: "Acoustic Garden", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Deep Focus Ambient Study Music", artist: "Ambient Worlds", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Peaceful Piano & Cello Melodies", artist: "Classic Calm", url: "https://www.youtube.com/watch?v=OX5wUp93hbc" },
-                { title: "Smooth Lo-Fi Hip Hop Beats", artist: "Chill Beats", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Meditation & Zen Spa Music", artist: "Zen Zone", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Cozy Coffee Shop Piano & Rain", artist: "Rainy Mood", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Acoustic Pop Guitar Covers", artist: "Cover Sessions", url: "https://www.youtube.com/watch?v=OX5wUp93hbc" },
-                { title: "Deep Sleep & Relaxation Soundscape", artist: "Sleep Sounds", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Soft Classical Piano Masterpieces", artist: "Piano Club", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Morning Sunshine Acoustic Guitar", artist: "Morning Vibes", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Peaceful Nature Sound & Piano", artist: "Nature Harmony", url: "https://www.youtube.com/watch?v=OX5wUp93hbc" },
-                { title: "Late Night Study Lofi Playlist", artist: "Night Owl", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Instrumental Bossa Nova Guitar", artist: "Bossa Nova", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Calming Harp & Flute Melodies", artist: "Harp Magic", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Dreamy Synthwave Chill Beats", artist: "Synth Chill", url: "https://www.youtube.com/watch?v=OX5wUp93hbc" }
-            ];
-
-            top20Songs.forEach((item, index) => {
-                musicList.push({
-                    id: 'm_top20_' + Date.now() + '_' + index,
-                    title: item.title,
-                    artist: item.artist,
-                    url: item.url,
-                    lyrics: [
-                        { time: 0, text: `♪ 精選熱門曲目: ${item.title} ♪` },
-                        { time: 5, text: `演出者: ${item.artist}` },
-                        { time: 15, text: '享受高音質串流音樂播放...' }
-                    ]
-                });
-            });
-
-            renderMusicTable();
-            populateMusicDropdown();
-            saveData();
-            alert("已成功追加 20 首高相容性熱門音樂！");
+        // --- YESPLAYMUSIC PLAYER ENGINE ---
+        function setYpmSection(sec) {
+            const exp = document.getElementById('ypmSubExplore');
+            const lib = document.getElementById('ypmSubLibrary');
+            if (sec === 'explore') {
+                exp.className = "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 pb-0.5";
+                lib.className = "hover:text-slate-700 dark:hover:text-slate-200 pb-0.5";
+            } else {
+                lib.className = "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 pb-0.5";
+                exp.className = "hover:text-slate-700 dark:hover:text-slate-200 pb-0.5";
+            }
         }
 
-        function loadTop20Videos() {
-            const top20Vids = [
-                { title: "Lofi Girl - Live Radio 24/7", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "4K Tropical Island Nature Drone Video", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                { title: "Relaxing Aquarium Fish 4K Video", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Relaxing Piano Music & Water Sounds", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Costa Rica 4K Wildlife & Nature", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                { title: "Relaxing Jazz & Bossa Nova Radio", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Beautiful Earth From Space 4K", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Calming Forest Stream & Birds", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Northern Lights Aurora Borealis 4K", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                { title: "Tokyo City Walk in Rain 4K", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Swiss Alps Scenic Drone Tour", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Iceland Waterfall & Glacier 4K", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Relaxing Beach Waves & Sunset", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                { title: "Cozy Fireplace Snow Cabin 4K", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Patagonia Landscapes Cinematic", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Kyoto Bamboo Forest Walk 4K", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
-                { title: "Cinematic Drone Journey over Norway", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-                { title: "Deep Space Cosmos HD Visualizer", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
-                { title: "Italian Amalfi Coast Summer 4K", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
-                { title: "Vancouver Island Scenic Drive 4K", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" }
-            ];
-
-            top20Vids.forEach((item, index) => {
-                videoList.push({
-                    id: 'v_top20_' + Date.now() + '_' + index,
-                    title: item.title,
-                    url: item.url
-                });
-            });
-
-            renderVideoTable();
-            populateVideoDropdown();
-            saveData();
-            alert("已成功追加 20 部可順利播放的影音劇院內容！");
-        }
-
-        function loadTop20Photos() {
-            const top20Imgs = [
-                { title: "台北都會天際線夜景", url: "https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=600&q=80" },
-                { title: "日本京都嵐山竹林", url: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80" },
-                { title: "北海道浪漫雪景", url: "https://images.unsplash.com/photo-1491557345352-5929e343eb89?auto=format&fit=crop&w=600&q=80" },
-                { title: "阿里山雲海日出", url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" },
-                { title: "太魯閣壯麗峽谷", url: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80" },
-                { title: "日月潭湖畔清晨", url: "https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=600&q=80" },
-                { title: "九份山城紅燈籠", url: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=600&q=80" },
-                { title: "墾丁蔚藍海岸沙灘", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" },
-                { title: "東京鐵塔城市風光", url: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80" },
-                { title: "大阪道頓堀霓虹燈", url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80" },
-                { title: "富士山與河口湖", url: "https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?auto=format&fit=crop&w=600&q=80" },
-                { title: "沖繩清澈透明海水", url: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=600&q=80" },
-                { title: "合歡山壯麗星空", url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=600&q=80" },
-                { title: "澎湖浪漫雙心石滬", url: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" },
-                { title: "質感文青咖啡角落", url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80" },
-                { title: "高山露營銀河美景", url: "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=600&q=80" },
-                { title: "金黃秋色楓葉林", url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80" },
-                { title: "復古底片街頭視角", url: "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80" },
-                { title: "質感手作筆記文具", url: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=600&q=80" },
-                { title: "溫馨北歐風居家生活", url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80" }
-            ];
-
-            top20Imgs.forEach((item, index) => {
-                photoList.push({
-                    id: 'p_top20_' + Date.now() + '_' + index,
-                    title: item.title,
-                    url: item.url
-                });
-            });
-
-            renderPhotoGallery();
-            saveData();
-            alert("已成功追加 20 張高畫質精選圖片！");
-        }
-
-        // --- MUSIC MANAGER & PLAYER ---
         function renderMusicTable() {
             const query = document.getElementById('musicSearch')?.value.toLowerCase() || '';
             const tbody = document.getElementById('musicTableBody');
@@ -1013,12 +985,13 @@
 
             filtered.forEach(m => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-cream-50 transition";
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-800">${m.title}</td>
-                    <td class="p-3 text-gray-600">${m.artist}</td>
+                    <td class="p-3 font-semibold text-slate-800 dark:text-slate-100">${m.title}</td>
+                    <td class="p-3 text-slate-500 dark:text-slate-400">${m.artist}</td>
+                    <td class="p-3 font-mono text-[11px] text-slate-400 truncate max-w-xs">${m.url}</td>
                     <td class="p-3 text-center space-x-2">
-                        <button onclick="selectMusicFromDropdown('${m.id}', true)" class="text-amber-600 hover:text-amber-800 font-bold" title="即時播放"><i class="fa-solid fa-circle-play text-base"></i></button>
+                        <button onclick="selectMusicFromDropdown('${m.id}', true)" class="text-blue-600 hover:text-blue-800 font-bold" title="即時播放"><i class="fa-solid fa-play"></i></button>
                         <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
@@ -1041,7 +1014,7 @@
                 lyrics: [
                     { time: 0, text: `♪ 歡迎收聽 ${title} ♪` },
                     { time: 5, text: `演唱者: ${artist}` },
-                    { time: 15, text: '享受純淨音樂與動態歌詞時光...' }
+                    { time: 15, text: '享受 YesPlayMusic 動態歌詞表現...' }
                 ]
             });
 
@@ -1056,7 +1029,7 @@
                 if (currentPlayingMusicId === id) {
                     pauseAudioPlayer();
                     document.getElementById('npTitle').innerText = "未選擇播放音樂";
-                    document.getElementById('npArtist').innerText = "請從下方選擇曲目";
+                    document.getElementById('npArtist').innerText = "請從佇列選擇曲目";
                 }
                 musicList = musicList.filter(x => x.id !== id);
                 renderMusicTable();
@@ -1070,11 +1043,11 @@
             queue.innerHTML = '';
             musicList.forEach((m, idx) => {
                 const div = document.createElement('div');
-                div.className = `p-2.5 rounded-xl border border-cream-200 flex items-center justify-between text-xs transition ${m.id === currentPlayingMusicId ? 'bg-amber-100/60 border-amber-300 font-bold' : 'bg-white'}`;
+                div.className = `p-2.5 rounded-2xl border transition flex items-center justify-between text-xs ${m.id === currentPlayingMusicId ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 font-bold' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800'}`;
                 div.innerHTML = `
                     <div class="truncate mr-2 cursor-pointer flex-1" onclick="selectMusicFromDropdown('${m.id}', true)">
-                        <div class="text-gray-800 truncate">${idx + 1}. ${m.title}</div>
-                        <div class="text-[10px] text-gray-400">${m.artist}</div>
+                        <div class="text-slate-800 dark:text-slate-100 truncate">${idx + 1}. ${m.title}</div>
+                        <div class="text-[10px] text-slate-400">${m.artist}</div>
                     </div>
                     <button onclick="deleteMusicItem('${m.id}')" class="text-red-400 hover:text-red-600 px-2" title="刪除"><i class="fa-solid fa-trash"></i></button>
                 `;
@@ -1087,6 +1060,7 @@
             const m = musicList.find(x => x.id === id);
             if (!m) return;
 
+            // MUTUAL EXCLUSION: Pause Video
             pauseVideoPlayer();
 
             currentPlayingMusicId = id;
@@ -1094,10 +1068,10 @@
 
             document.getElementById('npTitle').innerText = m.title;
             document.getElementById('npArtist').innerText = m.artist;
-            document.getElementById('npGenre').innerText = 'POP MUSIC';
             
-            const photoUrl = artistPhotos[m.artist] || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=300&q=80';
+            const photoUrl = artistPhotos[m.artist] || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80';
             document.getElementById('npArtistPhoto').src = photoUrl;
+            document.getElementById('ypmBlurBg').style.backgroundImage = `url('${photoUrl}')`;
 
             renderLyrics(m.lyrics || [{ time: 0, text: m.title }]);
 
@@ -1106,10 +1080,7 @@
             updatePlayBtnUI();
             
             if (autoplay) {
-                startVisualizer();
                 startAudioTimer();
-            } else {
-                stopVisualizer();
             }
             populateMusicDropdown();
         }
@@ -1134,14 +1105,12 @@
             } else {
                 document.getElementById('ytAudioFrameContainer').innerHTML = '';
                 clearInterval(audioProgressTimer);
-                stopVisualizer();
             }
         }
 
         function updatePlayBtnUI() {
             const btn = document.getElementById('masterPlayBtn');
-            btn.innerHTML = isAudioPlaying ? `<i class="fa-solid fa-pause"></i>` : `<i class="fa-solid fa-play ml-0.5"></i>`;
-            if (isAudioPlaying) startVisualizer(); else stopVisualizer();
+            btn.innerHTML = isAudioPlaying ? `<i class="fa-solid fa-pause"></i>` : `<i class="fa-solid fa-play ml-1"></i>`;
         }
 
         function startAudioTimer() {
@@ -1169,8 +1138,7 @@
             const container = document.getElementById('progressBarContainer');
             const rect = container.getBoundingClientRect();
             const clickX = event.clientX - rect.left;
-            const width = rect.width;
-            const ratio = Math.max(0, Math.min(1, clickX / width));
+            const ratio = Math.max(0, Math.min(1, clickX / rect.width));
             
             currentAudioTime = Math.floor(ratio * currentAudioDuration);
             updateProgressBarUI();
@@ -1185,9 +1153,15 @@
             lyricBox.innerHTML = '';
             lyricsArray.forEach((l, idx) => {
                 const p = document.createElement('p');
-                p.className = `lyric-line text-xs py-1.5 ${idx === 0 ? 'active text-amber-400 font-bold' : 'text-gray-300'}`;
+                p.className = `lyric-line text-xs font-semibold py-1.5 cursor-pointer ${idx === 0 ? 'active' : 'text-slate-400'}`;
                 p.id = `lyric-${idx}`;
                 p.innerText = l.text;
+                p.onclick = () => {
+                    currentAudioTime = l.time;
+                    updateProgressBarUI();
+                    updateActiveLyric(currentAudioTime);
+                    loadAudioIframe(currentAudioTime, isAudioPlaying);
+                };
                 lyricBox.appendChild(p);
             });
         }
@@ -1202,10 +1176,10 @@
             }
             document.querySelectorAll('.lyric-line').forEach((el, idx) => {
                 if (idx === currentIndex) {
-                    el.classList.add('active', 'text-amber-400', 'font-bold');
+                    el.classList.add('active');
                     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 } else {
-                    el.classList.remove('active', 'text-amber-400', 'font-bold');
+                    el.classList.remove('active');
                 }
             });
         }
@@ -1234,14 +1208,7 @@
         function toggleShuffle() {}
         function toggleLoop() {}
 
-        function startVisualizer() {
-            document.querySelectorAll('.v-bar').forEach(bar => bar.classList.add('animating'));
-        }
-        function stopVisualizer() {
-            document.querySelectorAll('.v-bar').forEach(bar => bar.classList.remove('animating'));
-        }
-
-        // --- VIDEO & THEATER MANAGER ---
+        // --- IINA MEDIA PLAYER ENGINE ---
         function renderVideoTable() {
             const query = document.getElementById('videoSearch')?.value.toLowerCase() || '';
             const tbody = document.getElementById('videoTableBody');
@@ -1251,11 +1218,12 @@
 
             filtered.forEach(v => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-cream-50 transition";
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition";
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-800">${v.title}</td>
+                    <td class="p-3 font-semibold text-slate-800 dark:text-slate-100">${v.title}</td>
+                    <td class="p-3 font-mono text-[11px] text-slate-400 truncate max-w-xs">${v.url}</td>
                     <td class="p-3 text-center space-x-2">
-                        <button onclick="selectVideoFromDropdown('${v.id}')" class="text-orange-600 hover:text-orange-800 font-bold" title="劇院播放"><i class="fa-solid fa-circle-play text-base"></i></button>
+                        <button onclick="selectVideoFromDropdown('${v.id}')" class="text-cyan-600 hover:text-cyan-800 font-bold" title="IINA 劇院播放"><i class="fa-solid fa-circle-play text-base"></i></button>
                         <button onclick="deleteVideoItem('${v.id}')" class="text-red-400 hover:text-red-600" title="刪除"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
@@ -1269,10 +1237,9 @@
         function saveVideoItem() {
             const title = document.getElementById('vFormTitle').value.trim();
             const url = document.getElementById('vFormUrl').value.trim();
-            if (!title || !url) { alert("請填寫所有必要欄位"); return; }
+            if (!title || !url) { alert("請填寫所有欄位"); return; }
 
             videoList.push({ id: 'v_' + Date.now(), title, url });
-
             closeVideoModal();
             renderVideoTable();
             populateVideoDropdown();
@@ -1291,7 +1258,7 @@
 
         function populateVideoDropdown() {
             const select = document.getElementById('playerVideoSelect');
-            if(!select) return;
+            if (!select) return;
             select.innerHTML = '';
             videoList.forEach(v => {
                 const opt = document.createElement('option');
@@ -1304,11 +1271,11 @@
             list.innerHTML = '';
             videoList.forEach((v, idx) => {
                 const div = document.createElement('div');
-                div.className = `p-2.5 rounded-xl border border-cream-200 cursor-pointer hover:bg-cream-100 flex items-center justify-between text-xs transition ${v.id === currentPlayingVideoId ? 'bg-orange-100/60 border-orange-300 font-bold' : 'bg-white'}`;
+                div.className = `p-2.5 rounded-2xl border cursor-pointer flex items-center justify-between text-xs transition ${v.id === currentPlayingVideoId ? 'bg-cyan-50 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700 font-bold' : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800'}`;
                 div.onclick = () => selectVideoFromDropdown(v.id);
                 div.innerHTML = `
                     <div class="truncate mr-2">
-                        <div class="text-gray-800 truncate">${idx + 1}. ${v.title}</div>
+                        <div class="text-slate-800 dark:text-slate-100 truncate">${idx + 1}. ${v.title}</div>
                     </div>
                 `;
                 list.appendChild(div);
@@ -1320,31 +1287,174 @@
             const v = videoList.find(x => x.id === id);
             if (!v) return;
 
+            // MUTUAL EXCLUSION: Pause Audio
             pauseAudioPlayer();
 
             currentPlayingVideoId = id;
+            isVideoPlaying = true;
             document.getElementById('playerVideoSelect').value = id;
             const ytId = extractYTId(v.url);
             document.getElementById('ytVideoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
 
             document.getElementById('vpTitle').innerText = v.title;
+            const playBtn = document.getElementById('iinaPlayBtn');
+            if (playBtn) playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+
+            showIINAOsd(`載入影音: ${v.title}`);
             populateVideoDropdown();
         }
 
-        // --- 相簿回憶管理與尺寸切換 ---
+        function toggleVideoPlayIINA() {
+            if (!currentPlayingVideoId) return;
+            isVideoPlaying = !isVideoPlaying;
+            const playBtn = document.getElementById('iinaPlayBtn');
+            
+            if (isVideoPlaying) {
+                pauseAudioPlayer();
+                const v = videoList.find(x => x.id === currentPlayingVideoId);
+                if (v) {
+                    const ytId = extractYTId(v.url);
+                    document.getElementById('ytVideoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1`;
+                }
+                playBtn.innerHTML = `<i class="fa-solid fa-pause"></i>`;
+                showIINAOsd('播放中');
+            } else {
+                document.getElementById('ytVideoIframe').src = '';
+                playBtn.innerHTML = `<i class="fa-solid fa-play"></i>`;
+                showIINAOsd('已暫停');
+            }
+        }
+
+        function stopVideoIINA() {
+            pauseVideoPlayer();
+            showIINAOsd('停止播放');
+        }
+
+        function setIINAAspectRatio(ratio) {
+            const wrapper = document.getElementById('iinaAspectContainer');
+            if (ratio === '16:9') wrapper.style.aspectRatio = '16/9';
+            else if (ratio === '4:3') wrapper.style.aspectRatio = '4/3';
+            else if (ratio === '21:9') wrapper.style.aspectRatio = '21/9';
+            else wrapper.style.aspectRatio = 'auto';
+
+            showIINAOsd(`螢幕比例: ${ratio}`);
+        }
+
+        function setIINASpeed(spd) {
+            showIINAOsd(`倍速設定: ${spd}x`);
+        }
+
+        function togglePipIINA() {
+            showIINAOsd('子母畫面 (PiP) 模式開啟');
+        }
+
+        function toggleFullscreenIINA() {
+            const wrapper = document.getElementById('iinaPlayerWrapper');
+            if (!document.fullscreenElement) {
+                wrapper.requestFullscreen().catch(err => {
+                    showIINAOsd('全螢幕模式啟動');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function showIINAOsd(text) {
+            const osd = document.getElementById('iinaOSD');
+            const osdText = document.getElementById('osdText');
+            osdText.innerText = text;
+            osd.classList.remove('hidden');
+            osd.classList.remove('osd-overlay');
+            void osd.offsetWidth; // Trigger reflow
+            osd.classList.add('osd-overlay');
+        }
+
+        // --- TOP 20 PRESETS LOADERS ---
+        function loadTop20Music() {
+            const top20Songs = [
+                { title: "Lofi Beats - Relax/Study", artist: "Lofi Girl", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+                { title: "Relaxing Piano Music", artist: "Calm Studio", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" },
+                { title: "Never Gonna Give You Up", artist: "Rick Astley", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                { title: "Relaxing Sleep Music & Guitar", artist: "Relaxing Music", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
+                { title: "Coffee Shop Jazz Instrumental", artist: "Jazz Cafe", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" }
+            ];
+
+            top20Songs.forEach((item, index) => {
+                musicList.push({
+                    id: 'm_top20_' + Date.now() + '_' + index,
+                    title: item.title,
+                    artist: item.artist,
+                    url: item.url,
+                    lyrics: [
+                        { time: 0, text: `♪ 精選熱門曲目: ${item.title} ♪` },
+                        { time: 5, text: `演出者: ${item.artist}` },
+                        { time: 15, text: '享受 YesPlayMusic 高音質串流播放...' }
+                    ]
+                });
+            });
+
+            renderMusicTable();
+            populateMusicDropdown();
+            saveData();
+            alert("已成功追加 5 首 YesPlayMusic 高音質精選歌曲！");
+        }
+
+        function loadTop20Videos() {
+            const top20Vids = [
+                { title: "Lofi Girl - Live Radio 24/7", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+                { title: "4K Tropical Island Drone Walk", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+                { title: "Relaxing Aquarium Fish 4K", url: "https://www.youtube.com/watch?v=2g811Ko7K8U" },
+                { title: "Relaxing Piano & Water Sounds", url: "https://www.youtube.com/watch?v=1ZYbU82GVz4" }
+            ];
+
+            top20Vids.forEach((item, index) => {
+                videoList.push({
+                    id: 'v_top20_' + Date.now() + '_' + index,
+                    title: item.title,
+                    url: item.url
+                });
+            });
+
+            renderVideoTable();
+            populateVideoDropdown();
+            saveData();
+            alert("已成功追加 4 部 IINA 劇院高清影片！");
+        }
+
+        function loadTop20Photos() {
+            const top20Imgs = [
+                { title: "台北都會夜景", url: "https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=600&q=80" },
+                { title: "京都嵐山竹林", url: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=600&q=80" },
+                { title: "北海道浪漫雪景", url: "https://images.unsplash.com/photo-1491557345352-5929e343eb89?auto=format&fit=crop&w=600&q=80" }
+            ];
+
+            top20Imgs.forEach((item, index) => {
+                photoList.push({
+                    id: 'p_top20_' + Date.now() + '_' + index,
+                    title: item.title,
+                    url: item.url
+                });
+            });
+
+            renderPhotoGallery();
+            saveData();
+            alert("已追加精選相簿照片！");
+        }
+
+        // --- PHOTO MEMORIES MANAGER ---
         function setPhotoSize(size) {
             currentPhotoSize = size;
             
-            document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600 font-bold" : "px-3 py-1.5 rounded-lg transition text-gray-600";
-            document.getElementById('sizeBtnMedium').className = size === 'medium' ? "px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600 font-bold" : "px-3 py-1.5 rounded-lg transition text-gray-600";
-            document.getElementById('sizeBtnLarge').className = size === 'large' ? "px-3 py-1.5 rounded-lg transition bg-white shadow-sm text-amber-600 font-bold" : "px-3 py-1.5 rounded-lg transition text-gray-600";
+            document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-3 py-1.5 rounded-xl transition bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 font-bold" : "px-3 py-1.5 rounded-xl transition";
+            document.getElementById('sizeBtnMedium').className = size === 'medium' ? "px-3 py-1.5 rounded-xl transition bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 font-bold" : "px-3 py-1.5 rounded-xl transition";
+            document.getElementById('sizeBtnLarge').className = size === 'large' ? "px-3 py-1.5 rounded-xl transition bg-white dark:bg-slate-700 shadow-sm text-blue-600 dark:text-blue-400 font-bold" : "px-3 py-1.5 rounded-xl transition";
 
             renderPhotoGallery();
         }
 
         function renderPhotoGallery() {
             const grid = document.getElementById('photoGalleryGrid');
-            if(!grid) return;
+            if (!grid) return;
             grid.innerHTML = '';
 
             const activeSize = currentPhotoSize;
@@ -1358,21 +1468,21 @@
 
             photoList.forEach(p => {
                 const card = document.createElement('div');
-                card.className = "card-cream rounded-2xl overflow-hidden flex flex-col group relative shadow hover:shadow-md transition";
+                card.className = "bg-slate-50 dark:bg-slate-800 rounded-3xl overflow-hidden flex flex-col group relative shadow hover:shadow-md transition border border-slate-200/60 dark:border-slate-700";
                 
                 let imgHeight = "h-48";
                 if (activeSize === 'small') imgHeight = "h-32";
                 if (activeSize === 'large') imgHeight = "h-96";
 
                 card.innerHTML = `
-                    <div class="w-full ${imgHeight} overflow-hidden bg-cream-100 relative">
+                    <div class="w-full ${imgHeight} overflow-hidden bg-slate-200 dark:bg-slate-700 relative">
                         <img src="${p.url}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                        <button onclick="deletePhotoItem('${p.id}')" class="absolute top-2 right-2 w-8 h-8 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow" title="刪除照片">
+                        <button onclick="deletePhotoItem('${p.id}')" class="absolute top-3 right-3 w-8 h-8 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow" title="刪除照片">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
-                    <div class="p-3 bg-white">
-                        <h4 class="font-bold text-xs text-gray-800 truncate">${p.title}</h4>
+                    <div class="p-3 bg-white dark:bg-ypm-darkCard">
+                        <h4 class="font-bold text-xs truncate text-slate-800 dark:text-slate-100">${p.title}</h4>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -1385,7 +1495,7 @@
         function savePhotoItem() {
             const title = document.getElementById('pFormTitle').value.trim();
             const url = document.getElementById('pFormUrl').value.trim();
-            if (!title || !url) { alert("請填寫所有必要欄位"); return; }
+            if (!title || !url) { alert("請填寫所有欄位"); return; }
 
             photoList.push({ id: 'p_' + Date.now(), title, url });
 
@@ -1402,11 +1512,11 @@
             }
         }
 
-        // --- EXPORT / IMPORT ---
+        // --- EXPORT & IMPORT ENGINE ---
         function exportExcel() {
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(musicList), "音樂庫");
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(videoList), "影音庫");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(musicList), "YesPlayMusic歌單");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(videoList), "IINA影音庫");
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(photoList), "相簿回憶");
             XLSX.writeFile(wb, `MediaBox_Pro_${Date.now()}.xlsx`);
         }
@@ -1424,7 +1534,7 @@
                 renderMusicTable();
                 populateMusicDropdown();
                 saveData();
-                alert("Excel 資料匯入成功！");
+                alert("Excel 資料成功匯入！");
             };
             reader.readAsArrayBuffer(file);
         }
@@ -1444,7 +1554,7 @@
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width);
-                pdf.save(`MediaBox_Report.pdf`);
+                pdf.save(`MediaBox_Pro_Export.pdf`);
             });
         }
     </script>
