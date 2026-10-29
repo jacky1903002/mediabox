@@ -221,7 +221,7 @@
                 </div>
                 <div class="flex items-center gap-2 flex-wrap">
                     <button onclick="loadTop20Music()" class="px-4 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-fire"></i> 強制重置載入 Top20 華語流行歌曲
+                        <i class="fa-solid fa-fire"></i> 強制重置載入 Top10 華語流行歌曲
                     </button>
                     <button onclick="openMusicModal()" class="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl border border-zinc-200 dark:border-zinc-700 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-plus text-rose-500"></i> 新增歌曲
@@ -580,7 +580,7 @@
         let selectedVideoIds = [];
         let selectedPhotoIds = [];
 
-        // 絕對精準校正之華語流行金曲與公開 MV 連結 (保證絕對相符)
+        // 精準校正之預設歌曲
         const preciseMandatorySongs = [
             { id: 'm_p_1', title: '晴天', artist: '周杰倫', url: 'https://www.youtube.com/watch?v=DYptgVvkVLQ', lyrics: [{ time: 0, text: '♪ 故事的小黃花 從出生那年就飄著 ♪' }, { time: 8, text: '童年的蕩鞦韆 隨記憶一直晃到現在' }] },
             { id: 'm_p_2', title: '告白氣球', artist: '周杰倫', url: 'https://www.youtube.com/watch?v=bu7nU9Mhpyo', lyrics: [{ time: 0, text: '♪ 塞納河畔 左岸的咖啡 ♪' }, { time: 8, text: '我手捧著鮮花 準備告白' }] },
@@ -599,27 +599,26 @@
             { id: 'v_p_2', title: '周杰倫 Jay Chou【告白氣球 Love Confession】MV', url: 'https://www.youtube.com/watch?v=bu7nU9Mhpyo' },
             { id: 'v_p_3', title: '陳奕迅 Eason Chan《孤勇者》英雄聯盟主題曲', url: 'https://www.youtube.com/watch?v=10S5A-L3j8k' },
             { id: 'v_p_4', title: 'G.E.M. 鄧紫棋【光年之外 LIGHT YEARS AWAY】MV', url: 'https://www.youtube.com/watch?v=T4SimnaiktU' },
-            { id: 'v_p_5', title: '田馥甄 Hebe Tien【小幸運】Official MV', url: 'https://www.youtube.com/watch?v=_sQSXwdtlGE' },
-            { id: 'v_p_6', title: '【4K 台灣之美】台灣高畫質空拍巡禮', url: 'https://www.youtube.com/watch?v=2e_m4j3dJms' }
+            { id: 'v_p_5', title: '田馥甄 Hebe Tien【小幸運】Official MV', url: 'https://www.youtube.com/watch?v=_sQSXwdtlGE' }
         ];
 
-        let tabTitles = JSON.parse(localStorage.getItem('mediaBox_tabTitles')) || {
+        let tabTitles = JSON.parse(localStorage.getItem('mediaBox_tabTitles_v2')) || {
             1: "頁面一: YesPlayMusic 華語音樂館",
             2: "頁面二: IINA 華語劇院中心",
             3: "頁面三: 相簿回憶系統"
         };
 
-        // 嚴格檢查：若 localStorage 內無紀錄，才賦予初始值；若有紀錄（包含空陣列 []），則以實際存儲為準，避免刪除後重新載入又跑回來
-        let musicList = localStorage.getItem('mediaBox_musicList') !== null 
-            ? JSON.parse(localStorage.getItem('mediaBox_musicList')) 
+        // Key 名稱升級為 v2，且嚴格判斷只要 getItem !== null 就不蓋過去
+        let musicList = localStorage.getItem('mediaBox_musicList_v2') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_musicList_v2')) 
             : [...preciseMandatorySongs];
 
-        let videoList = localStorage.getItem('mediaBox_videoList') !== null 
-            ? JSON.parse(localStorage.getItem('mediaBox_videoList')) 
+        let videoList = localStorage.getItem('mediaBox_videoList_v2') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_videoList_v2')) 
             : [...preciseMandatoryVideos];
 
-        let photoList = localStorage.getItem('mediaBox_photoList') !== null 
-            ? JSON.parse(localStorage.getItem('mediaBox_photoList')) 
+        let photoList = localStorage.getItem('mediaBox_photoList_v2') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_photoList_v2')) 
             : [
                 { id: 'p1', title: '台北都會夜景', url: 'https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=600&q=80' },
                 { id: 'p2', title: '日月潭晨曦美景', url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=600&q=80' }
@@ -697,11 +696,12 @@
             }
         };
 
+        // 寫入更升級後的版本名，避免與舊快取衝突
         function saveData() {
-            localStorage.setItem('mediaBox_musicList', JSON.stringify(musicList));
-            localStorage.setItem('mediaBox_videoList', JSON.stringify(videoList));
-            localStorage.setItem('mediaBox_photoList', JSON.stringify(photoList));
-            localStorage.setItem('mediaBox_tabTitles', JSON.stringify(tabTitles));
+            localStorage.setItem('mediaBox_musicList_v2', JSON.stringify(musicList));
+            localStorage.setItem('mediaBox_videoList_v2', JSON.stringify(videoList));
+            localStorage.setItem('mediaBox_photoList_v2', JSON.stringify(photoList));
+            localStorage.setItem('mediaBox_tabTitles_v2', JSON.stringify(tabTitles));
             saveToFirebase();
         }
 
@@ -722,10 +722,10 @@
             get(ref(window.fbDb, 'users/' + currentUser.uid + '/data')).then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    if (data.musicList) musicList = data.musicList;
-                    if (data.videoList) videoList = data.videoList;
-                    if (data.photoList) photoList = data.photoList;
-                    if (data.tabTitles) tabTitles = data.tabTitles;
+                    if (data.musicList !== undefined) musicList = data.musicList;
+                    if (data.videoList !== undefined) videoList = data.videoList;
+                    if (data.photoList !== undefined) photoList = data.photoList;
+                    if (data.tabTitles !== undefined) tabTitles = data.tabTitles;
 
                     renderTabTitles();
                     renderMusicTable();
@@ -959,7 +959,7 @@
                 selectedMusicIds = [];
                 renderMusicTable();
                 populateMusicDropdown();
-                saveData(); // 立即寫入儲存，確保刪除狀態永久保存
+                saveData(); // 立即儲存並寫入 v2 key
             }
         }
 
@@ -970,7 +970,7 @@
                 selectedMusicIds = selectedMusicIds.filter(x => x !== id);
                 renderMusicTable();
                 populateMusicDropdown();
-                saveData(); // 立即寫入儲存
+                saveData(); // 立即儲存並寫入 v2 key
             }
         }
 
@@ -1222,7 +1222,7 @@
                 selectedVideoIds = [];
                 renderVideoTable();
                 populateVideoDropdown();
-                saveData(); // 立即寫入儲存
+                saveData();
             }
         }
 
@@ -1233,7 +1233,7 @@
                 selectedVideoIds = selectedVideoIds.filter(x => x !== id);
                 renderVideoTable();
                 populateVideoDropdown();
-                saveData(); // 立即寫入儲存
+                saveData();
             }
         }
 
@@ -1375,7 +1375,7 @@
                 photoList = photoList.filter(p => !selectedPhotoIds.includes(p.id));
                 selectedPhotoIds = [];
                 renderPhotoGallery();
-                saveData(); // 立即寫入儲存
+                saveData();
             }
         }
 
@@ -1384,7 +1384,7 @@
                 photoList = photoList.filter(p => p.id !== id);
                 selectedPhotoIds = selectedPhotoIds.filter(x => x !== id);
                 renderPhotoGallery();
-                saveData(); // 立即寫入儲存
+                saveData();
             }
         }
 
