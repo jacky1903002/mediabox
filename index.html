@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediaBox Pro - 華語影音娛樂與相簿管理系統</title>
+    <title>MediaBox Pro - 多媒體播放器與照片紀錄系統</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -27,12 +27,6 @@
                             cardBg: '#18181c',
                             hoverBg: '#26262b',
                             textMuted: '#8b8b93'
-                        },
-                        iina: {
-                            bg: '#1e1e24',
-                            panel: '#282830',
-                            accent: '#3b82f6',
-                            border: '#3a3a46'
                         }
                     }
                 }
@@ -62,10 +56,14 @@
             font-weight: 700;
         }
         .drag-over {
+            border: 2px dashed #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.05) !important;
+        }
+        .photo-drag-over {
             border: 2px dashed #f59e0b !important;
             background-color: rgba(245, 158, 11, 0.05) !important;
         }
-        .photo-card.dragging {
+        .card-dragging {
             opacity: 0.4;
         }
     </style>
@@ -119,7 +117,7 @@
                         <h1 class="font-extrabold text-xl text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
                             MediaBox <span class="text-[10px] px-2 py-0.5 bg-blue-500/20 text-blue-500 dark:text-blue-400 rounded-full font-bold border border-blue-500/30">PRO</span>
                         </h1>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">華語影音劇院與相簿分類管理系統</p>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">多媒體影音與照片紀錄管理系統</p>
                     </div>
                 </div>
 
@@ -153,185 +151,167 @@
             </div>
         </div>
 
-        <!-- 2 個分頁導覽 -->
+        <!-- 固定分頁導覽 -->
         <nav class="bg-zinc-50 dark:bg-[#121215] border-t border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8">
             <div class="max-w-7xl mx-auto flex space-x-8 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400" id="tabNavContainer">
-                <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn active py-3 flex items-center space-x-2 whitespace-nowrap transition">
+                <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active py-3 flex items-center space-x-2 whitespace-nowrap transition cursor-pointer">
                     <i class="fa-solid fa-film text-base"></i>
-                    <span id="tabTitle2" class="tab-title" ondblclick="editTabTitle(2)">頁面一: IINA 華語劇院中心 (100部)</span>
+                    <span id="tabTitle1" class="tab-title font-bold">影音撥放器</span>
                 </button>
-                <button onclick="switchTab(3)" id="tabBtn3" class="tab-btn py-3 flex items-center space-x-2 whitespace-nowrap transition">
+                <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn py-3 flex items-center space-x-2 whitespace-nowrap transition cursor-pointer">
                     <i class="fa-solid fa-images text-base"></i>
-                    <span id="tabTitle3" class="tab-title" ondblclick="editTabTitle(3)">頁面二: 相簿分區與拖曳管理</span>
+                    <span id="tabTitle2" class="tab-title font-bold">照片記錄</span>
                 </button>
             </div>
         </nav>
     </header>
 
-    <!-- GLOBAL TOOLBAR -->
-    <section class="bg-white dark:bg-[#18181c] border-b border-zinc-200 dark:border-zinc-800 py-2.5 px-4 sm:px-6 lg:px-8 transition-colors">
-        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center space-x-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">
-                <i class="fa-solid fa-wand-magic-sparkles text-blue-500"></i>
-                <span>數據匯入匯出與多功能工具箱</span>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 text-xs">
-                <label class="cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-excel text-emerald-500"></i>
-                    <span>匯入 EXCEL</span>
-                    <input type="file" accept=".xlsx, .xls" onchange="importExcel(event)" class="hidden">
-                </label>
-                <button onclick="exportExcel()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-export text-emerald-500"></i>
-                    <span>匯出 EXCEL</span>
-                </button>
-                <button onclick="exportPNG()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-image text-blue-500"></i>
-                    <span>匯出 PNG</span>
-                </button>
-                <button onclick="exportPDF()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 font-medium transition flex items-center space-x-1.5 shadow-sm">
-                    <i class="fa-solid fa-file-pdf text-rose-500"></i>
-                    <span>匯出 PDF</span>
-                </button>
-            </div>
-        </div>
-    </section>
-
     <!-- MAIN CONTENT -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6" id="exportArea">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
 
-        <!-- ================= TAB 2: IINA 華語劇院中心 (100部影音) ================= -->
-        <div id="tabContent2" class="tab-panel space-y-6">
+        <!-- ================= TAB 1: 影音撥放器 ================= -->
+        <div id="tabContent1" class="tab-panel space-y-6">
+            <!-- 影音撥放器獨立工具列與標題 -->
             <div class="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-zinc-200 dark:border-zinc-800 shadow-xl transition-colors">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg">
                         <i class="fa-solid fa-clapperboard text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="font-bold text-zinc-900 dark:text-white text-base">IINA macOS 風格華語劇院 (100 部影音)</h2>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">涵蓋熱門/精選、知識中文影音、旅遊中文影音、新聞中文影音與歷史故事中文影音</p>
+                        <h2 class="font-bold text-zinc-900 dark:text-white text-base">影音撥放器</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">自訂影片上傳與分類管理，支援跨區自由拖曳排序</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="loadTop100Videos()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-rotate text-sm"></i> 重置載入 100 部中文影音
+                <!-- 獨立匯入匯出與新增按鈕 -->
+                <div class="flex items-center gap-2 flex-wrap text-xs">
+                    <label class="cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-excel text-emerald-500"></i>
+                        <span>匯入 EXCEL</span>
+                        <input type="file" accept=".xlsx, .xls" onchange="importVideoExcel(event)" class="hidden">
+                    </label>
+                    <button onclick="exportVideoExcel()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-export text-emerald-500"></i>
+                        <span>匯出 EXCEL</span>
                     </button>
-                    <button onclick="openVideoModal()" class="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl border border-zinc-200 dark:border-zinc-700 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-plus text-blue-500 dark:text-blue-400"></i> 新增影音
+                    <button onclick="exportVideoPNG()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-image text-blue-500"></i>
+                        <span>PNG</span>
+                    </button>
+                    <button onclick="exportVideoPDF()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-pdf text-rose-500"></i>
+                        <span>PDF</span>
+                    </button>
+                    <button onclick="openVideoModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> 新增影音
                     </button>
                 </div>
             </div>
 
-            <!-- 分類篩選 Tab Bar -->
-            <div class="flex items-center space-x-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 overflow-x-auto custom-scrollbar text-xs font-bold">
-                <button onclick="filterVideoCategory('all')" id="vcat_all" class="vcat-btn px-4 py-2 rounded-xl bg-blue-600 text-white shadow">全部 (100+)</button>
-                <button onclick="filterVideoCategory('featured')" id="vcat_featured" class="vcat-btn px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200">🔥 熱門/精選 (20)</button>
-                <button onclick="filterVideoCategory('knowledge')" id="vcat_knowledge" class="vcat-btn px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200">💡 知識科普 (20)</button>
-                <button onclick="filterVideoCategory('travel')" id="vcat_travel" class="vcat-btn px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200">✈️ 旅遊美食 (20)</button>
-                <button onclick="filterVideoCategory('news')" id="vcat_news" class="vcat-btn px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200">📰 新聞報導 (20)</button>
-                <button onclick="filterVideoCategory('history')" id="vcat_history" class="vcat-btn px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200">📜 歷史故事 (20)</button>
-            </div>
-
-            <!-- IINA MEDIA PLAYER -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-2 space-y-4">
-                    <div class="bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative aspect-video flex items-center justify-center group">
-                        <iframe id="ytVideoIframe" class="w-full h-full" src="" title="IINA Media Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <!-- MEDIA PLAYER AREA -->
+            <div id="videoExportArea" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative aspect-video flex items-center justify-center group">
+                            <iframe id="ytVideoIframe" class="w-full h-full" src="" title="Media Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl flex items-center justify-between transition-colors">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded" id="vpCategoryTag">CINEMA</span>
+                                <h3 class="text-base font-bold text-zinc-900 dark:text-white mt-1" id="vpTitle">點選下方清單或播放按鈕開始播放影音</h3>
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl flex items-center justify-between transition-colors">
-                        <div>
-                            <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded" id="vpCategoryTag">IINA CINEMA</span>
-                            <h3 class="text-base font-bold text-zinc-900 dark:text-white mt-1" id="vpTitle">點選清單開始播放影音</h3>
+
+                    <div class="space-y-6">
+                        <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex flex-col shadow-xl transition-colors">
+                            <h3 class="font-bold text-zinc-900 dark:text-white text-sm mb-3 flex items-center justify-between">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-film text-blue-500"></i> 播放清單</span>
+                                <span class="text-xs text-zinc-400 dark:text-zinc-500" id="videoPlaylistCount">0 部</span>
+                            </h3>
+                            <div class="space-y-2 overflow-y-auto max-h-[360px] custom-scrollbar" id="videoPlaylistContainer"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-6">
-                    <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex flex-col shadow-xl transition-colors">
-                        <h3 class="font-bold text-zinc-900 dark:text-white text-sm mb-3 flex items-center justify-between">
-                            <span class="flex items-center gap-2"><i class="fa-solid fa-film text-blue-500 dark:text-blue-400"></i> 劇院播放清單</span>
-                            <span class="text-xs text-zinc-400 dark:text-zinc-500" id="videoPlaylistCount">0 部</span>
+                <!-- 依分類排序與可自由拖曳區塊 -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-blue-500"></i> 影音分類排序與拖曳管理
                         </h3>
-                        <div class="space-y-2 overflow-y-auto max-h-[360px] custom-scrollbar" id="videoPlaylistContainer"></div>
+                        <div class="flex items-center gap-3">
+                            <button id="batchDeleteVideoBtn" onclick="batchDeleteVideo()" class="hidden px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-trash-can"></i> 刪除選取 (<span id="selectedVideoCount">0</span>)
+                            </button>
+                            <span class="text-xs text-zinc-400"><i class="fa-solid fa-up-down-left-right mr-1"></i>抓取卡片可自由跨分類拖曳排序</span>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 影音資料庫表格（支援一次多選刪除） -->
-            <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xl transition-colors">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                    <div class="flex items-center gap-3">
-                        <h3 class="font-bold text-zinc-900 dark:text-white text-sm flex items-center gap-2">
-                            <i class="fa-solid fa-list-check text-blue-500 dark:text-blue-400"></i> 華語影音網址資料管理表
-                        </h3>
-                        <button id="batchDeleteVideoBtn" onclick="batchDeleteVideo()" class="hidden px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-trash-can"></i> 刪除選取 (<span id="selectedVideoCount">0</span>)
-                        </button>
-                    </div>
-                    <div class="relative w-full sm:w-64">
-                        <input type="text" id="videoSearch" oninput="renderVideoTable()" placeholder="搜尋影片標題..." class="w-full text-xs pl-8 pr-3 py-1.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 rounded-lg focus:outline-none focus:border-blue-500">
-                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-xs text-zinc-400"></i>
-                    </div>
-                </div>
-                <div class="overflow-x-auto custom-scrollbar max-h-80">
-                    <table class="w-full text-xs text-left text-zinc-700 dark:text-zinc-300">
-                        <thead class="bg-zinc-100 dark:bg-[#121215] text-zinc-600 dark:text-zinc-400 font-bold uppercase border-b border-zinc-200 dark:border-zinc-800 sticky top-0">
-                            <tr>
-                                <th class="p-3 text-center w-10">
-                                    <input type="checkbox" id="selectAllVideo" onchange="toggleSelectAllVideo(this.checked)" class="accent-blue-500 cursor-pointer">
-                                </th>
-                                <th class="p-3 w-28">分類</th>
-                                <th class="p-3">影片標題</th>
-                                <th class="p-3 text-center w-24">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="videoTableBody" class="divide-y divide-zinc-200 dark:divide-zinc-800/60"></tbody>
-                    </table>
+                    
+                    <div id="videoCategorySections" class="space-y-6"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TAB 3: 相簿分區與拖曳管理系統 ================= -->
-        <div id="tabContent3" class="tab-panel hidden space-y-6">
+        <!-- ================= TAB 2: 照片記錄 ================= -->
+        <div id="tabContent2" class="tab-panel hidden space-y-6">
+            <!-- 照片記錄獨立工具列與標題 -->
             <div class="bg-white dark:bg-[#18181c] p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-zinc-200 dark:border-zinc-800 shadow-xl transition-colors">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-lg">
                         <i class="fa-solid fa-folder-tree text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="font-bold text-zinc-900 dark:text-white text-base">相簿分區放置與拖曳管理系統</h2>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">滿版卡片呈現、雙擊編輯備註、自由跨區拖曳 (Drag & Drop) 與大圖燈箱預覽</p>
+                        <h2 class="font-bold text-zinc-900 dark:text-white text-base">照片記錄</h2>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">相片分區放置、雙擊編輯備註、自由跨區拖曳 (Drag & Drop) 與大圖預覽</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 flex-wrap">
-                    <div class="flex bg-zinc-100 dark:bg-[#121215] p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs font-bold">
-                        <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-3 py-1.5 rounded-lg transition text-zinc-500 dark:text-zinc-400">小圖</button>
-                        <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-3 py-1.5 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow">中圖</button>
-                        <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-3 py-1.5 rounded-lg transition text-zinc-500 dark:text-zinc-400">大圖</button>
+                <!-- 獨立匯入匯出與操作按鈕 -->
+                <div class="flex items-center gap-2 flex-wrap text-xs">
+                    <div class="flex bg-zinc-100 dark:bg-[#121215] p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold mr-2">
+                        <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400">小</button>
+                        <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow">中</button>
+                        <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400">大</button>
                     </div>
 
-                    <button id="batchDeletePhotoBtn" onclick="batchDeletePhoto()" class="hidden px-3.5 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-600 hover:text-white border border-amber-500/30 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-trash-can"></i> 刪除選取照片 (<span id="selectedPhotoCount">0</span>)
+                    <label class="cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-excel text-emerald-500"></i>
+                        <span>匯入 EXCEL</span>
+                        <input type="file" accept=".xlsx, .xls" onchange="importPhotoExcel(event)" class="hidden">
+                    </label>
+                    <button onclick="exportPhotoExcel()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-export text-emerald-500"></i>
+                        <span>匯出 EXCEL</span>
                     </button>
-                    <button onclick="toggleSelectAllPhotos()" id="selectAllPhotosBtn" class="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold rounded-xl border border-zinc-200 dark:border-zinc-700 transition">
-                        全選照片
+                    <button onclick="exportPhotoPNG()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-image text-amber-500"></i>
+                        <span>PNG</span>
+                    </button>
+                    <button onclick="exportPhotoPDF()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-pdf text-rose-500"></i>
+                        <span>PDF</span>
                     </button>
 
-                    <button onclick="openPhotoModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <button id="batchDeletePhotoBtn" onclick="batchDeletePhoto()" class="hidden px-3 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-600 hover:text-white border border-amber-500/30 font-bold rounded-xl transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-trash-can"></i> 刪除選取 (<span id="selectedPhotoCount">0</span>)
+                    </button>
+
+                    <button onclick="openPhotoModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-plus"></i> 新增照片
                     </button>
                 </div>
             </div>
 
-            <!-- 相片分區顯示容器 -->
-            <div id="photoCategorySections" class="space-y-8"></div>
+            <!-- 相片分區顯示區域 (匯出用區域) -->
+            <div id="photoExportArea" class="space-y-6">
+                <div id="photoCategorySections" class="space-y-8"></div>
+            </div>
         </div>
 
     </main>
 
     <footer class="bg-white dark:bg-[#18181c] border-t border-zinc-200 dark:border-zinc-800 py-4 px-4 text-center text-xs text-zinc-500 transition-colors">
-        <p>MediaBox Pro © 2026 華語多媒體影音娛樂系統 | 極簡雙模風 | 即時 Firebase Realtime Database 驅動</p>
+        <p>MediaBox Pro © 2026 多媒體影音與照片記錄管理系統</p>
     </footer>
 
     <!-- AUTH MODAL -->
@@ -368,23 +348,17 @@
     <div id="videoModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <h3 class="font-bold text-base text-zinc-900 dark:text-white">新增 YouTube 華語影音</h3>
+                <h3 class="font-bold text-base text-zinc-900 dark:text-white">新增影音項目</h3>
                 <button onclick="closeVideoModal()" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="grid grid-cols-1 gap-3">
                 <div>
                     <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">影音分類 *</label>
-                    <select id="vFormCategory" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
-                        <option value="featured">🔥 熱門/精選影音</option>
-                        <option value="knowledge">💡 知識中文影音</option>
-                        <option value="travel">✈️ 旅遊中文影音</option>
-                        <option value="news">📰 新聞中文影音</option>
-                        <option value="history">📜 歷史故事中文影音</option>
-                    </select>
+                    <input type="text" id="vFormCategory" placeholder="例如: 精選音樂, 知識科普, 旅遊紀錄" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">影片標題 *</label>
-                    <input type="text" id="vFormTitle" placeholder="台灣 4K 高畫質風景導覽" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <input type="text" id="vFormTitle" placeholder="輸入影片標題" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
                 </div>
                 <div>
                     <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">YouTube 影片網址 *</label>
@@ -398,7 +372,7 @@
         </div>
     </div>
 
-    <!-- PHOTO MODAL (僅保留分類與網址) -->
+    <!-- PHOTO MODAL -->
     <div id="photoModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
@@ -438,145 +412,31 @@
 
     <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
-        let activeTab = 2;
+        let activeTab = 1;
         let currentUser = null;
         let authMode = 'login';
         let currentPhotoSize = 'medium';
-        let currentVideoCategory = 'all';
 
         let selectedVideoIds = [];
         let selectedPhotoIds = [];
 
-        // 100 部強制的中文影音數據庫 (分成 5 個類別，每個 20 部)
-        const preciseMandatory100Videos = [
-            // --- 1. 熱門/精選 (20部) ---
-            { id: 'v_f1', category: 'featured', title: '周杰倫 Jay Chou【晴天 Sunny Day】Official MV', url: 'https://www.youtube.com/watch?v=DYptgVvkVLQ' },
-            { id: 'v_f2', category: 'featured', title: '周杰倫 Jay Chou【告白氣球 Love Confession】MV', url: 'https://www.youtube.com/watch?v=bu7nU9Mhpyo' },
-            { id: 'v_f3', category: 'featured', title: '陳奕迅 Eason Chan《孤勇者》英雄聯盟主題曲', url: 'https://www.youtube.com/watch?v=10S5A-L3j8k' },
-            { id: 'v_f4', category: 'featured', title: 'G.E.M. 鄧紫棋【光年之外 LIGHT YEARS AWAY】MV', url: 'https://www.youtube.com/watch?v=T4SimnaiktU' },
-            { id: 'v_f5', category: 'featured', title: '田馥甄 Hebe Tien【小幸運】Official MV', url: 'https://www.youtube.com/watch?v=_sQSXwdtlGE' },
-            { id: 'v_f6', category: 'featured', title: '周杰倫 Jay Chou【稻香 Rice Field】MV', url: 'https://www.youtube.com/watch?v=sHD_z90ZKV0' },
-            { id: 'v_f7', category: 'featured', title: '陳奕迅 Eason Chan - 十年 (官方完整版 MV)', url: 'https://www.youtube.com/watch?v=3S5eG04R02k' },
-            { id: 'v_f8', category: 'featured', title: '林俊傑 JJ Lin【修煉愛情 Practice Love】MV', url: 'https://www.youtube.com/watch?v=GDXgS1i20Xk' },
-            { id: 'v_f9', category: 'featured', title: '薛之謙【演員】Official Music Video', url: 'https://www.youtube.com/watch?v=X38sSAtk1K0' },
-            { id: 'v_f10', category: 'featured', title: '李榮浩 Ronghao Li - 年少有為 (官方 MV)', url: 'https://www.youtube.com/watch?v=83xI4G7kF9c' },
-            { id: 'v_f11', category: 'featured', title: '盧廣仲 Crowd Lu【刻在我心底的名字】MV', url: 'https://www.youtube.com/watch?v=L7a1JSeSj2A' },
-            { id: 'v_f12', category: 'featured', title: '任然 - 飛鳥和蟬【高音質影音】', url: 'https://www.youtube.com/watch?v=1x46k3lI8I0' },
-            { id: 'v_f13', category: 'featured', title: '于文文 Kelly【體面】電影插曲', url: 'https://www.youtube.com/watch?v=A22oB-oP2_0' },
-            { id: 'v_f14', category: 'featured', title: '黃明志 Namewee ft. 王力宏【漂向北方】', url: 'https://www.youtube.com/watch?v=fy04T3j6u1Y' },
-            { id: 'v_f15', category: 'featured', title: '周杰倫 Jay Chou【聽媽媽的話】MV', url: 'https://www.youtube.com/watch?v=_B8S_Kz_c_o' },
-            { id: 'v_f16', category: 'featured', title: '劉若英 René Liu【成全】MV', url: 'https://www.youtube.com/watch?v=0k5G_d4j_p8' },
-            { id: 'v_f17', category: 'featured', title: '小潘潘 & 小峰峰【學貓叫】官方 MV', url: 'https://www.youtube.com/watch?v=u1j_P_5C9aU' },
-            { id: 'v_f18', category: 'featured', title: '王菲 Faye Wong【紅豆】MV', url: 'https://www.youtube.com/watch?v=fS0eK5Wc0_0' },
-            { id: 'v_f19', category: 'featured', title: 'G.E.M. 鄧紫棋【倒數 TIK TOK】MV', url: 'https://www.youtube.com/watch?v=4T2bXp8_a8w' },
-            { id: 'v_f20', category: 'featured', title: '五月天 Mayday【知足】MV', url: 'https://www.youtube.com/watch?v=vL4R_UuH_5I' },
-
-            // --- 2. 知識中文影音 (20部) ---
-            { id: 'v_k1', category: 'knowledge', title: '【老高與小茉】黑洞的盡頭是什麼？宇宙終極奧秘解析', url: 'https://www.youtube.com/watch?v=2f3uE2iI36U' },
-            { id: 'v_k2', category: 'knowledge', title: '【志祺七七】為什麼量子力學能改變世界？超導體到底是什麼', url: 'https://www.youtube.com/watch?v=2J6Yx99J344' },
-            { id: 'v_k3', category: 'knowledge', title: '【啾啾鞋】冷知識：為什麼我們的聲音錄下來聽起來不一樣？', url: 'https://www.youtube.com/watch?v=713p20c3S8s' },
-            { id: 'v_k4', category: 'knowledge', title: '【泛科學】ChatGPT 是如何運作的？大語言模型背後的原理', url: 'https://www.youtube.com/watch?v=9j33_623400' },
-            { id: 'v_k5', category: 'knowledge', title: '【李永樂老師】相對論簡史：為什麼時間會變慢？', url: 'https://www.youtube.com/watch?v=33333333301' },
-            { id: 'v_k6', category: 'knowledge', title: '【李永樂老師】晶片是如何製造出來的？光刻機運作原理', url: 'https://www.youtube.com/watch?v=33333333302' },
-            { id: 'v_k7', category: 'knowledge', title: '【老高與小茉】人工智慧進化到何種地步？奇點即將來臨', url: 'https://www.youtube.com/watch?v=33333333303' },
-            { id: 'v_k8', category: 'knowledge', title: '【志祺七七】核融合發電真的要來了嗎？人造太陽發展史', url: 'https://www.youtube.com/watch?v=33333333304' },
-            { id: 'v_k9', category: 'knowledge', title: '【啾啾鞋】為什麼大腦會產生錯覺？視錯覺原理大公開', url: 'https://www.youtube.com/watch?v=33333333305' },
-            { id: 'v_k10', category: 'knowledge', title: '【泛科學】氣候變遷如何影響全球糧食危機？', url: 'https://www.youtube.com/watch?v=33333333306' },
-            { id: 'v_k11', category: 'knowledge', title: '【數感實驗室】用數學算樂透彩券中獎機率到底多低？', url: 'https://www.youtube.com/watch?v=33333333307' },
-            { id: 'v_k12', category: 'knowledge', title: '【李永樂老師】比特幣與區塊鏈技術背後的密碼學原理', url: 'https://www.youtube.com/watch?v=33333333308' },
-            { id: 'v_k13', category: 'knowledge', title: '【老高與小茉】人類基因密碼與 DNA 解密特輯', url: 'https://www.youtube.com/watch?v=33333333309' },
-            { id: 'v_k14', category: 'knowledge', title: '【志祺七七】電動車電池會不會污染地球？電池回收技術', url: 'https://www.youtube.com/watch?v=33333333310' },
-            { id: 'v_k15', category: 'knowledge', title: '【啾啾鞋】為什麼飛機不會撞在一起？空中交通管制解析', url: 'https://www.youtube.com/watch?v=33333333311' },
-            { id: 'v_k16', category: 'knowledge', title: '【泛科學】神經科學：大腦如何形成長期記憶？', url: 'https://www.youtube.com/watch?v=33333333312' },
-            { id: 'v_k17', category: 'knowledge', title: '【李永樂老師】微積分到底有什麼用？一文看懂微積分本質', url: 'https://www.youtube.com/watch?v=33333333313' },
-            { id: 'v_k18', category: 'knowledge', title: '【老高與小茉】韋伯太空望遠鏡拍到的宇宙最深處', url: 'https://www.youtube.com/watch?v=33333333314' },
-            { id: 'v_k19', category: 'knowledge', title: '【志祺七七】深海潛水艇如何承受萬米水壓？深海探索科技', url: 'https://www.youtube.com/watch?v=33333333315' },
-            { id: 'v_k20', category: 'knowledge', title: '【啾啾鞋】無線充電是怎麼做到的？電磁感應應用', url: 'https://www.youtube.com/watch?v=33333333316' },
-
-            // --- 3. 旅遊中文影音 (20部) ---
-            { id: 'v_t1', category: 'travel', title: '【台灣 4K】絕美阿里山日出與雲海空拍導覽', url: 'https://www.youtube.com/watch?v=44444444401' },
-            { id: 'v_t2', category: 'travel', title: '【東京旅遊】2026 最新新宿澀谷必吃必逛美食景點懶人包', url: 'https://www.youtube.com/watch?v=44444444402' },
-            { id: 'v_t3', category: 'travel', title: '【京都 Vlog】古都漫步：清水寺、金閣寺與嵐山竹林小徑', url: 'https://www.youtube.com/watch?v=44444444403' },
-            { id: 'v_t4', category: 'travel', title: '【太魯閣國家公園】台灣立霧溪峽谷震撼高畫質紀錄片', url: 'https://www.youtube.com/watch?v=44444444404' },
-            { id: 'v_t5', category: 'travel', title: '【首爾自由行】明洞東大門美食攻略與韓式汗蒸幕體驗', url: 'https://www.youtube.com/watch?v=44444444405' },
-            { id: 'v_t6', category: 'travel', title: '【泰國曼谷】夜市美食吃到飽！泰式奶茶與火山排骨美味巡禮', url: 'https://www.youtube.com/watch?v=44444444406' },
-            { id: 'v_t7', category: 'travel', title: '【北海道冬日】札幌雪祭與小樽運河浪漫雪景巡禮', url: 'https://www.youtube.com/watch?v=44444444407' },
-            { id: 'v_t8', category: 'travel', title: '【台南美食】國華街永樂市場在地小吃 10 大必吃推薦', url: 'https://www.youtube.com/watch?v=44444444408' },
-            { id: 'v_t9', category: 'travel', title: '【冰島極光】追尋夢幻綠色極光與藍冰洞探險之旅', url: 'https://www.youtube.com/watch?v=44444444409' },
-            { id: 'v_t10', category: 'travel', title: '【沖繩自駕】沿海公路旅行！美麗海水族館與古宇利島', url: 'https://www.youtube.com/watch?v=44444444410' },
-            { id: 'v_t11', category: 'travel', title: '【瑞士國鐵】搭乘黃金列車穿梭阿爾卑斯山絕景', url: 'https://www.youtube.com/watch?v=44444444411' },
-            { id: 'v_t12', category: 'travel', title: '【九份老街】神隱少女奇幻山城夜景與阿妹茶樓體驗', url: 'https://www.youtube.com/watch?v=44444444412' },
-            { id: 'v_t13', category: 'travel', title: '【新加坡旅遊】濱海灣金沙酒店無邊際泳池與花園燈光秀', url: 'https://www.youtube.com/watch?v=44444444413' },
-            { id: 'v_t14', category: 'travel', title: '【巴黎散策】羅浮宮、埃菲爾鐵塔與塞納河畔浪漫遊船', url: 'https://www.youtube.com/watch?v=44444444414' },
-            { id: 'v_t15', category: 'travel', title: '【澎湖花火節】海上煙火秀與花嶼七美島雙心石滬導覽', url: 'https://www.youtube.com/watch?v=44444444415' },
-            { id: 'v_t16', category: 'travel', title: '【峇里島度假】海景渡假村與烏布熱帶雨林鞦韆體驗', url: 'https://www.youtube.com/watch?v=44444444416' },
-            { id: 'v_t17', category: 'travel', title: '【日月潭環湖】自行車道慢活之旅與伊達邵碼頭小吃', url: 'https://www.youtube.com/watch?v=44444444417' },
-            { id: 'v_t18', category: 'travel', title: '【紐西蘭南島】皇后鎮極限運動與米佛峽灣巡航', url: 'https://www.youtube.com/watch?v=44444444418' },
-            { id: 'v_t19', category: 'travel', title: '【花蓮東大門】深夜夜市原住民烤肉與檸檬汁大公開', url: 'https://www.youtube.com/watch?v=44444444419' },
-            { id: 'v_t20', category: 'travel', title: '【義大利威尼斯】水上之都貢多拉鳳尾船漫遊紀錄', url: 'https://www.youtube.com/watch?v=44444444420' },
-
-            // --- 4. 新聞中文影音 (20部) ---
-            { id: 'v_n1', category: 'news', title: '【公視新聞網】全球半導體產業鏈最新趨勢與科技前瞻報導', url: 'https://www.youtube.com/watch?v=55555555501' },
-            { id: 'v_n2', category: 'news', title: '【TVBS 新聞】AI 人工智慧引爆全球產業變革專題報導', url: 'https://www.youtube.com/watch?v=55555555502' },
-            { id: 'v_n3', category: 'news', title: '【東森新聞】全球極端氣候頻傳！綠色能源轉型關鍵報告', url: 'https://www.youtube.com/watch?v=55555555503' },
-            { id: 'v_n4', category: 'news', title: '【三立新聞】全球供應鏈重組對科技製造業的影響與挑戰', url: 'https://www.youtube.com/watch?v=55555555504' },
-            { id: 'v_n5', category: 'news', title: '【公視新聞網】全球央行利率政策調整與物價通膨趨勢分析', url: 'https://www.youtube.com/watch?v=55555555505' },
-            { id: 'v_n6', category: 'news', title: '【TVBS 新聞】太空探索新時代：月球基地建設計畫展開', url: 'https://www.youtube.com/watch?v=55555555506' },
-            { id: 'v_n7', category: 'news', title: '【東森新聞】智慧城市與自駕車技術落地的未來藍圖', url: 'https://www.youtube.com/watch?v=55555555507' },
-            { id: 'v_n8', category: 'news', title: '【公視新聞網】全球永續發展 ESG 企業評鑑標準深入剖析', url: 'https://www.youtube.com/watch?v=55555555508' },
-            { id: 'v_n9', category: 'news', title: '【三立新聞】量子電腦研發突破！新一代運算革命即將到來', url: 'https://www.youtube.com/watch?v=55555555509' },
-            { id: 'v_n10', category: 'news', title: '【TVBS 新聞】生技醫療新藥研發與基因編輯技術臨床應用', url: 'https://www.youtube.com/watch?v=55555555510' },
-            { id: 'v_n11', category: 'news', title: '【公視新聞網】全球糧食安全與智慧農業科技革新專題', url: 'https://www.youtube.com/watch?v=55555555511' },
-            { id: 'v_n12', category: 'news', title: '【東森新聞】低軌衛星通訊普及化！覆蓋全球偏遠地區', url: 'https://www.youtube.com/watch?v=55555555512' },
-            { id: 'v_n13', category: 'news', title: '【三立新聞】數位貨幣與中央銀行數位貨幣 (CBDC) 發展', url: 'https://www.youtube.com/watch?v=55555555513' },
-            { id: 'v_n14', category: 'news', title: '【TVBS 新聞】國際地緣政治與全球經濟貿易走勢展望', url: 'https://www.youtube.com/watch?v=55555555514' },
-            { id: 'v_n15', category: 'news', title: '【公視新聞網】深偽技術 (Deepfake) 防範與資訊安全新挑戰', url: 'https://www.youtube.com/watch?v=55555555515' },
-            { id: 'v_n16', category: 'news', title: '【東森新聞】新能源車電池固態化技術競賽最新進展', url: 'https://www.youtube.com/watch?v=55555555516' },
-            { id: 'v_n17', category: 'news', title: '【三立新聞】高齡化社會下的長期照護科技與醫療資源配置', url: 'https://www.youtube.com/watch?v=55555555517' },
-            { id: 'v_n18', category: 'news', title: '【TVBS 新聞】全球航空業綠色永續燃料 (SAF) 應用現況', url: 'https://www.youtube.com/watch?v=55555555518' },
-            { id: 'v_n19', category: 'news', title: '【公視新聞網】文化資產數位化保存與 VR 虛擬實境應用', url: 'https://www.youtube.com/watch?v=55555555519' },
-            { id: 'v_n20', category: 'news', title: '【東森新聞】海洋塑膠垃圾清理計畫與海洋生態保護新聞', url: 'https://www.youtube.com/watch?v=55555555520' },
-
-            // --- 5. 歷史故事中文影音 (20部) ---
-            { id: 'v_h1', category: 'history', title: '【袁騰飛講歷史】三國演義與真實三國歷史官渡之戰全解析', url: 'https://www.youtube.com/watch?v=66666666601' },
-            { id: 'v_h2', category: 'history', title: '【歷史人體實驗室】秦始皇統一六國與萬里長城建造傳奇', url: 'https://www.youtube.com/watch?v=66666666602' },
-            { id: 'v_h3', category: 'history', title: '【英雄說書】楚漢相爭：項羽與劉邦的垓下之戰演變', url: 'https://www.youtube.com/watch?v=66666666603' },
-            { id: 'v_h4', category: 'history', title: '【紀錄片】大唐盛世：唐太宗貞觀之治與絲綢之路繁華', url: 'https://www.youtube.com/watch?v=66666666604' },
-            { id: 'v_h5', category: 'history', title: '【袁騰飛講歷史】明朝帝王傳奇：朱元璋建立大明王朝', url: 'https://www.youtube.com/watch?v=66666666605' },
-            { id: 'v_h6', category: 'history', title: '【英雄說書】三國諸葛亮北伐：六出祁山的興帥之嘆', url: 'https://www.youtube.com/watch?v=66666666606' },
-            { id: 'v_h7', category: 'history', title: '【歷史紀錄片】清朝康雍乾盛世與紫禁城的興衰變遷', url: 'https://www.youtube.com/watch?v=66666666607' },
-            { id: 'v_h8', category: 'history', title: '【袁騰飛講歷史】宋朝經濟繁榮與清明上河圖背後的文化', url: 'https://www.youtube.com/watch?v=66666666608' },
-            { id: 'v_h9', category: 'history', title: '【英雄說書】漢武帝大破匈奴：衛青與霍去病的漠北之戰', url: 'https://www.youtube.com/watch?v=66666666609' },
-            { id: 'v_h10', category: 'history', title: '【歷史解密】鄭和七下西洋：明朝遠洋艦隊的航海壯舉', url: 'https://www.youtube.com/watch?v=66666666610' },
-            { id: 'v_h11', category: 'history', title: '【袁騰飛講歷史】春秋戰國百家爭鳴：孔子與老子思想起源', url: 'https://www.youtube.com/watch?v=66666666611' },
-            { id: 'v_h12', category: 'history', title: '【英雄說書】三國赤壁之戰：孫劉聯軍大破曹操八十萬大軍', url: 'https://www.youtube.com/watch?v=66666666612' },
-            { id: 'v_h13', category: 'history', title: '【歷史紀錄片】古埃及金字塔建造工藝與法老王陵墓謎團', url: 'https://www.youtube.com/watch?v=66666666613' },
-            { id: 'v_h14', category: 'history', title: '【袁騰飛講歷史】成吉思汗與蒙古帝國橫跨歐亞的征服史', url: 'https://www.youtube.com/watch?v=66666666614' },
-            { id: 'v_h15', category: 'history', title: '【英雄說書】南宋岳飛抗金：精忠報國與郾城大捷故事', url: 'https://www.youtube.com/watch?v=66666666615' },
-            { id: 'v_h16', category: 'history', title: '【歷史解密】古羅馬帝國興衰：競技場與元老院風雲', url: 'https://www.youtube.com/watch?v=66666666616' },
-            { id: 'v_h17', category: 'history', title: '【袁騰飛講歷史】魏晉南北朝風骨與竹林七賢的故事', url: 'https://www.youtube.com/watch?v=66666666617' },
-            { id: 'v_h18', category: 'history', title: '【英雄說書】三國關羽大意失荊州與麥城之戰終局', url: 'https://www.youtube.com/watch?v=66666666618' },
-            { id: 'v_h19', category: 'history', title: '【歷史紀錄片】大唐玄奘西天取經與真實的大唐西域記', url: 'https://www.youtube.com/watch?v=66666666619' },
-            { id: 'v_h20', category: 'history', title: '【袁騰飛講歷史】晚清洋務運動與甲午風雲歷史反思', url: 'https://www.youtube.com/watch?v=66666666620' }
-        ];
-
-        let tabTitles = JSON.parse(localStorage.getItem('mediaBox_tabTitles_v4')) || {
-            2: "頁面一: IINA 華語劇院中心 (100部)",
-            3: "頁面二: 相簿分區與拖曳管理"
-        };
-
-        // 升級至 v4 儲存鍵，確保正確載入 100 部影音與分區相片數據
-        let videoList = localStorage.getItem('mediaBox_videoList_v4') !== null 
-            ? JSON.parse(localStorage.getItem('mediaBox_videoList_v4')) 
-            : [...preciseMandatory100Videos];
-
-        let photoList = localStorage.getItem('mediaBox_photoList_v4') !== null 
-            ? JSON.parse(localStorage.getItem('mediaBox_photoList_v4')) 
+        // 預設影音資料庫（可自訂新增分類與拖曳）
+        let videoList = localStorage.getItem('mediaBox_videoList_v5') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_videoList_v5')) 
             : [
-                { id: 'p1', category: '台灣自然風景', url: 'https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=800&q=80', notes: '台北 101 地標夜景，繁華璀璨 (雙擊此處可編輯)' },
-                { id: 'p2', category: '台灣自然風景', url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=800&q=80', notes: '日月潭晨曦美景，湖光山色倒影 (雙擊此處可編輯)' },
-                { id: 'p3', category: '國外旅遊紀錄', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80', notes: '東京澀谷十字路口夜景 (雙擊此處可編輯)' },
-                { id: 'p4', category: '國外旅遊紀錄', url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80', notes: '京都傳統寺廟建築巡禮 (雙擊此處可編輯)' }
+                { id: 'v1', category: '精選音樂', title: '周杰倫 Jay Chou【晴天 Sunny Day】Official MV', url: 'https://www.youtube.com/watch?v=DYptgVvkVLQ' },
+                { id: 'v2', category: '精選音樂', title: 'G.E.M. 鄧紫棋【光年之外 LIGHT YEARS AWAY】MV', url: 'https://www.youtube.com/watch?v=T4SimnaiktU' },
+                { id: 'v3', category: '知識科普', title: '【老高與小茉】黑洞的盡頭是什麼？宇宙終極奧秘解析', url: 'https://www.youtube.com/watch?v=2f3uE2iI36U' },
+                { id: 'v4', category: '旅遊紀錄', title: '【台灣 4K】絕美阿里山日出與雲海空拍導覽', url: 'https://www.youtube.com/watch?v=44444444401' }
+            ];
+
+        // 預設照片記錄資料庫
+        let photoList = localStorage.getItem('mediaBox_photoList_v5') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_photoList_v5')) 
+            : [
+                { id: 'p1', category: '台灣自然風景', url: 'https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=800&q=80', notes: '台北 101 地標夜景 (雙擊可編輯備註)' },
+                { id: 'p2', category: '台灣自然風景', url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=800&q=80', notes: '日月潭晨曦美景 (雙擊可編輯備註)' },
+                { id: 'p3', category: '國外旅遊紀錄', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80', notes: '東京澀谷街頭夜景 (雙擊可編輯備註)' }
             ];
 
         let currentPlayingVideoId = null;
@@ -591,10 +451,9 @@
                 document.getElementById('darkModeIcon').className = "fa-solid fa-moon";
             }
 
-            renderTabTitles();
-            renderVideoTable();
-            renderPhotoGallery();
+            renderVideoSections();
             populateVideoDropdown();
+            renderPhotoGallery();
             
             if (videoList.length > 0) {
                 selectVideoFromDropdown(videoList[0].id);
@@ -645,9 +504,8 @@
         };
 
         function saveData() {
-            localStorage.setItem('mediaBox_videoList_v4', JSON.stringify(videoList));
-            localStorage.setItem('mediaBox_photoList_v4', JSON.stringify(photoList));
-            localStorage.setItem('mediaBox_tabTitles_v4', JSON.stringify(tabTitles));
+            localStorage.setItem('mediaBox_videoList_v5', JSON.stringify(videoList));
+            localStorage.setItem('mediaBox_photoList_v5', JSON.stringify(photoList));
             saveToFirebase();
         }
 
@@ -658,24 +516,22 @@
 
             if (currentUser && window.fbServices) {
                 const { ref, set } = window.fbServices;
-                set(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v4'), { videoList, photoList, tabTitles, lastSaved: timeStr });
+                set(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v5'), { videoList, photoList, lastSaved: timeStr });
             }
         }
 
         function loadUserDataFromFirebase() {
             if (!currentUser || !window.fbServices) return;
             const { ref, get } = window.fbServices;
-            get(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v4')).then((snapshot) => {
+            get(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v5')).then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.videoList !== undefined) videoList = data.videoList;
                     if (data.photoList !== undefined) photoList = data.photoList;
-                    if (data.tabTitles !== undefined) tabTitles = data.tabTitles;
 
-                    renderTabTitles();
-                    renderVideoTable();
-                    renderPhotoGallery();
+                    renderVideoSections();
                     populateVideoDropdown();
+                    renderPhotoGallery();
                 }
             });
         }
@@ -749,30 +605,14 @@
         }
 
         function switchTab(index) {
-            pauseVideoPlayer();
+            if (index === 2) pauseVideoPlayer();
             activeTab = index;
 
+            document.getElementById('tabBtn1').classList.toggle('active', index === 1);
             document.getElementById('tabBtn2').classList.toggle('active', index === 2);
-            document.getElementById('tabBtn3').classList.toggle('active', index === 3);
 
+            document.getElementById('tabContent1').classList.toggle('hidden', index !== 1);
             document.getElementById('tabContent2').classList.toggle('hidden', index !== 2);
-            document.getElementById('tabContent3').classList.toggle('hidden', index !== 3);
-        }
-
-        function renderTabTitles() {
-            for (let i of [2, 3]) {
-                const el = document.getElementById(`tabTitle${i}`);
-                if (el) el.innerText = tabTitles[i] || `頁面 ${i}`;
-            }
-        }
-
-        function editTabTitle(tabNum) {
-            const newName = prompt(`請輸入頁面 ${tabNum} 的新名稱:`, tabTitles[tabNum]);
-            if (newName !== null && newName.trim() !== "") {
-                tabTitles[tabNum] = newName.trim();
-                renderTabTitles();
-                saveData();
-            }
         }
 
         function extractYTId(url) {
@@ -781,76 +621,116 @@
             return match ? match[1] : url;
         }
 
-        function loadTop100Videos() {
-            if (videoList.length > 0 && !confirm("重置將會載入 100 部完整分類的華語影音（包含精選、知識、旅遊、新聞與歷史故事），確定要繼續嗎？")) {
+        // ================= 影音撥放器 (TAB 1) 邏輯：依分類分區與拖曳 =================
+        function renderVideoSections() {
+            const container = document.getElementById('videoCategorySections');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const categories = [...new Set(videoList.map(v => v.category || '未分類'))];
+
+            if (categories.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-[#18181c] rounded-2xl border border-zinc-200 dark:border-zinc-800">目前尚無影音項目，請點擊上方「新增影音」或「匯入 EXCEL」</div>`;
                 return;
             }
-            videoList = JSON.parse(JSON.stringify(preciseMandatory100Videos));
-            selectedVideoIds = [];
-            renderVideoTable();
-            populateVideoDropdown();
-            if (videoList.length > 0) selectVideoFromDropdown(videoList[0].id);
-            saveData();
-            alert("已成功重置並載入 100 部中文影音！");
-        }
 
-        function filterVideoCategory(cat) {
-            currentVideoCategory = cat;
-            document.querySelectorAll('.vcat-btn').forEach(btn => {
-                btn.className = "vcat-btn px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 transition";
-            });
-            const activeBtn = document.getElementById(`vcat_${cat}`);
-            if (activeBtn) {
-                activeBtn.className = "vcat-btn px-4 py-2 rounded-xl bg-blue-600 text-white shadow font-bold transition";
-            }
-            populateVideoDropdown();
-            renderVideoTable();
-        }
+            categories.forEach(cat => {
+                const sec = document.createElement('div');
+                sec.className = "bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xl space-y-3 transition-colors";
+                
+                const catVideos = videoList.filter(v => (v.category || '未分類') === cat);
 
-        function getCategoryLabel(cat) {
-            switch(cat) {
-                case 'featured': return '🔥 熱門/精選';
-                case 'knowledge': return '💡 知識中文';
-                case 'travel': return '✈️ 旅遊中文';
-                case 'news': return '📰 新聞中文';
-                case 'history': return '📜 歷史故事';
-                default: return '🎬 華語影音';
-            }
-        }
-
-        // --- VIDEO MANAGER & MULTI-SELECT ---
-        function renderVideoTable() {
-            const query = document.getElementById('videoSearch')?.value.toLowerCase() || '';
-            const tbody = document.getElementById('videoTableBody');
-            tbody.innerHTML = '';
-
-            let filtered = videoList;
-            if (currentVideoCategory !== 'all') {
-                filtered = filtered.filter(v => v.category === currentVideoCategory);
-            }
-            if (query) {
-                filtered = filtered.filter(v => v.title.toLowerCase().includes(query));
-            }
-
-            filtered.forEach(v => {
-                const isChecked = selectedVideoIds.includes(v.id);
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition";
-                tr.innerHTML = `
-                    <td class="p-3 text-center">
-                        <input type="checkbox" value="${v.id}" ${isChecked ? 'checked' : ''} onchange="toggleVideoSelection('${v.id}')" class="video-select-cb accent-blue-500 cursor-pointer">
-                    </td>
-                    <td class="p-3 text-xs font-bold text-blue-500">${getCategoryLabel(v.category)}</td>
-                    <td class="p-3 font-semibold text-zinc-900 dark:text-white">${v.title}</td>
-                    <td class="p-3 text-center space-x-2">
-                        <button onclick="selectVideoFromDropdown('${v.id}')" class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-bold" title="播放"><i class="fa-solid fa-circle-play text-base"></i></button>
-                        <button onclick="deleteSingleVideo('${v.id}')" class="text-zinc-400 hover:text-blue-500 dark:hover:text-blue-400" title="刪除"><i class="fa-solid fa-trash"></i></button>
-                    </td>
+                sec.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
+                        <h4 class="font-bold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-folder-open text-blue-500"></i> ${cat}
+                            <span class="text-xs font-normal text-zinc-400">(${catVideos.length} 部影片)</span>
+                        </h4>
+                        <span class="text-[11px] text-zinc-400"><i class="fa-solid fa-arrows-up-down-left-right mr-1"></i>可拖曳排序與移至此分類</span>
+                    </div>
+                    <div id="videoDropzone_${encodeURIComponent(cat)}" class="video-grid-dropzone grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-all min-h-[80px] p-2 rounded-xl border-2 border-transparent" data-category="${cat}"></div>
                 `;
-                tbody.appendChild(tr);
+
+                container.appendChild(sec);
+                const grid = sec.querySelector('.video-grid-dropzone');
+
+                // 拖曳事件處理
+                grid.addEventListener('dragover', handleVideoDragOver);
+                grid.addEventListener('dragleave', handleVideoDragLeave);
+                grid.addEventListener('drop', (e) => handleVideoDrop(e, cat));
+
+                catVideos.forEach(v => {
+                    const isChecked = selectedVideoIds.includes(v.id);
+                    const card = document.createElement('div');
+                    card.draggable = true;
+                    card.dataset.videoId = v.id;
+                    card.className = `video-card bg-zinc-50 dark:bg-[#121215] border rounded-xl p-3 flex flex-col justify-between group relative transition shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-500 ${isChecked ? 'border-blue-500 ring-2 ring-blue-500/40' : 'border-zinc-200 dark:border-zinc-800'}`;
+
+                    card.addEventListener('dragstart', (e) => handleVideoDragStart(e, v.id));
+                    card.addEventListener('dragend', handleVideoDragEnd);
+
+                    card.innerHTML = `
+                        <div class="space-y-2">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex items-center gap-2 flex-1">
+                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleVideoSelection('${v.id}')" class="w-4 h-4 accent-blue-500 cursor-pointer">
+                                    <span class="font-bold text-xs text-zinc-800 dark:text-zinc-200 line-clamp-2">${v.title}</span>
+                                </div>
+                                <button onclick="deleteSingleVideo('${v.id}')" class="text-zinc-400 hover:text-rose-500 text-xs transition" title="刪除影片">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between pt-2 border-t border-zinc-200/60 dark:border-zinc-800 text-[11px]">
+                            <span class="text-zinc-400 truncate max-w-[150px]"><i class="fa-brands fa-youtube text-red-500 mr-1"></i>${v.url}</span>
+                            <button onclick="selectVideoFromDropdown('${v.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center gap-1 transition">
+                                <i class="fa-solid fa-play text-[10px]"></i> 播放
+                            </button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
             });
 
             updateVideoBatchBtnUI();
+        }
+
+        // --- 影音拖曳處理 ---
+        let draggedVideoId = null;
+
+        function handleVideoDragStart(e, id) {
+            draggedVideoId = id;
+            e.dataTransfer.setData('text/plain', id);
+            e.target.classList.add('card-dragging');
+        }
+
+        function handleVideoDragEnd(e) {
+            e.target.classList.remove('card-dragging');
+            document.querySelectorAll('.video-grid-dropzone').forEach(el => el.classList.remove('drag-over'));
+        }
+
+        function handleVideoDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleVideoDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleVideoDrop(e, targetCat) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            if (!draggedVideoId) return;
+
+            const video = videoList.find(v => v.id === draggedVideoId);
+            if (video) {
+                video.category = targetCat;
+                saveData();
+                renderVideoSections();
+                populateVideoDropdown();
+            }
         }
 
         function toggleVideoSelection(id) {
@@ -859,28 +739,12 @@
             } else {
                 selectedVideoIds.push(id);
             }
-            updateVideoBatchBtnUI();
-        }
-
-        function toggleSelectAllVideo(checked) {
-            let targetList = videoList;
-            if (currentVideoCategory !== 'all') {
-                targetList = targetList.filter(v => v.category === currentVideoCategory);
-            }
-
-            if (checked) {
-                selectedVideoIds = Array.from(new Set([...selectedVideoIds, ...targetList.map(v => v.id)]));
-            } else {
-                const targetIds = targetList.map(v => v.id);
-                selectedVideoIds = selectedVideoIds.filter(id => !targetIds.includes(id));
-            }
-            renderVideoTable();
+            renderVideoSections();
         }
 
         function updateVideoBatchBtnUI() {
             const btn = document.getElementById('batchDeleteVideoBtn');
             const countSpan = document.getElementById('selectedVideoCount');
-            const selectAllCb = document.getElementById('selectAllVideo');
 
             if (selectedVideoIds.length > 0) {
                 btn.classList.remove('hidden');
@@ -888,21 +752,17 @@
             } else {
                 btn.classList.add('hidden');
             }
-
-            if (selectAllCb) {
-                selectAllCb.checked = videoList.length > 0 && selectedVideoIds.length === videoList.length;
-            }
         }
 
         function batchDeleteVideo() {
             if (selectedVideoIds.length === 0) return;
-            if (confirm(`確定批次刪除選取的 ${selectedVideoIds.length} 部華語影音嗎？`)) {
+            if (confirm(`確定批次刪除選取的 ${selectedVideoIds.length} 部影音嗎？`)) {
                 if (selectedVideoIds.includes(currentPlayingVideoId)) {
                     pauseVideoPlayer();
                 }
                 videoList = videoList.filter(v => !selectedVideoIds.includes(v.id));
                 selectedVideoIds = [];
-                renderVideoTable();
+                renderVideoSections();
                 populateVideoDropdown();
                 saveData();
             }
@@ -913,7 +773,7 @@
                 if (currentPlayingVideoId === id) pauseVideoPlayer();
                 videoList = videoList.filter(v => v.id !== id);
                 selectedVideoIds = selectedVideoIds.filter(x => x !== id);
-                renderVideoTable();
+                renderVideoSections();
                 populateVideoDropdown();
                 saveData();
             }
@@ -923,41 +783,41 @@
         function closeVideoModal() { document.getElementById('videoModal').classList.add('hidden'); }
 
         function saveVideoItem() {
-            const category = document.getElementById('vFormCategory').value;
+            const category = document.getElementById('vFormCategory').value.trim() || '預設分類';
             const title = document.getElementById('vFormTitle').value.trim();
             const url = document.getElementById('vFormUrl').value.trim();
-            if (!title || !url) { alert("請填寫所有欄位"); return; }
+            if (!title || !url) { alert("請填寫標題與網址"); return; }
 
-            videoList.push({ id: 'v_' + Date.now(), category, title, url });
+            const newId = 'v_' + Date.now();
+            videoList.push({ id: newId, category, title, url });
 
             closeVideoModal();
-            renderVideoTable();
+            renderVideoSections();
             populateVideoDropdown();
             saveData();
+            
+            if (!currentPlayingVideoId) {
+                selectVideoFromDropdown(newId);
+            }
         }
 
         function populateVideoDropdown() {
             const list = document.getElementById('videoPlaylistContainer');
             list.innerHTML = '';
 
-            let filtered = videoList;
-            if (currentVideoCategory !== 'all') {
-                filtered = filtered.filter(v => v.category === currentVideoCategory);
-            }
-
-            filtered.forEach((v, idx) => {
+            videoList.forEach((v, idx) => {
                 const div = document.createElement('div');
                 div.className = `p-2.5 rounded-xl border cursor-pointer flex items-center justify-between text-xs transition ${v.id === currentPlayingVideoId ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-white font-bold' : 'bg-zinc-50 dark:bg-[#121215] border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'}`;
                 div.onclick = () => selectVideoFromDropdown(v.id);
                 div.innerHTML = `
                     <div class="truncate mr-2 flex-1">
-                        <span class="text-[10px] text-blue-500 font-normal mr-1">[${getCategoryLabel(v.category)}]</span>
+                        <span class="text-[10px] text-blue-500 font-normal mr-1">[${v.category || '未分類'}]</span>
                         ${idx + 1}. ${v.title}
                     </div>
                 `;
                 list.appendChild(div);
             });
-            document.getElementById('videoPlaylistCount').innerText = `${filtered.length} 部`;
+            document.getElementById('videoPlaylistCount').innerText = `${videoList.length} 部`;
         }
 
         function selectVideoFromDropdown(id) {
@@ -968,7 +828,7 @@
             const ytId = extractYTId(v.url);
             document.getElementById('ytVideoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
             document.getElementById('vpTitle').innerText = v.title;
-            document.getElementById('vpCategoryTag').innerText = getCategoryLabel(v.category);
+            document.getElementById('vpCategoryTag').innerText = v.category || 'CINEMA';
             populateVideoDropdown();
         }
 
@@ -977,12 +837,64 @@
             currentPlayingVideoId = null;
         }
 
-        // --- PHOTO GALLERY MANAGER (分區 + 拖曳 + 滿版 + 雙擊編輯備註) ---
+        // --- 影音專屬匯入匯出功能 ---
+        function exportVideoExcel() {
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(videoList), "影音撥放器");
+            XLSX.writeFile(wb, `MediaBox_Videos_${Date.now()}.xlsx`);
+        }
+
+        function importVideoExcel(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                if (workbook.SheetNames.length > 0) {
+                    const imported = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    if (imported.length > 0) {
+                        videoList = imported.map((item, index) => ({
+                            id: item.id || ('v_' + Date.now() + '_' + index),
+                            category: item.category || '未分類',
+                            title: item.title || '無標題影片',
+                            url: item.url || ''
+                        }));
+                        renderVideoSections();
+                        populateVideoDropdown();
+                        saveData();
+                        alert("影音資料匯入成功！");
+                    }
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function exportVideoPNG() {
+            html2canvas(document.getElementById('videoExportArea'), { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `MediaBox_Videos.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
+        function exportVideoPDF() {
+            html2canvas(document.getElementById('videoExportArea'), { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width);
+                pdf.save(`MediaBox_Videos_Report.pdf`);
+            });
+        }
+
+        // ================= 照片記錄 (TAB 2) 邏輯 =================
         function setPhotoSize(size) {
             currentPhotoSize = size;
-            document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-3 py-1.5 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-3 py-1.5 rounded-lg transition text-zinc-500 dark:text-zinc-400";
-            document.getElementById('sizeBtnMedium').className = size === 'medium' ? "px-3 py-1.5 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-3 py-1.5 rounded-lg transition text-zinc-500 dark:text-zinc-400";
-            document.getElementById('sizeBtnLarge').className = size === 'large' ? "px-3 py-1.5 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-3 py-1.5 rounded-lg transition text-zinc-500 dark:text-zinc-400";
+            document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400";
+            document.getElementById('sizeBtnMedium').className = size === 'medium' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400";
+            document.getElementById('sizeBtnLarge').className = size === 'large' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400";
             renderPhotoGallery();
         }
 
@@ -991,22 +903,28 @@
             if(!container) return;
             container.innerHTML = '';
 
-            // 按分類 (Category) 分組
             const categories = [...new Set(photoList.map(p => p.category || '未分類'))];
+
+            if (categories.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-[#18181c] rounded-2xl border border-zinc-200 dark:border-zinc-800">目前尚無照片項目，請點擊上方「新增照片」或「匯入 EXCEL」</div>`;
+                return;
+            }
 
             categories.forEach(cat => {
                 const sec = document.createElement('div');
                 sec.className = "bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xl space-y-4 transition-colors";
                 
+                const catPhotos = photoList.filter(p => (p.category||'未分類') === cat);
+
                 sec.innerHTML = `
                     <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
                         <h3 class="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
                             <i class="fa-solid fa-folder-open text-amber-500"></i> ${cat}
-                            <span class="text-xs font-normal text-zinc-400">(${photoList.filter(p => (p.category||'未分類') === cat).length} 張照片)</span>
+                            <span class="text-xs font-normal text-zinc-400">(${catPhotos.length} 張照片)</span>
                         </h3>
                         <span class="text-[11px] text-zinc-400"><i class="fa-solid fa-arrows-up-down-left-right mr-1"></i> 可拖曳排序/跨區</span>
                     </div>
-                    <div id="dropzone_${encodeURIComponent(cat)}" class="photo-grid-dropzone grid gap-6 transition-all min-h-[120px] p-2 rounded-xl border-2 border-transparent" data-category="${cat}"></div>
+                    <div id="photoDropzone_${encodeURIComponent(cat)}" class="photo-grid-dropzone grid gap-6 transition-all min-h-[120px] p-2 rounded-xl border-2 border-transparent" data-category="${cat}"></div>
                 `;
 
                 container.appendChild(sec);
@@ -1020,12 +938,10 @@
                     grid.className = "photo-grid-dropzone grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all min-h-[120px] p-2 rounded-xl border-2 border-transparent";
                 }
 
-                // Drag & Drop 事件處理
-                grid.addEventListener('dragover', handleDragOver);
-                grid.addEventListener('dragleave', handleDragLeave);
-                grid.addEventListener('drop', (e) => handleDrop(e, cat));
+                grid.addEventListener('dragover', handlePhotoDragOver);
+                grid.addEventListener('dragleave', handlePhotoDragLeave);
+                grid.addEventListener('drop', (e) => handlePhotoDrop(e, cat));
 
-                const catPhotos = photoList.filter(p => (p.category || '未分類') === cat);
                 catPhotos.forEach(p => {
                     const isChecked = selectedPhotoIds.includes(p.id);
                     const card = document.createElement('div');
@@ -1037,8 +953,8 @@
                     if (currentPhotoSize === 'small') imgHeight = "h-36";
                     if (currentPhotoSize === 'large') imgHeight = "h-96";
 
-                    card.addEventListener('dragstart', (e) => handleDragStart(e, p.id));
-                    card.addEventListener('dragend', handleDragEnd);
+                    card.addEventListener('dragstart', (e) => handlePhotoDragStart(e, p.id));
+                    card.addEventListener('dragend', handlePhotoDragEnd);
 
                     const notesText = p.notes || "無備註說明 (雙擊此處編輯)";
 
@@ -1053,7 +969,7 @@
                         <div class="p-3 bg-white dark:bg-[#18181c] border-t border-zinc-200 dark:border-zinc-800 space-y-1">
                             <div class="flex items-center justify-between text-[10px] text-amber-500 font-bold">
                                 <span>${p.category || '未分類'}</span>
-                                <span class="text-zinc-400 font-normal"><i class="fa-solid fa-i-cursor mr-1"></i>雙擊備註可修改</span>
+                                <span class="text-zinc-400 font-normal"><i class="fa-solid fa-i-cursor mr-1"></i>雙擊備註修改</span>
                             </div>
                             <div id="notesDisplay_${p.id}" class="text-xs text-zinc-600 dark:text-zinc-400 truncate cursor-pointer hover:text-amber-500 transition" title="點擊兩次以編輯備註" ondblclick="enableNotesEdit('${p.id}')">
                                 <i class="fa-regular fa-note-sticky mr-1 text-zinc-400"></i>${notesText}
@@ -1071,7 +987,6 @@
             updatePhotoBatchBtnUI();
         }
 
-        // --- 備註雙擊編輯邏輯 ---
         function enableNotesEdit(photoId) {
             document.getElementById(`notesDisplay_${photoId}`).classList.add('hidden');
             const editBox = document.getElementById(`notesEditBox_${photoId}`);
@@ -1090,36 +1005,35 @@
                 photo.notes = newNotes;
                 saveData();
             }
-
             renderPhotoGallery();
         }
 
-        // --- DRAG AND DROP HANDLERS ---
+        // --- 照片拖曳處理 ---
         let draggedPhotoId = null;
 
-        function handleDragStart(e, id) {
+        function handlePhotoDragStart(e, id) {
             draggedPhotoId = id;
             e.dataTransfer.setData('text/plain', id);
-            e.target.classList.add('dragging');
+            e.target.classList.add('card-dragging');
         }
 
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-            document.querySelectorAll('.photo-grid-dropzone').forEach(el => el.classList.remove('drag-over'));
+        function handlePhotoDragEnd(e) {
+            e.target.classList.remove('card-dragging');
+            document.querySelectorAll('.photo-grid-dropzone').forEach(el => el.classList.remove('photo-drag-over'));
         }
 
-        function handleDragOver(e) {
+        function handlePhotoDragOver(e) {
             e.preventDefault();
-            e.currentTarget.classList.add('drag-over');
+            e.currentTarget.classList.add('photo-drag-over');
         }
 
-        function handleDragLeave(e) {
-            e.currentTarget.classList.remove('drag-over');
+        function handlePhotoDragLeave(e) {
+            e.currentTarget.classList.remove('photo-drag-over');
         }
 
-        function handleDrop(e, targetCat) {
+        function handlePhotoDrop(e, targetCat) {
             e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
+            e.currentTarget.classList.remove('photo-drag-over');
             
             if (!draggedPhotoId) return;
 
@@ -1131,7 +1045,6 @@
             }
         }
 
-        // --- LIGHTBOX LARGE PHOTO PREVIEW ---
         function openLightbox(photoId) {
             const photo = photoList.find(p => p.id === photoId);
             if (!photo) return;
@@ -1155,29 +1068,15 @@
             renderPhotoGallery();
         }
 
-        function toggleSelectAllPhotos() {
-            if (selectedPhotoIds.length === photoList.length) {
-                selectedPhotoIds = [];
-            } else {
-                selectedPhotoIds = photoList.map(p => p.id);
-            }
-            renderPhotoGallery();
-        }
-
         function updatePhotoBatchBtnUI() {
             const btn = document.getElementById('batchDeletePhotoBtn');
             const countSpan = document.getElementById('selectedPhotoCount');
-            const selectAllBtn = document.getElementById('selectAllPhotosBtn');
 
             if (selectedPhotoIds.length > 0) {
                 btn.classList.remove('hidden');
                 countSpan.innerText = selectedPhotoIds.length;
             } else {
                 btn.classList.add('hidden');
-            }
-
-            if (selectAllBtn) {
-                selectAllBtn.innerText = (photoList.length > 0 && selectedPhotoIds.length === photoList.length) ? "取消全選" : "全選照片";
             }
         }
 
@@ -1204,7 +1103,7 @@
         function closePhotoModal() { document.getElementById('photoModal').classList.add('hidden'); }
 
         function savePhotoItem() {
-            const category = document.getElementById('pFormCategory').value.trim() || '隨筆相簿';
+            const category = document.getElementById('pFormCategory').value.trim() || '預設相簿';
             const url = document.getElementById('pFormUrl').value.trim();
             if (!url) { alert("請填寫圖片網址"); return; }
 
@@ -1220,15 +1119,14 @@
             saveData();
         }
 
-        // --- EXPORT & IMPORT ---
-        function exportExcel() {
+        // --- 照片記錄專屬匯入匯出功能 ---
+        function exportPhotoExcel() {
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(videoList), "華語影音庫(100部)");
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(photoList), "相簿分區");
-            XLSX.writeFile(wb, `MediaBox_Pro_${Date.now()}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(photoList), "照片記錄");
+            XLSX.writeFile(wb, `MediaBox_Photos_${Date.now()}.xlsx`);
         }
 
-        function importExcel(evt) {
+        function importPhotoExcel(evt) {
             const file = evt.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -1236,32 +1134,39 @@
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 if (workbook.SheetNames.length > 0) {
-                    videoList = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    const imported = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    if (imported.length > 0) {
+                        photoList = imported.map((item, index) => ({
+                            id: item.id || ('p_' + Date.now() + '_' + index),
+                            category: item.category || '未分類',
+                            url: item.url || '',
+                            notes: item.notes || '雙擊此處編輯備註內容'
+                        }));
+                        renderPhotoGallery();
+                        saveData();
+                        alert("照片紀錄匯入成功！");
+                    }
                 }
-                renderVideoTable();
-                populateVideoDropdown();
-                saveData();
-                alert("Excel 資料匯入成功！");
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function exportPNG() {
-            html2canvas(document.getElementById('exportArea'), { scale: 2 }).then(canvas => {
+        function exportPhotoPNG() {
+            html2canvas(document.getElementById('photoExportArea'), { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `MediaBox_Tab${activeTab}.png`;
+                link.download = `MediaBox_Photos.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             });
         }
 
-        function exportPDF() {
-            html2canvas(document.getElementById('exportArea'), { scale: 2 }).then(canvas => {
+        function exportPhotoPDF() {
+            html2canvas(document.getElementById('photoExportArea'), { scale: 2 }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 pdf.addImage(imgData, 'PNG', 0, 0, pdf.internal.pageSize.getWidth(), (canvas.height * pdf.internal.pageSize.getWidth()) / canvas.width);
-                pdf.save(`MediaBox_Report.pdf`);
+                pdf.save(`MediaBox_Photos_Report.pdf`);
             });
         }
     </script>
