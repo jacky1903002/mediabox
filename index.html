@@ -262,13 +262,18 @@
                     </div>
                     <div>
                         <h2 class="font-bold text-zinc-900 dark:text-white text-base">照片記錄</h2>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">相片分區放置、雙擊編輯備註、自由跨區拖曳 (Drag & Drop) 與大圖預覽</p>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">已連結 GitHub (`jacky1903002/mediabox/image`) 自動載入並解析檔名備註</p>
                     </div>
                 </div>
 
                 <!-- 獨立匯入匯出與操作按鈕 -->
                 <div class="flex items-center gap-2 flex-wrap text-xs">
-                    <div class="flex bg-zinc-100 dark:bg-[#121215] p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold mr-2">
+                    <button onclick="loadPhotosFromGithub()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-xl font-bold transition flex items-center space-x-1.5 shadow-md">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>同步 GitHub 照片</span>
+                    </button>
+
+                    <div class="flex bg-zinc-100 dark:bg-[#121215] p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold mr-1">
                         <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400">小</button>
                         <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow">中</button>
                         <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400">大</button>
@@ -431,13 +436,9 @@
             ];
 
         // 預設照片記錄資料庫
-        let photoList = localStorage.getItem('mediaBox_photoList_v5') !== null 
-            ? JSON.parse(localStorage.getItem('mediaBox_photoList_v5')) 
-            : [
-                { id: 'p1', category: '台灣自然風景', url: 'https://images.unsplash.com/photo-1508873696983-2df5c920ac1c?auto=format&fit=crop&w=800&q=80', notes: '台北 101 地標夜景 (雙擊可編輯備註)' },
-                { id: 'p2', category: '台灣自然風景', url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=800&q=80', notes: '日月潭晨曦美景 (雙擊可編輯備註)' },
-                { id: 'p3', category: '國外旅遊紀錄', url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=800&q=80', notes: '東京澀谷街頭夜景 (雙擊可編輯備註)' }
-            ];
+        let photoList = localStorage.getItem('mediaBox_photoList_v6') !== null 
+            ? JSON.parse(localStorage.getItem('mediaBox_photoList_v6')) 
+            : [];
 
         let currentPlayingVideoId = null;
 
@@ -453,7 +454,12 @@
 
             renderVideoSections();
             populateVideoDropdown();
-            renderPhotoGallery();
+            
+            if (photoList.length === 0) {
+                loadPhotosFromGithub(true);
+            } else {
+                renderPhotoGallery();
+            }
             
             if (videoList.length > 0) {
                 selectVideoFromDropdown(videoList[0].id);
@@ -505,7 +511,7 @@
 
         function saveData() {
             localStorage.setItem('mediaBox_videoList_v5', JSON.stringify(videoList));
-            localStorage.setItem('mediaBox_photoList_v5', JSON.stringify(photoList));
+            localStorage.setItem('mediaBox_photoList_v6', JSON.stringify(photoList));
             saveToFirebase();
         }
 
@@ -516,14 +522,14 @@
 
             if (currentUser && window.fbServices) {
                 const { ref, set } = window.fbServices;
-                set(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v5'), { videoList, photoList, lastSaved: timeStr });
+                set(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v6'), { videoList, photoList, lastSaved: timeStr });
             }
         }
 
         function loadUserDataFromFirebase() {
             if (!currentUser || !window.fbServices) return;
             const { ref, get } = window.fbServices;
-            get(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v5')).then((snapshot) => {
+            get(ref(window.fbDb, 'users/' + currentUser.uid + '/data_v6')).then((snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.videoList !== undefined) videoList = data.videoList;
@@ -890,6 +896,66 @@
         }
 
         // ================= 照片記錄 (TAB 2) 邏輯 =================
+
+        // 從檔名轉換產生自動備註文字
+        function generateNotesFromFileName(filename) {
+            try {
+                let name = decodeURIComponent(filename);
+                name = name.replace(/\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i, '');
+                name = name.replace(/[-_]/g, ' ');
+                return name.trim() || filename;
+            } catch (e) {
+                return filename.replace(/\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i, '');
+            }
+        }
+
+        // 從 GitHub 自動讀取圖片列表
+        async function loadPhotosFromGithub(isInitial = false) {
+            const apiUrl = 'https://api.github.com/repos/jacky1903002/mediabox/contents/image';
+            const rawBaseUrl = 'https://raw.githubusercontent.com/jacky1903002/mediabox/main/image/';
+
+            try {
+                const res = await fetch(apiUrl);
+                if (!res.ok) throw new Error('無法存取 GitHub API');
+
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.bmp'];
+                    const imageFiles = data.filter(item => 
+                        item.type === 'file' && imageExtensions.some(ext => item.name.toLowerCase().endsWith(ext))
+                    );
+
+                    const fetchedPhotos = imageFiles.map((file, idx) => {
+                        const rawUrl = rawBaseUrl + encodeURIComponent(file.name);
+                        const autoNotes = generateNotesFromFileName(file.name);
+                        
+                        // 保留既有已存在照片的類別與手動備註
+                        const existing = photoList.find(p => p.url === rawUrl || p.fileName === file.name);
+
+                        return {
+                            id: existing ? existing.id : 'p_gh_' + idx + '_' + Date.now(),
+                            category: existing ? existing.category : 'GitHub 相簿',
+                            fileName: file.name,
+                            url: rawUrl,
+                            notes: existing ? existing.notes : autoNotes
+                        };
+                    });
+
+                    if (fetchedPhotos.length > 0) {
+                        photoList = fetchedPhotos;
+                        saveData();
+                        renderPhotoGallery();
+                        if (!isInitial) alert(`已成功從 GitHub 同步 ${fetchedPhotos.length} 張照片！`);
+                    } else {
+                        if (!isInitial) alert("GitHub 資料夾中未找到圖片檔案。");
+                    }
+                }
+            } catch (err) {
+                console.error("載入 GitHub 照片失敗:", err);
+                if (!isInitial) alert("抓取 GitHub 照片失敗，請檢查網路連線或儲存庫權限。");
+            }
+        }
+
         function setPhotoSize(size) {
             currentPhotoSize = size;
             document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400";
@@ -906,7 +972,13 @@
             const categories = [...new Set(photoList.map(p => p.category || '未分類'))];
 
             if (categories.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-[#18181c] rounded-2xl border border-zinc-200 dark:border-zinc-800">目前尚無照片項目，請點擊上方「新增照片」或「匯入 EXCEL」</div>`;
+                container.innerHTML = `
+                    <div class="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-[#18181c] rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
+                        <p>目前尚無照片項目，請點擊上方「同步 GitHub 照片」或「新增照片」</p>
+                        <button onclick="loadPhotosFromGithub()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> 從 GitHub 讀取圖片
+                        </button>
+                    </div>`;
                 return;
             }
 
@@ -960,7 +1032,7 @@
 
                     card.innerHTML = `
                         <div class="w-full ${imgHeight} overflow-hidden relative cursor-pointer" onclick="openLightbox('${p.id}')">
-                            <img src="${p.url}" alt="Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <img src="${p.url}" alt="Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='https://placehold.co/600x400/282830/ffffff?text=Image+Load+Error'">
                             <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()" onchange="togglePhotoSelection('${p.id}')" class="absolute top-3 left-3 w-5 h-5 accent-amber-500 cursor-pointer shadow-lg z-10">
                             <button onclick="event.stopPropagation(); deleteSinglePhoto('${p.id}')" class="absolute top-2 right-2 w-8 h-8 bg-rose-600/80 hover:bg-rose-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow z-10" title="刪除照片">
                                 <i class="fa-solid fa-trash"></i>
