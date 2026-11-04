@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW" class="dark">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,12 +21,15 @@
             theme: {
                 extend: {
                     colors: {
-                        ypm: {
-                            red: '#ea445a',
-                            darkBg: '#0f0f11',
-                            cardBg: '#18181c',
-                            hoverBg: '#26262b',
-                            textMuted: '#8b8b93'
+                        cream: {
+                            50: '#fdfbf7',
+                            100: '#f7f3eb',
+                            200: '#efe6d5',
+                            300: '#e2d3b7',
+                            400: '#d2bc94',
+                            500: '#bf9e6e',
+                            800: '#4a3b2c',
+                            900: '#2d2319'
                         }
                     }
                 }
@@ -35,7 +38,7 @@
     </script>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
             user-select: none;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
@@ -44,31 +47,34 @@
             height: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(0, 0, 0, 0.05);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #a1a1aa;
+            background: #cbd5e1;
             border-radius: 4px;
         }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+        }
         .tab-btn.active {
-            color: #3b82f6;
-            border-bottom: 2px solid #3b82f6;
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
             font-weight: 700;
         }
         .drag-over {
-            border: 2px dashed #3b82f6 !important;
-            background-color: rgba(59, 130, 246, 0.05) !important;
+            border: 2px dashed #2563eb !important;
+            background-color: rgba(37, 99, 235, 0.08) !important;
         }
         .photo-drag-over {
-            border: 2px dashed #f59e0b !important;
-            background-color: rgba(245, 158, 11, 0.05) !important;
+            border: 2px dashed #d97706 !important;
+            background-color: rgba(217, 119, 6, 0.08) !important;
         }
         .card-dragging {
             opacity: 0.4;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col custom-scrollbar bg-zinc-950 text-zinc-100 dark:bg-[#0f0f11] dark:text-zinc-100">
+<body class="min-h-screen flex flex-col custom-scrollbar bg-[#fcfaf7] text-stone-900 dark:bg-stone-950 dark:text-stone-100">
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -106,45 +112,45 @@
     </script>
 
     <!-- HEADER / NAVIGATION BAR -->
-    <header class="bg-white dark:bg-[#18181c] border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-40 shadow-md transition-colors">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header class="bg-[#f7f3eb] dark:bg-stone-900 border-b border-stone-300 dark:border-stone-800 sticky top-0 z-40 shadow-sm transition-colors">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg">
-                        <i class="fa-solid fa-play text-xl"></i>
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-600 to-blue-600 flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid fa-play text-lg"></i>
                     </div>
                     <div>
-                        <h1 class="font-extrabold text-xl text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                            MediaBox <span class="text-[10px] px-2 py-0.5 bg-blue-500/20 text-blue-500 dark:text-blue-400 rounded-full font-bold border border-blue-500/30">PRO</span>
+                        <h1 class="font-black text-xl text-stone-900 dark:text-stone-100 tracking-tight flex items-center gap-2">
+                            MediaBox <span class="text-[10px] px-2 py-0.5 bg-blue-600/10 text-blue-700 dark:text-blue-400 rounded-full font-bold border border-blue-600/30">PRO</span>
                         </h1>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400">多媒體影音與照片紀錄管理系統</p>
+                        <p class="text-[11px] text-stone-600 dark:text-stone-400 font-medium">多媒體影音與照片紀錄管理系統</p>
                     </div>
                 </div>
 
                 <div class="hidden md:flex items-center space-x-6 text-xs">
-                    <div class="flex items-center space-x-2 bg-zinc-100 dark:bg-zinc-800 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700">
+                    <div class="flex items-center space-x-2 bg-white/80 dark:bg-stone-800 px-3 py-1.5 rounded-full border border-stone-300 dark:border-stone-700 shadow-sm">
                         <span id="connDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span id="connStatus" class="font-medium text-zinc-700 dark:text-zinc-300">🟢 已連線數據庫</span>
+                        <span id="connStatus" class="font-bold text-stone-700 dark:text-stone-300">🟢 已連線數據庫</span>
                     </div>
-                    <div class="flex items-center space-x-2 text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                        <i class="fa-regular fa-clock text-blue-500"></i>
-                        <span>上次同步: <strong id="lastSaveTime" class="text-zinc-800 dark:text-zinc-200 font-mono">未連線</strong></span>
+                    <div class="flex items-center space-x-2 text-stone-700 dark:text-stone-400 bg-white/80 dark:bg-stone-800 px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 shadow-sm">
+                        <i class="fa-regular fa-clock text-blue-600"></i>
+                        <span>上次同步: <strong id="lastSaveTime" class="text-stone-900 dark:text-stone-200 font-mono font-bold">未連線</strong></span>
                     </div>
                 </div>
 
                 <div class="flex items-center space-x-3">
-                    <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-amber-400 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 transition" title="切換日/夜模式">
+                    <button onclick="toggleDarkMode()" class="w-9 h-9 rounded-xl bg-white dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-amber-400 flex items-center justify-center border border-stone-300 dark:border-stone-700 shadow-sm transition" title="切換日/夜模式">
                         <i id="darkModeIcon" class="fa-solid fa-moon"></i>
                     </button>
 
-                    <div id="userInfoBox" class="hidden flex items-center space-x-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 pr-3 rounded-full border border-zinc-200 dark:border-zinc-700">
-                        <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs" id="userAvatar">U</div>
-                        <span id="userNameDisplay" class="text-xs font-semibold text-zinc-800 dark:text-zinc-200 max-w-[120px] truncate">使用者</span>
-                        <button onclick="handleLogout()" class="text-zinc-500 hover:text-blue-500 text-xs ml-1" title="登出">
+                    <div id="userInfoBox" class="hidden flex items-center space-x-2 bg-white dark:bg-stone-800 p-1.5 pr-3 rounded-full border border-stone-300 dark:border-stone-700 shadow-sm">
+                        <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs" id="userAvatar">U</div>
+                        <span id="userNameDisplay" class="text-xs font-bold text-stone-800 dark:text-stone-200 max-w-[120px] truncate">使用者</span>
+                        <button onclick="handleLogout()" class="text-stone-500 hover:text-rose-600 text-xs ml-1" title="登出">
                             <i class="fa-solid fa-right-from-bracket"></i>
                         </button>
                     </div>
-                    <button id="loginBtnTrigger" onclick="openAuthModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition">
+                    <button id="loginBtnTrigger" onclick="openAuthModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition">
                         <i class="fa-solid fa-user-lock mr-1.5"></i> 會員登入 / 註冊
                     </button>
                 </div>
@@ -152,156 +158,176 @@
         </div>
 
         <!-- 固定分頁導覽 -->
-        <nav class="bg-zinc-50 dark:bg-[#121215] border-t border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto flex space-x-8 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-medium text-zinc-500 dark:text-zinc-400" id="tabNavContainer">
+        <nav class="bg-[#efe6d5] dark:bg-stone-900/90 border-t border-stone-300 dark:border-stone-800 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-[1600px] mx-auto flex space-x-8 overflow-x-auto custom-scrollbar text-xs sm:text-sm font-bold text-stone-600 dark:text-stone-400" id="tabNavContainer">
                 <button onclick="switchTab(1)" id="tabBtn1" class="tab-btn active py-3 flex items-center space-x-2 whitespace-nowrap transition cursor-pointer">
                     <i class="fa-solid fa-film text-base"></i>
-                    <span id="tabTitle1" class="tab-title font-bold">影音撥放器</span>
+                    <span id="tabTitle1" class="tab-title">影音撥放器</span>
                 </button>
                 <button onclick="switchTab(2)" id="tabBtn2" class="tab-btn py-3 flex items-center space-x-2 whitespace-nowrap transition cursor-pointer">
                     <i class="fa-solid fa-images text-base"></i>
-                    <span id="tabTitle2" class="tab-title font-bold">照片記錄</span>
+                    <span id="tabTitle2" class="tab-title">照片記錄</span>
                 </button>
             </div>
         </nav>
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 space-y-6">
 
         <!-- ================= TAB 1: 影音撥放器 ================= -->
         <div id="tabContent1" class="tab-panel space-y-6">
             <!-- 影音撥放器獨立工具列與標題 -->
-            <div class="bg-white dark:bg-[#1e1e24] p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-zinc-200 dark:border-zinc-800 shadow-xl transition-colors">
+            <div class="bg-white dark:bg-stone-900 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-stone-300 dark:border-stone-800 shadow-sm transition-colors">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg">
+                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md">
                         <i class="fa-solid fa-clapperboard text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="font-bold text-zinc-900 dark:text-white text-base">影音撥放器</h2>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">自訂影片上傳與分類管理，支援跨區自由拖曳排序</p>
+                        <h2 class="font-extrabold text-stone-900 dark:text-white text-base tracking-tight">影音撥放器</h2>
+                        <p class="text-xs text-stone-600 dark:text-stone-400 font-medium">左側選單分類與拖曳管理，右側極大化劇院放映模式</p>
                     </div>
                 </div>
                 <!-- 獨立匯入匯出與新增按鈕 -->
                 <div class="flex items-center gap-2 flex-wrap text-xs">
-                    <label class="cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-excel text-emerald-500"></i>
+                    <label class="cursor-pointer bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
                         <span>匯入 EXCEL</span>
                         <input type="file" accept=".xlsx, .xls" onchange="importVideoExcel(event)" class="hidden">
                     </label>
-                    <button onclick="exportVideoExcel()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-export text-emerald-500"></i>
+                    <button onclick="exportVideoExcel()" class="bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-export text-emerald-600"></i>
                         <span>匯出 EXCEL</span>
                     </button>
-                    <button onclick="exportVideoPNG()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-image text-blue-500"></i>
+                    <button onclick="exportVideoPNG()" class="bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-image text-blue-600"></i>
                         <span>PNG</span>
                     </button>
-                    <button onclick="exportVideoPDF()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-pdf text-rose-500"></i>
+                    <button onclick="exportVideoPDF()" class="bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-pdf text-rose-600"></i>
                         <span>PDF</span>
                     </button>
-                    <button onclick="openVideoModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <button onclick="openVideoModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-plus"></i> 新增影音
                     </button>
                 </div>
             </div>
 
-            <!-- MEDIA PLAYER AREA -->
-            <div id="videoExportArea" class="space-y-6">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-2 space-y-4">
-                        <div class="bg-black border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative aspect-video flex items-center justify-center group">
-                            <iframe id="ytVideoIframe" class="w-full h-full" src="" title="Media Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <!-- MEDIA PLAYER MAIN LAYOUT (左欄：播放清單與分類管理 / 右欄：極大化影片放映區) -->
+            <div id="videoExportArea" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- 左側欄 (5/12 比例)：播放清單(含下拉篩選) + 影音分類與拖曳管理 -->
+                <div class="lg:col-span-5 space-y-6">
+                    
+                    <!-- 播放清單（支援下拉選單篩選分類） -->
+                    <div class="bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 rounded-2xl p-5 flex flex-col shadow-sm transition-colors space-y-3">
+                        <div class="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3">
+                            <h3 class="font-extrabold text-stone-900 dark:text-white text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-list-ul text-blue-600"></i> 播放清單
+                            </h3>
+                            <span class="text-xs font-bold text-stone-500 dark:text-stone-400" id="videoPlaylistCount">0 部</span>
                         </div>
-                        <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl flex items-center justify-between transition-colors">
-                            <div>
-                                <span class="text-[10px] uppercase font-bold px-2 py-0.5 bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded" id="vpCategoryTag">CINEMA</span>
-                                <h3 class="text-base font-bold text-zinc-900 dark:text-white mt-1" id="vpTitle">點選下方清單或播放按鈕開始播放影音</h3>
+
+                        <!-- 下拉式分類篩選選單 -->
+                        <div class="flex items-center gap-2 bg-[#f7f3eb] dark:bg-stone-800 p-2 rounded-xl border border-stone-300 dark:border-stone-700">
+                            <label for="playlistCategoryFilter" class="text-xs font-extrabold text-stone-700 dark:text-stone-300 whitespace-nowrap flex items-center gap-1">
+                                <i class="fa-solid fa-filter text-blue-600"></i> 篩選分類:
+                            </label>
+                            <select id="playlistCategoryFilter" onchange="onCategoryFilterChange()" class="w-full text-xs font-bold p-1.5 bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="ALL">全部影音分類 (0)</option>
+                            </select>
+                        </div>
+
+                        <!-- 播放清單列表容器 -->
+                        <div class="space-y-2 overflow-y-auto max-h-[300px] custom-scrollbar pr-1" id="videoPlaylistContainer"></div>
+                    </div>
+
+                    <!-- 影音分類排序與拖曳管理 -->
+                    <div class="bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 rounded-2xl p-5 shadow-sm space-y-4 transition-colors">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3 gap-2">
+                            <h3 class="font-extrabold text-stone-900 dark:text-white text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-blue-600"></i> 分類與拖曳管理
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <button id="batchDeleteVideoBtn" onclick="batchDeleteVideo()" class="hidden px-2.5 py-1 bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-300 dark:border-rose-800 text-xs font-bold rounded-lg transition flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i> 刪除選取 (<span id="selectedVideoCount">0</span>)
+                                </button>
+                                <span class="text-[11px] text-stone-500 dark:text-stone-400 font-medium"><i class="fa-solid fa-up-down-left-right mr-1"></i>跨區拖曳</span>
                             </div>
                         </div>
+                        
+                        <div id="videoCategorySections" class="space-y-5"></div>
                     </div>
 
-                    <div class="space-y-6">
-                        <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 flex flex-col shadow-xl transition-colors">
-                            <h3 class="font-bold text-zinc-900 dark:text-white text-sm mb-3 flex items-center justify-between">
-                                <span class="flex items-center gap-2"><i class="fa-solid fa-film text-blue-500"></i> 播放清單</span>
-                                <span class="text-xs text-zinc-400 dark:text-zinc-500" id="videoPlaylistCount">0 部</span>
-                            </h3>
-                            <div class="space-y-2 overflow-y-auto max-h-[360px] custom-scrollbar" id="videoPlaylistContainer"></div>
+                </div>
+
+                <!-- 右側欄 (7/12 比例)：極大化影音播放畫面區 -->
+                <div class="lg:col-span-7 space-y-4 lg:sticky lg:top-24">
+                    <div class="bg-black border border-stone-300 dark:border-stone-800 rounded-2xl overflow-hidden shadow-2xl relative aspect-video flex items-center justify-center ring-1 ring-stone-900/10">
+                        <iframe id="ytVideoIframe" class="w-full h-full" src="" title="Media Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+
+                    <div class="bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 p-5 rounded-2xl flex items-center justify-between shadow-sm transition-colors">
+                        <div>
+                            <span class="text-[10px] uppercase font-black px-2.5 py-1 bg-blue-600/15 text-blue-700 dark:text-blue-400 rounded-md tracking-wider border border-blue-600/20" id="vpCategoryTag">CINEMA</span>
+                            <h3 class="text-lg font-extrabold text-stone-900 dark:text-white mt-2" id="vpTitle">請點擊左側播放清單或播放按鈕開始觀賞影音</h3>
                         </div>
                     </div>
                 </div>
 
-                <!-- 依分類排序與可自由拖曳區塊 -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-layer-group text-blue-500"></i> 影音分類排序與拖曳管理
-                        </h3>
-                        <div class="flex items-center gap-3">
-                            <button id="batchDeleteVideoBtn" onclick="batchDeleteVideo()" class="hidden px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-500/30 text-xs font-bold rounded-lg transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-trash-can"></i> 刪除選取 (<span id="selectedVideoCount">0</span>)
-                            </button>
-                            <span class="text-xs text-zinc-400"><i class="fa-solid fa-up-down-left-right mr-1"></i>抓取卡片可自由跨分類拖曳排序</span>
-                        </div>
-                    </div>
-                    
-                    <div id="videoCategorySections" class="space-y-6"></div>
-                </div>
             </div>
         </div>
 
         <!-- ================= TAB 2: 照片記錄 ================= -->
         <div id="tabContent2" class="tab-panel hidden space-y-6">
             <!-- 照片記錄獨立工具列與標題 -->
-            <div class="bg-white dark:bg-[#18181c] p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-zinc-200 dark:border-zinc-800 shadow-xl transition-colors">
+            <div class="bg-white dark:bg-stone-900 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-stone-300 dark:border-stone-800 shadow-sm transition-colors">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-lg">
+                    <div class="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shadow-md">
                         <i class="fa-solid fa-folder-tree text-lg"></i>
                     </div>
                     <div>
-                        <h2 class="font-bold text-zinc-900 dark:text-white text-base">照片記錄</h2>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">已連結 GitHub (`jacky1903002/mediabox/image`) 自動載入並解析檔名備註</p>
+                        <h2 class="font-extrabold text-stone-900 dark:text-white text-base">照片記錄</h2>
+                        <p class="text-xs text-stone-600 dark:text-stone-400 font-medium">已連結 GitHub (`jacky1903002/mediabox/image`) 自動載入與管理</p>
                     </div>
                 </div>
 
                 <!-- 獨立匯入匯出與操作按鈕 -->
                 <div class="flex items-center gap-2 flex-wrap text-xs">
-                    <button onclick="loadPhotosFromGithub()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-xl font-bold transition flex items-center space-x-1.5 shadow-md">
+                    <button onclick="loadPhotosFromGithub()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-xl font-bold transition flex items-center space-x-1.5 shadow">
                         <i class="fa-solid fa-rotate-right"></i>
                         <span>同步 GitHub 照片</span>
                     </button>
 
-                    <div class="flex bg-zinc-100 dark:bg-[#121215] p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 font-bold mr-1">
-                        <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400">小</button>
-                        <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow">中</button>
-                        <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400">大</button>
+                    <div class="flex bg-[#f7f3eb] dark:bg-stone-800 p-1 rounded-xl border border-stone-300 dark:border-stone-700 font-bold mr-1">
+                        <button onclick="setPhotoSize('small')" id="sizeBtnSmall" class="px-2.5 py-1 rounded-lg transition text-stone-600 dark:text-stone-400">小</button>
+                        <button onclick="setPhotoSize('medium')" id="sizeBtnMedium" class="px-2.5 py-1 rounded-lg transition bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 shadow">中</button>
+                        <button onclick="setPhotoSize('large')" id="sizeBtnLarge" class="px-2.5 py-1 rounded-lg transition text-stone-600 dark:text-stone-400">大</button>
                     </div>
 
-                    <label class="cursor-pointer bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-excel text-emerald-500"></i>
+                    <label class="cursor-pointer bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
                         <span>匯入 EXCEL</span>
                         <input type="file" accept=".xlsx, .xls" onchange="importPhotoExcel(event)" class="hidden">
                     </label>
-                    <button onclick="exportPhotoExcel()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-export text-emerald-500"></i>
+                    <button onclick="exportPhotoExcel()" class="bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-export text-emerald-600"></i>
                         <span>匯出 EXCEL</span>
                     </button>
-                    <button onclick="exportPhotoPNG()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-image text-amber-500"></i>
+                    <button onclick="exportPhotoPNG()" class="bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-image text-amber-600"></i>
                         <span>PNG</span>
                     </button>
-                    <button onclick="exportPhotoPDF()" class="bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
-                        <i class="fa-solid fa-file-pdf text-rose-500"></i>
+                    <button onclick="exportPhotoPDF()" class="bg-[#f7f3eb] hover:bg-[#efe6d5] dark:bg-stone-800 dark:hover:bg-stone-700 text-stone-800 dark:text-stone-200 px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-pdf text-rose-600"></i>
                         <span>PDF</span>
                     </button>
 
-                    <button id="batchDeletePhotoBtn" onclick="batchDeletePhoto()" class="hidden px-3 py-2 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-600 hover:text-white border border-amber-500/30 font-bold rounded-xl transition flex items-center gap-1.5">
+                    <button id="batchDeletePhotoBtn" onclick="batchDeletePhoto()" class="hidden px-3 py-2 bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-300 dark:border-rose-800 font-bold rounded-xl transition flex items-center gap-1.5">
                         <i class="fa-solid fa-trash-can"></i> 刪除選取 (<span id="selectedPhotoCount">0</span>)
                     </button>
 
-                    <button onclick="openPhotoModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
+                    <button onclick="openPhotoModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-plus"></i> 新增照片
                     </button>
                 </div>
@@ -315,103 +341,103 @@
 
     </main>
 
-    <footer class="bg-white dark:bg-[#18181c] border-t border-zinc-200 dark:border-zinc-800 py-4 px-4 text-center text-xs text-zinc-500 transition-colors">
+    <footer class="bg-[#f7f3eb] dark:bg-stone-900 border-t border-stone-300 dark:border-stone-800 py-4 px-4 text-center text-xs font-bold text-stone-600 dark:text-stone-400 transition-colors">
         <p>MediaBox Pro © 2026 多媒體影音與照片記錄管理系統</p>
     </footer>
 
     <!-- AUTH MODAL -->
-    <div id="authModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <h3 class="font-bold text-base text-zinc-900 dark:text-white">會員登入 / 註冊</h3>
-                <button onclick="closeAuthModal()" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <div id="authModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-stone-200 dark:border-stone-800 pb-3">
+                <h3 class="font-extrabold text-base text-stone-900 dark:text-white">會員登入 / 註冊</h3>
+                <button onclick="closeAuthModal()" class="text-stone-400 hover:text-stone-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-3">
-                <div class="flex bg-zinc-100 dark:bg-[#121215] p-1 rounded-xl">
-                    <button onclick="setAuthMode('login')" id="authTabLogin" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow">登入</button>
-                    <button onclick="setAuthMode('register')" id="authTabRegister" class="flex-1 py-1.5 text-xs font-bold rounded-lg transition text-zinc-400">註冊帳號</button>
+                <div class="flex bg-[#f7f3eb] dark:bg-stone-800 p-1 rounded-xl">
+                    <button onclick="setAuthMode('login')" id="authTabLogin" class="flex-1 py-1.5 text-xs font-extrabold rounded-lg transition bg-white dark:bg-stone-900 text-stone-900 dark:text-white shadow">登入</button>
+                    <button onclick="setAuthMode('register')" id="authTabRegister" class="flex-1 py-1.5 text-xs font-extrabold rounded-lg transition text-stone-500">註冊帳號</button>
                 </div>
                 <div id="realNameField" class="hidden space-y-1">
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">真實姓名</label>
-                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">真實姓名</label>
+                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">電子郵件 (Email)</label>
-                    <input type="email" id="authEmail" placeholder="user@example.com" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">電子郵件 (Email)</label>
+                    <input type="email" id="authEmail" placeholder="user@example.com" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">密碼 (Password)</label>
-                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">密碼 (Password)</label>
+                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div id="authError" class="text-xs text-rose-500 dark:text-rose-400 hidden bg-rose-500/10 p-2 rounded border border-rose-500/20"></div>
-                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow transition">確定送出</button>
+                <div id="authError" class="text-xs font-bold text-rose-600 dark:text-rose-400 hidden bg-rose-50 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900"></div>
+                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition">確定送出</button>
             </div>
         </div>
     </div>
 
     <!-- VIDEO MODAL -->
-    <div id="videoModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-[#1e1e24] border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <h3 class="font-bold text-base text-zinc-900 dark:text-white">新增影音項目</h3>
-                <button onclick="closeVideoModal()" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <div id="videoModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-stone-200 dark:border-stone-800 pb-3">
+                <h3 class="font-extrabold text-base text-stone-900 dark:text-white">新增影音項目</h3>
+                <button onclick="closeVideoModal()" class="text-stone-400 hover:text-stone-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="grid grid-cols-1 gap-3">
                 <div>
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">影音分類 *</label>
-                    <input type="text" id="vFormCategory" placeholder="例如: 精選音樂, 知識科普, 旅遊紀錄" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">影音分類 *</label>
+                    <input type="text" id="vFormCategory" placeholder="例如: 精選音樂, 知識科普, 旅遊紀錄" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">影片標題 *</label>
-                    <input type="text" id="vFormTitle" placeholder="輸入影片標題" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">影片標題 *</label>
+                    <input type="text" id="vFormTitle" placeholder="輸入影片標題" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">YouTube 影片網址 *</label>
-                    <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">YouTube 影片網址 *</label>
+                    <input type="text" id="vFormUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
             <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="closeVideoModal()" class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl">取消</button>
-                <button onclick="saveVideoItem()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl shadow">儲存影片</button>
+                <button onclick="closeVideoModal()" class="px-4 py-2 bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-bold rounded-xl">取消</button>
+                <button onclick="saveVideoItem()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow">儲存影片</button>
             </div>
         </div>
     </div>
 
     <!-- PHOTO MODAL -->
-    <div id="photoModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <h3 class="font-bold text-base text-zinc-900 dark:text-white">新增相簿照片</h3>
-                <button onclick="closePhotoModal()" class="text-zinc-400 hover:text-zinc-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <div id="photoModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-stone-200 dark:border-stone-800 pb-3">
+                <h3 class="font-extrabold text-base text-stone-900 dark:text-white">新增相簿照片</h3>
+                <button onclick="closePhotoModal()" class="text-stone-400 hover:text-stone-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="grid grid-cols-1 gap-3">
                 <div>
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">相片分類 *</label>
-                    <input type="text" id="pFormCategory" placeholder="例如: 自然風景, 旅遊紀錄, 家族合照" class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">相片分類 *</label>
+                    <input type="text" id="pFormCategory" placeholder="例如: 自然風景, 旅遊紀錄, 家族合照" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-zinc-600 dark:text-zinc-400">圖片網址 (URL) *</label>
-                    <input type="text" id="pFormUrl" placeholder="https://images.unsplash.com/photo-..." class="w-full text-xs p-2.5 bg-zinc-100 dark:bg-[#121215] border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white rounded-xl">
+                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">圖片網址 (URL) *</label>
+                    <input type="text" id="pFormUrl" placeholder="https://images.unsplash.com/photo-..." class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
             </div>
             <div class="flex justify-end space-x-2 pt-2">
-                <button onclick="closePhotoModal()" class="px-4 py-2 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl">取消</button>
-                <button onclick="savePhotoItem()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow">儲存照片</button>
+                <button onclick="closePhotoModal()" class="px-4 py-2 bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-bold rounded-xl">取消</button>
+                <button onclick="savePhotoItem()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow">儲存照片</button>
             </div>
         </div>
     </div>
 
     <!-- FULLSCREEN LIGHTBOX MODAL -->
-    <div id="lightboxModal" class="fixed inset-0 bg-black/90 backdrop-blur-lg z-50 hidden flex flex-col items-center justify-between p-4 sm:p-8">
-        <div class="w-full flex justify-between items-center text-white z-10">
-            <span class="text-xs font-mono text-zinc-400" id="lbCategory">分類</span>
-            <button onclick="closeLightbox()" class="text-2xl text-zinc-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+    <div id="lightboxModal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 hidden flex flex-col items-center justify-between p-4 sm:p-8">
+        <div class="w-full flex justify-between items-center text-white z-10 max-w-5xl">
+            <span class="text-xs font-bold text-stone-300" id="lbCategory">分類</span>
+            <button onclick="closeLightbox()" class="text-2xl text-stone-400 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="flex-1 w-full flex items-center justify-center overflow-hidden my-4">
-            <img id="lbImage" src="" alt="Full view" class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl">
+            <img id="lbImage" src="" alt="Full view" class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl">
         </div>
-        <div class="max-w-2xl w-full text-center space-y-2 bg-zinc-900/80 p-4 rounded-2xl border border-zinc-800 backdrop-blur">
-            <p class="text-xs text-amber-400 font-semibold" id="lbNotes">備註說明...</p>
+        <div class="max-w-2xl w-full text-center space-y-2 bg-stone-900/90 p-4 rounded-2xl border border-stone-800 backdrop-blur">
+            <p class="text-xs text-amber-400 font-bold" id="lbNotes">備註說明...</p>
         </div>
     </div>
 
@@ -421,11 +447,12 @@
         let currentUser = null;
         let authMode = 'login';
         let currentPhotoSize = 'medium';
+        let selectedPlaylistCategory = 'ALL';
 
         let selectedVideoIds = [];
         let selectedPhotoIds = [];
 
-        // 預設影音資料庫（可自訂新增分類與拖曳）
+        // 預設影音資料庫
         let videoList = localStorage.getItem('mediaBox_videoList_v5') !== null 
             ? JSON.parse(localStorage.getItem('mediaBox_videoList_v5')) 
             : [
@@ -444,16 +471,17 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const savedDarkMode = localStorage.getItem('mediaBox_darkMode');
-            if (savedDarkMode === 'light') {
-                document.documentElement.classList.remove('dark');
-                document.getElementById('darkModeIcon').className = "fa-solid fa-sun";
-            } else {
+            if (savedDarkMode === 'dark') {
                 document.documentElement.classList.add('dark');
                 document.getElementById('darkModeIcon').className = "fa-solid fa-moon";
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('darkModeIcon').className = "fa-solid fa-sun";
             }
 
             renderVideoSections();
-            populateVideoDropdown();
+            populateVideoCategoryFilter();
+            populateVideoPlaylist();
             
             if (photoList.length === 0) {
                 loadPhotosFromGithub(true);
@@ -536,7 +564,8 @@
                     if (data.photoList !== undefined) photoList = data.photoList;
 
                     renderVideoSections();
-                    populateVideoDropdown();
+                    populateVideoCategoryFilter();
+                    populateVideoPlaylist();
                     renderPhotoGallery();
                 }
             });
@@ -564,8 +593,8 @@
         function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
         function setAuthMode(mode) {
             authMode = mode;
-            document.getElementById('authTabLogin').className = mode === 'login' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-zinc-400";
-            document.getElementById('authTabRegister').className = mode === 'register' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-zinc-400";
+            document.getElementById('authTabLogin').className = mode === 'login' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white dark:bg-stone-900 text-stone-900 dark:text-white shadow" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-stone-500";
+            document.getElementById('authTabRegister').className = mode === 'register' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white dark:bg-stone-900 text-stone-900 dark:text-white shadow" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-stone-500";
             document.getElementById('realNameField').classList.toggle('hidden', mode === 'login');
         }
 
@@ -627,7 +656,7 @@
             return match ? match[1] : url;
         }
 
-        // ================= 影音撥放器 (TAB 1) 邏輯：依分類分區與拖曳 =================
+        // ================= 影音撥放器 (TAB 1) 邏輯：左側分類拖曳與下拉篩選 =================
         function renderVideoSections() {
             const container = document.getElementById('videoCategorySections');
             if(!container) return;
@@ -636,69 +665,122 @@
             const categories = [...new Set(videoList.map(v => v.category || '未分類'))];
 
             if (categories.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-[#18181c] rounded-2xl border border-zinc-200 dark:border-zinc-800">目前尚無影音項目，請點擊上方「新增影音」或「匯入 EXCEL」</div>`;
+                container.innerHTML = `<div class="p-6 text-center text-xs font-bold text-stone-500 bg-[#f7f3eb] dark:bg-stone-800/50 rounded-2xl border border-stone-300 dark:border-stone-800">目前尚無影音項目，請點擊上方「新增影音」或「匯入 EXCEL」</div>`;
                 return;
             }
 
             categories.forEach(cat => {
                 const sec = document.createElement('div');
-                sec.className = "bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xl space-y-3 transition-colors";
+                sec.className = "bg-[#f7f3eb] dark:bg-stone-800/60 border border-stone-300 dark:border-stone-700/60 rounded-xl p-3.5 space-y-2.5 transition-colors";
                 
                 const catVideos = videoList.filter(v => (v.category || '未分類') === cat);
 
                 sec.innerHTML = `
-                    <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-2.5">
-                        <h4 class="font-bold text-sm text-zinc-900 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-folder-open text-blue-500"></i> ${cat}
-                            <span class="text-xs font-normal text-zinc-400">(${catVideos.length} 部影片)</span>
+                    <div class="flex items-center justify-between border-b border-stone-300 dark:border-stone-700 pb-2">
+                        <h4 class="font-extrabold text-xs text-stone-900 dark:text-stone-100 flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-open text-blue-600"></i> ${cat}
+                            <span class="text-[11px] font-bold text-stone-500 dark:text-stone-400">(${catVideos.length})</span>
                         </h4>
-                        <span class="text-[11px] text-zinc-400"><i class="fa-solid fa-arrows-up-down-left-right mr-1"></i>可拖曳排序與移至此分類</span>
                     </div>
-                    <div id="videoDropzone_${encodeURIComponent(cat)}" class="video-grid-dropzone grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-all min-h-[80px] p-2 rounded-xl border-2 border-transparent" data-category="${cat}"></div>
+                    <div id="videoDropzone_${encodeURIComponent(cat)}" class="video-grid-dropzone flex flex-col gap-2 transition-all min-h-[60px] p-1.5 rounded-lg border border-transparent" data-category="${cat}"></div>
                 `;
 
                 container.appendChild(sec);
-                const grid = sec.querySelector('.video-grid-dropzone');
+                const dropzone = sec.querySelector('.video-grid-dropzone');
 
                 // 拖曳事件處理
-                grid.addEventListener('dragover', handleVideoDragOver);
-                grid.addEventListener('dragleave', handleVideoDragLeave);
-                grid.addEventListener('drop', (e) => handleVideoDrop(e, cat));
+                dropzone.addEventListener('dragover', handleVideoDragOver);
+                dropzone.addEventListener('dragleave', handleVideoDragLeave);
+                dropzone.addEventListener('drop', (e) => handleVideoDrop(e, cat));
 
                 catVideos.forEach(v => {
                     const isChecked = selectedVideoIds.includes(v.id);
                     const card = document.createElement('div');
                     card.draggable = true;
                     card.dataset.videoId = v.id;
-                    card.className = `video-card bg-zinc-50 dark:bg-[#121215] border rounded-xl p-3 flex flex-col justify-between group relative transition shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-500 ${isChecked ? 'border-blue-500 ring-2 ring-blue-500/40' : 'border-zinc-200 dark:border-zinc-800'}`;
+                    card.className = `video-card bg-white dark:bg-stone-900 border rounded-xl p-2.5 flex flex-col justify-between group relative transition shadow-sm cursor-grab active:cursor-grabbing hover:border-blue-500 ${isChecked ? 'border-blue-600 ring-2 ring-blue-500/30' : 'border-stone-300 dark:border-stone-800'}`;
 
                     card.addEventListener('dragstart', (e) => handleVideoDragStart(e, v.id));
                     card.addEventListener('dragend', handleVideoDragEnd);
 
                     card.innerHTML = `
-                        <div class="space-y-2">
-                            <div class="flex items-start justify-between gap-2">
+                        <div class="space-y-1.5">
+                            <div class="flex items-start justify-between gap-1.5">
                                 <div class="flex items-center gap-2 flex-1">
-                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleVideoSelection('${v.id}')" class="w-4 h-4 accent-blue-500 cursor-pointer">
-                                    <span class="font-bold text-xs text-zinc-800 dark:text-zinc-200 line-clamp-2">${v.title}</span>
+                                    <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleVideoSelection('${v.id}')" class="w-4 h-4 accent-blue-600 cursor-pointer rounded">
+                                    <span class="font-bold text-xs text-stone-900 dark:text-stone-100 line-clamp-1">${v.title}</span>
                                 </div>
-                                <button onclick="deleteSingleVideo('${v.id}')" class="text-zinc-400 hover:text-rose-500 text-xs transition" title="刪除影片">
+                                <button onclick="deleteSingleVideo('${v.id}')" class="text-stone-400 hover:text-rose-600 text-xs transition" title="刪除影片">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="mt-3 flex items-center justify-between pt-2 border-t border-zinc-200/60 dark:border-zinc-800 text-[11px]">
-                            <span class="text-zinc-400 truncate max-w-[150px]"><i class="fa-brands fa-youtube text-red-500 mr-1"></i>${v.url}</span>
-                            <button onclick="selectVideoFromDropdown('${v.id}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold flex items-center gap-1 transition">
-                                <i class="fa-solid fa-play text-[10px]"></i> 播放
+                        <div class="mt-2 flex items-center justify-between pt-1.5 border-t border-stone-200 dark:border-stone-800 text-[11px]">
+                            <span class="text-stone-500 dark:text-stone-400 font-medium truncate max-w-[140px]"><i class="fa-brands fa-youtube text-red-600 mr-1"></i>${v.url}</span>
+                            <button onclick="selectVideoFromDropdown('${v.id}')" class="px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-1 transition text-[10px]">
+                                <i class="fa-solid fa-play text-[9px]"></i> 播放
                             </button>
                         </div>
                     `;
-                    grid.appendChild(card);
+                    dropzone.appendChild(card);
                 });
             });
 
             updateVideoBatchBtnUI();
+        }
+
+        // 下拉式選單選取分類更新與邏輯
+        function populateVideoCategoryFilter() {
+            const filter = document.getElementById('playlistCategoryFilter');
+            if (!filter) return;
+
+            const categories = [...new Set(videoList.map(v => v.category || '未分類'))];
+            
+            let html = `<option value="ALL">全部影音分類 (${videoList.length} 部)</option>`;
+            categories.forEach(cat => {
+                const count = videoList.filter(v => (v.category || '未分類') === cat).length;
+                html += `<option value="${cat}" ${selectedPlaylistCategory === cat ? 'selected' : ''}>${cat} (${count} 部)</option>`;
+            });
+
+            filter.innerHTML = html;
+        }
+
+        function onCategoryFilterChange() {
+            const filter = document.getElementById('playlistCategoryFilter');
+            if (filter) {
+                selectedPlaylistCategory = filter.value;
+                populateVideoPlaylist();
+            }
+        }
+
+        function populateVideoPlaylist() {
+            const list = document.getElementById('videoPlaylistContainer');
+            if (!list) return;
+            list.innerHTML = '';
+
+            const filteredList = selectedPlaylistCategory === 'ALL'
+                ? videoList
+                : videoList.filter(v => (v.category || '未分類') === selectedPlaylistCategory);
+
+            if (filteredList.length === 0) {
+                list.innerHTML = `<div class="p-4 text-center text-xs font-bold text-stone-400 bg-[#f7f3eb] dark:bg-stone-800/40 rounded-xl">此分類無影音項目</div>`;
+            } else {
+                filteredList.forEach((v, idx) => {
+                    const div = document.createElement('div');
+                    div.className = `p-2.5 rounded-xl border cursor-pointer flex items-center justify-between text-xs transition ${v.id === currentPlayingVideoId ? 'bg-blue-500/10 border-blue-500/40 text-blue-700 dark:text-blue-400 font-extrabold shadow-sm' : 'bg-[#fcfaf7] dark:bg-stone-800/80 border-stone-200 dark:border-stone-700/70 text-stone-800 dark:text-stone-200 hover:border-blue-400'}`;
+                    div.onclick = () => selectVideoFromDropdown(v.id);
+                    div.innerHTML = `
+                        <div class="truncate mr-2 flex-1">
+                            <span class="text-[10px] text-blue-600 dark:text-blue-400 font-bold mr-1.5">[${v.category || '未分類'}]</span>
+                            <span>${idx + 1}. ${v.title}</span>
+                        </div>
+                        <i class="fa-solid fa-play text-[10px] ${v.id === currentPlayingVideoId ? 'text-blue-600 dark:text-blue-400' : 'text-stone-300 dark:text-stone-600'}"></i>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+
+            document.getElementById('videoPlaylistCount').innerText = `${filteredList.length} / ${videoList.length} 部`;
         }
 
         // --- 影音拖曳處理 ---
@@ -735,7 +817,8 @@
                 video.category = targetCat;
                 saveData();
                 renderVideoSections();
-                populateVideoDropdown();
+                populateVideoCategoryFilter();
+                populateVideoPlaylist();
             }
         }
 
@@ -769,7 +852,8 @@
                 videoList = videoList.filter(v => !selectedVideoIds.includes(v.id));
                 selectedVideoIds = [];
                 renderVideoSections();
-                populateVideoDropdown();
+                populateVideoCategoryFilter();
+                populateVideoPlaylist();
                 saveData();
             }
         }
@@ -780,7 +864,8 @@
                 videoList = videoList.filter(v => v.id !== id);
                 selectedVideoIds = selectedVideoIds.filter(x => x !== id);
                 renderVideoSections();
-                populateVideoDropdown();
+                populateVideoCategoryFilter();
+                populateVideoPlaylist();
                 saveData();
             }
         }
@@ -799,31 +884,13 @@
 
             closeVideoModal();
             renderVideoSections();
-            populateVideoDropdown();
+            populateVideoCategoryFilter();
+            populateVideoPlaylist();
             saveData();
             
             if (!currentPlayingVideoId) {
                 selectVideoFromDropdown(newId);
             }
-        }
-
-        function populateVideoDropdown() {
-            const list = document.getElementById('videoPlaylistContainer');
-            list.innerHTML = '';
-
-            videoList.forEach((v, idx) => {
-                const div = document.createElement('div');
-                div.className = `p-2.5 rounded-xl border cursor-pointer flex items-center justify-between text-xs transition ${v.id === currentPlayingVideoId ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-white font-bold' : 'bg-zinc-50 dark:bg-[#121215] border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300'}`;
-                div.onclick = () => selectVideoFromDropdown(v.id);
-                div.innerHTML = `
-                    <div class="truncate mr-2 flex-1">
-                        <span class="text-[10px] text-blue-500 font-normal mr-1">[${v.category || '未分類'}]</span>
-                        ${idx + 1}. ${v.title}
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-            document.getElementById('videoPlaylistCount').innerText = `${videoList.length} 部`;
         }
 
         function selectVideoFromDropdown(id) {
@@ -835,7 +902,7 @@
             document.getElementById('ytVideoIframe').src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
             document.getElementById('vpTitle').innerText = v.title;
             document.getElementById('vpCategoryTag').innerText = v.category || 'CINEMA';
-            populateVideoDropdown();
+            populateVideoPlaylist();
         }
 
         function pauseVideoPlayer() {
@@ -867,7 +934,8 @@
                             url: item.url || ''
                         }));
                         renderVideoSections();
-                        populateVideoDropdown();
+                        populateVideoCategoryFilter();
+                        populateVideoPlaylist();
                         saveData();
                         alert("影音資料匯入成功！");
                     }
@@ -897,7 +965,6 @@
 
         // ================= 照片記錄 (TAB 2) 邏輯 =================
 
-        // 從檔名轉換產生自動備註文字
         function generateNotesFromFileName(filename) {
             try {
                 let name = decodeURIComponent(filename);
@@ -909,7 +976,6 @@
             }
         }
 
-        // 從 GitHub 自動讀取圖片列表
         async function loadPhotosFromGithub(isInitial = false) {
             const apiUrl = 'https://api.github.com/repos/jacky1903002/mediabox/contents/image';
             const rawBaseUrl = 'https://raw.githubusercontent.com/jacky1903002/mediabox/main/image/';
@@ -929,7 +995,6 @@
                         const rawUrl = rawBaseUrl + encodeURIComponent(file.name);
                         const autoNotes = generateNotesFromFileName(file.name);
                         
-                        // 保留既有已存在照片的類別與手動備註
                         const existing = photoList.find(p => p.url === rawUrl || p.fileName === file.name);
 
                         return {
@@ -958,9 +1023,9 @@
 
         function setPhotoSize(size) {
             currentPhotoSize = size;
-            document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400";
-            document.getElementById('sizeBtnMedium').className = size === 'medium' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400";
-            document.getElementById('sizeBtnLarge').className = size === 'large' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-zinc-500 dark:text-zinc-400";
+            document.getElementById('sizeBtnSmall').className = size === 'small' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-stone-600 dark:text-stone-400";
+            document.getElementById('sizeBtnMedium').className = size === 'medium' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-stone-600 dark:text-stone-400";
+            document.getElementById('sizeBtnLarge').className = size === 'large' ? "px-2.5 py-1 rounded-lg transition bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 font-bold shadow" : "px-2.5 py-1 rounded-lg transition text-stone-600 dark:text-stone-400";
             renderPhotoGallery();
         }
 
@@ -973,9 +1038,9 @@
 
             if (categories.length === 0) {
                 container.innerHTML = `
-                    <div class="p-8 text-center text-xs text-zinc-500 bg-white dark:bg-[#18181c] rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
+                    <div class="p-8 text-center text-xs font-bold text-stone-500 bg-white dark:bg-stone-900 rounded-2xl border border-stone-300 dark:border-stone-800 space-y-3">
                         <p>目前尚無照片項目，請點擊上方「同步 GitHub 照片」或「新增照片」</p>
-                        <button onclick="loadPhotosFromGithub()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition">
+                        <button onclick="loadPhotosFromGithub()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl transition">
                             <i class="fa-solid fa-rotate-right mr-1"></i> 從 GitHub 讀取圖片
                         </button>
                     </div>`;
@@ -984,17 +1049,17 @@
 
             categories.forEach(cat => {
                 const sec = document.createElement('div');
-                sec.className = "bg-white dark:bg-[#18181c] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xl space-y-4 transition-colors";
+                sec.className = "bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 rounded-2xl p-6 shadow-sm space-y-4 transition-colors";
                 
                 const catPhotos = photoList.filter(p => (p.category||'未分類') === cat);
 
                 sec.innerHTML = `
-                    <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                        <h3 class="font-bold text-base text-zinc-900 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-folder-open text-amber-500"></i> ${cat}
-                            <span class="text-xs font-normal text-zinc-400">(${catPhotos.length} 張照片)</span>
+                    <div class="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3">
+                        <h3 class="font-extrabold text-base text-stone-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-folder-open text-amber-600"></i> ${cat}
+                            <span class="text-xs font-bold text-stone-500 dark:text-stone-400">(${catPhotos.length} 張照片)</span>
                         </h3>
-                        <span class="text-[11px] text-zinc-400"><i class="fa-solid fa-arrows-up-down-left-right mr-1"></i> 可拖曳排序/跨區</span>
+                        <span class="text-[11px] font-bold text-stone-500 dark:text-stone-400"><i class="fa-solid fa-arrows-up-down-left-right mr-1"></i> 可拖曳排序/跨區</span>
                     </div>
                     <div id="photoDropzone_${encodeURIComponent(cat)}" class="photo-grid-dropzone grid gap-6 transition-all min-h-[120px] p-2 rounded-xl border-2 border-transparent" data-category="${cat}"></div>
                 `;
@@ -1019,7 +1084,7 @@
                     const card = document.createElement('div');
                     card.draggable = true;
                     card.dataset.photoId = p.id;
-                    card.className = `photo-card bg-zinc-50 dark:bg-[#121215] border rounded-2xl overflow-hidden flex flex-col group relative transition shadow-md cursor-grab active:cursor-grabbing ${isChecked ? 'border-amber-500 ring-2 ring-amber-500/50' : 'border-zinc-200 dark:border-zinc-800'}`;
+                    card.className = `photo-card bg-[#fcfaf7] dark:bg-stone-800 border rounded-2xl overflow-hidden flex flex-col group relative transition shadow-sm cursor-grab active:cursor-grabbing ${isChecked ? 'border-amber-600 ring-2 ring-amber-500/40' : 'border-stone-300 dark:border-stone-700'}`;
                     
                     let imgHeight = "h-56";
                     if (currentPhotoSize === 'small') imgHeight = "h-36";
@@ -1032,23 +1097,23 @@
 
                     card.innerHTML = `
                         <div class="w-full ${imgHeight} overflow-hidden relative cursor-pointer" onclick="openLightbox('${p.id}')">
-                            <img src="${p.url}" alt="Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='https://placehold.co/600x400/282830/ffffff?text=Image+Load+Error'">
-                            <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()" onchange="togglePhotoSelection('${p.id}')" class="absolute top-3 left-3 w-5 h-5 accent-amber-500 cursor-pointer shadow-lg z-10">
-                            <button onclick="event.stopPropagation(); deleteSinglePhoto('${p.id}')" class="absolute top-2 right-2 w-8 h-8 bg-rose-600/80 hover:bg-rose-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow z-10" title="刪除照片">
+                            <img src="${p.url}" alt="Photo" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.onerror=null;this.src='https://placehold.co/600x400/efe6d5/2d2319?text=Image+Load+Error'">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()" onchange="togglePhotoSelection('${p.id}')" class="absolute top-3 left-3 w-5 h-5 accent-amber-600 cursor-pointer shadow-md z-10 rounded">
+                            <button onclick="event.stopPropagation(); deleteSinglePhoto('${p.id}')" class="absolute top-2 right-2 w-8 h-8 bg-rose-600/90 hover:bg-rose-600 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow z-10" title="刪除照片">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
-                        <div class="p-3 bg-white dark:bg-[#18181c] border-t border-zinc-200 dark:border-zinc-800 space-y-1">
-                            <div class="flex items-center justify-between text-[10px] text-amber-500 font-bold">
+                        <div class="p-3.5 bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-800 space-y-1">
+                            <div class="flex items-center justify-between text-[11px] text-amber-700 dark:text-amber-400 font-extrabold">
                                 <span>${p.category || '未分類'}</span>
-                                <span class="text-zinc-400 font-normal"><i class="fa-solid fa-i-cursor mr-1"></i>雙擊備註修改</span>
+                                <span class="text-stone-400 font-medium"><i class="fa-solid fa-i-cursor mr-1"></i>雙擊備註修改</span>
                             </div>
-                            <div id="notesDisplay_${p.id}" class="text-xs text-zinc-600 dark:text-zinc-400 truncate cursor-pointer hover:text-amber-500 transition" title="點擊兩次以編輯備註" ondblclick="enableNotesEdit('${p.id}')">
-                                <i class="fa-regular fa-note-sticky mr-1 text-zinc-400"></i>${notesText}
+                            <div id="notesDisplay_${p.id}" class="text-xs text-stone-700 dark:text-stone-300 font-medium truncate cursor-pointer hover:text-amber-600 transition" title="點擊兩次以編輯備註" ondblclick="enableNotesEdit('${p.id}')">
+                                <i class="fa-regular fa-note-sticky mr-1.5 text-stone-400"></i>${notesText}
                             </div>
-                            <div id="notesEditBox_${p.id}" class="hidden flex items-center space-x-1 pt-1">
-                                <input type="text" id="notesInput_${p.id}" value="${p.notes || ''}" placeholder="輸入備註..." class="flex-1 text-xs p-1 bg-zinc-100 dark:bg-[#121215] border border-amber-500 rounded text-zinc-900 dark:text-white focus:outline-none" onkeydown="if(event.key==='Enter') saveNotesEdit('${p.id}')">
-                                <button onclick="saveNotesEdit('${p.id}')" class="px-2 py-1 bg-amber-500 text-white text-[10px] font-bold rounded">儲存</button>
+                            <div id="notesEditBox_${p.id}" class="hidden flex items-center space-x-1.5 pt-1">
+                                <input type="text" id="notesInput_${p.id}" value="${p.notes || ''}" placeholder="輸入備註..." class="flex-1 text-xs p-1.5 bg-[#fcfaf7] dark:bg-stone-800 border border-amber-500 rounded-lg text-stone-900 dark:text-white focus:outline-none" onkeydown="if(event.key==='Enter') saveNotesEdit('${p.id}')">
+                                <button onclick="saveNotesEdit('${p.id}')" class="px-2.5 py-1.5 bg-amber-600 text-white text-[11px] font-bold rounded-lg shadow">儲存</button>
                             </div>
                         </div>
                     `;
