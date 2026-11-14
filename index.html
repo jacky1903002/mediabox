@@ -79,7 +79,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
@@ -100,11 +100,9 @@
         window.fbAuth = auth;
         window.fbDb = db;
         window.fbServices = {
-            createUserWithEmailAndPassword,
             signInWithEmailAndPassword,
             signOut,
             onAuthStateChanged,
-            updateProfile,
             ref, set, get, onValue
         };
 
@@ -151,7 +149,7 @@
                         </button>
                     </div>
                     <button id="loginBtnTrigger" onclick="openAuthModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition">
-                        <i class="fa-solid fa-user-lock mr-1.5"></i> 會員登入 / 註冊
+                        <i class="fa-solid fa-user-lock mr-1.5"></i> 會員登入
                     </button>
                 </div>
             </div>
@@ -345,32 +343,24 @@
         <p>MediaBox Pro © 2026 多媒體影音與照片記錄管理系統</p>
     </footer>
 
-    <!-- AUTH MODAL -->
+    <!-- AUTH MODAL (僅保留登入功能) -->
     <div id="authModal" class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-stone-900 border border-stone-300 dark:border-stone-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-stone-200 dark:border-stone-800 pb-3">
-                <h3 class="font-extrabold text-base text-stone-900 dark:text-white">會員登入 / 註冊</h3>
+                <h3 class="font-extrabold text-base text-stone-900 dark:text-white">會員登入</h3>
                 <button onclick="closeAuthModal()" class="text-stone-400 hover:text-stone-900 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-3">
-                <div class="flex bg-[#f7f3eb] dark:bg-stone-800 p-1 rounded-xl">
-                    <button onclick="setAuthMode('login')" id="authTabLogin" class="flex-1 py-1.5 text-xs font-extrabold rounded-lg transition bg-white dark:bg-stone-900 text-stone-900 dark:text-white shadow">登入</button>
-                    <button onclick="setAuthMode('register')" id="authTabRegister" class="flex-1 py-1.5 text-xs font-extrabold rounded-lg transition text-stone-500">註冊帳號</button>
-                </div>
-                <div id="realNameField" class="hidden space-y-1">
-                    <label class="text-xs font-bold text-stone-700 dark:text-stone-300">真實姓名</label>
-                    <input type="text" id="authRealName" placeholder="例如: 王小明" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-stone-700 dark:text-stone-300">電子郵件 (Email)</label>
                     <input type="email" id="authEmail" placeholder="user@example.com" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-bold text-stone-700 dark:text-stone-300">密碼 (Password)</label>
-                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="password" id="authPassword" placeholder="******" class="w-full text-xs p-2.5 bg-[#fcfaf7] dark:bg-stone-800 border border-stone-300 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" onkeydown="if(event.key==='Enter') handleAuthSubmit()">
                 </div>
                 <div id="authError" class="text-xs font-bold text-rose-600 dark:text-rose-400 hidden bg-rose-50 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900"></div>
-                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition">確定送出</button>
+                <button onclick="handleAuthSubmit()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition">登入系統</button>
             </div>
         </div>
     </div>
@@ -445,7 +435,6 @@
     <script>
         let activeTab = 1;
         let currentUser = null;
-        let authMode = 'login';
         let currentPhotoSize = 'medium';
         let selectedPlaylistCategory = 'ALL';
 
@@ -589,19 +578,15 @@
             }
         }
 
-        function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
-        function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
-        function setAuthMode(mode) {
-            authMode = mode;
-            document.getElementById('authTabLogin').className = mode === 'login' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white dark:bg-stone-900 text-stone-900 dark:text-white shadow" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-stone-500";
-            document.getElementById('authTabRegister').className = mode === 'register' ? "flex-1 py-1.5 text-xs font-bold rounded-lg transition bg-white dark:bg-stone-900 text-stone-900 dark:text-white shadow" : "flex-1 py-1.5 text-xs font-bold rounded-lg transition text-stone-500";
-            document.getElementById('realNameField').classList.toggle('hidden', mode === 'login');
+        function openAuthModal() { 
+            document.getElementById('authError').classList.add('hidden');
+            document.getElementById('authModal').classList.remove('hidden'); 
         }
+        function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
 
         async function handleAuthSubmit() {
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value.trim();
-            const realName = document.getElementById('authRealName').value.trim();
             const errorDiv = document.getElementById('authError');
             errorDiv.classList.add('hidden');
 
@@ -611,21 +596,15 @@
                 return;
             }
 
-            const { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } = window.fbServices;
+            const { signInWithEmailAndPassword } = window.fbServices;
             try {
-                if (authMode === 'register') {
-                    const res = await createUserWithEmailAndPassword(window.fbAuth, email, password);
-                    await updateProfile(res.user, { displayName: realName || '會員' });
-                    currentUser = res.user;
-                } else {
-                    const res = await signInWithEmailAndPassword(window.fbAuth, email, password);
-                    currentUser = res.user;
-                }
+                const res = await signInWithEmailAndPassword(window.fbAuth, email, password);
+                currentUser = res.user;
                 closeAuthModal();
                 updateUserUI();
                 saveData();
             } catch (err) {
-                errorDiv.innerText = "驗證失敗: " + err.message;
+                errorDiv.innerText = "登入失敗: " + err.message;
                 errorDiv.classList.remove('hidden');
             }
         }
